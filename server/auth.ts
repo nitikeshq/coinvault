@@ -7,11 +7,11 @@ import bcrypt from "bcryptjs";
 import { body, validationResult } from "express-validator";
 import { storage } from "./storage";
 import connectPg from "connect-pg-simple";
-import { User } from "@shared/schema";
+import { User as DBUser } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    interface User extends DBUser {}
   }
 }
 
@@ -72,6 +72,7 @@ export function setupAuth(app: Express) {
 
       return done(null, user);
     } catch (error) {
+      console.error('Login error:', error);
       return done(error);
     }
   }));
@@ -128,7 +129,7 @@ export function setupAuth(app: Express) {
   }
 
   passport.serializeUser((user, done) => {
-    done(null, user.id);
+    done(null, (user as DBUser).id);
   });
 
   passport.deserializeUser(async (id: string, done) => {
@@ -155,7 +156,7 @@ export function setupAuth(app: Express) {
   ];
 
   // Auth routes
-  app.post('/api/register', registerValidation, async (req, res) => {
+  app.post('/api/register', registerValidation, async (req: any, res: any) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -190,7 +191,7 @@ export function setupAuth(app: Express) {
       });
 
       // Auto login after registration
-      req.login(user, (err) => {
+      req.login(user, (err: any) => {
         if (err) {
           return res.status(500).json({ message: 'Registration successful but login failed' });
         }
@@ -202,7 +203,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/login', loginValidation, (req, res, next) => {
+  app.post('/api/login', loginValidation, (req: any, res: any, next: any) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: errors.array()[0].msg });
@@ -210,14 +211,16 @@ export function setupAuth(app: Express) {
 
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
+        console.error('Passport authentication error:', err);
         return res.status(500).json({ message: 'Login failed' });
       }
       if (!user) {
         return res.status(401).json({ message: info.message || 'Invalid credentials' });
       }
 
-      req.login(user, (err) => {
+      req.login(user, (err: any) => {
         if (err) {
+          console.error('req.login error:', err);
           return res.status(500).json({ message: 'Login failed' });
         }
         res.json({ user: { ...user, password: undefined } });
@@ -248,7 +251,7 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get('/api/user', (req, res) => {
+  app.get('/api/user', (req: any, res: any) => {
     if (req.isAuthenticated() && req.user) {
       res.json({ ...req.user, password: undefined });
     } else {

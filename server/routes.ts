@@ -26,7 +26,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // User routes
-  app.get('/api/user', requireAuth, async (req: any, res) => {
+  app.get('/api/me', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
