@@ -21,6 +21,7 @@ const registerSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().optional(),
+  referralCode: z.string().optional(),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -47,6 +48,7 @@ export default function AuthPage() {
       email: "",
       password: "",
       phone: "",
+      referralCode: "",
     },
   });
 
@@ -379,6 +381,25 @@ export default function AuthPage() {
                                 placeholder="Enter your phone number"
                                 className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500"
                                 data-testid="input-phone"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="referralCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 font-medium">Referral Code (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="Enter referral code to get bonuses"
+                                className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500"
+                                data-testid="input-referral-code"
                               />
                             </FormControl>
                             <FormMessage />

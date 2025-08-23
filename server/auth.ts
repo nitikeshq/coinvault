@@ -150,6 +150,7 @@ export function setupAuth(app: Express) {
     body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('phone').optional().isMobilePhone('any').withMessage('Please provide a valid phone number'),
+    body('referralCode').optional().isString().withMessage('Please provide a valid referral code'),
   ];
 
   const loginValidation = [
@@ -165,7 +166,7 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: errors.array()[0].msg });
       }
 
-      const { name, username, email, password, phone } = req.body;
+      const { name, username, email, password, phone, referralCode } = req.body;
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -176,6 +177,16 @@ export function setupAuth(app: Express) {
       const existingUsername = await storage.getUserByUsername(username);
       if (existingUsername) {
         return res.status(400).json({ message: 'Username is already taken' });
+      }
+
+      // Validate referral code if provided
+      let referrerId = null;
+      if (referralCode && referralCode.trim()) {
+        const referrer = await storage.getUserByReferralCode(referralCode.trim());
+        if (!referrer) {
+          return res.status(400).json({ message: 'Invalid referral code' });
+        }
+        referrerId = referrer.id;
       }
 
       // Hash password
@@ -190,6 +201,7 @@ export function setupAuth(app: Express) {
         phone: phone || null,
         authProvider: 'email',
         isActive: true,
+        referredBy: referrerId,
       });
 
       // Auto login after registration

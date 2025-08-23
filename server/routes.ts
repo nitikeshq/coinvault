@@ -227,7 +227,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { status, adminNotes } = req.body;
+      
+      // Get deposit details before updating
+      const depositRequest = await storage.getDepositRequest(id);
+      if (!depositRequest) {
+        return res.status(404).json({ message: "Deposit request not found" });
+      }
+      
       await storage.updateDepositStatus(id, status, adminNotes);
+      
+      // If deposit is approved, trigger referral earnings and update user balance
+      if (status === 'approved' && depositRequest.status !== 'approved') {
+        const depositAmount = parseFloat(depositRequest.amount);
+        
+        // Get user details to check for referrer
+        const user = await storage.getUser(depositRequest.userId);
+        if (user?.referredBy) {
+          // Calculate 5% referral earnings
+          const earningsAmount = depositAmount * 0.05;
+          
+          // Record referral earnings
+          await storage.recordReferralEarning({
+            referrerId: user.referredBy,
+            referredUserId: user.id,
+            depositAmount,
+            earningsAmount,
+          });
+          
+          console.log(`Recorded referral earning: $${earningsAmount.toFixed(2)} for referrer ${user.referredBy}`);
+        }
+        
+        // Update user's token balance (convert USD to tokens)
+        const tokenConfig = await storage.getTokenConfig();
+        if (tokenConfig) {
+          const tokenPrice = parseFloat(tokenConfig.defaultPriceUsd);
+          const tokensToAdd = depositAmount / tokenPrice;
+          
+          await storage.updateUserTokenBalance(depositRequest.userId, tokensToAdd.toString());
+        }
+      }
+      
       res.json({ message: "Deposit status updated successfully" });
     } catch (error) {
       console.error("Error updating deposit status:", error);
