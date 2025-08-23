@@ -5,9 +5,8 @@ import { requireAuth } from "./auth";
 import type { Request, Response } from "express";
 
 interface AuthRequest extends Request {
-  session: {
-    user?: { id: string; email: string };
-  } & any;
+  user?: { id: string; email: string; name?: string };
+  session?: any;
 }
 
 const router = Router();
@@ -17,7 +16,7 @@ const imageManager = new ImageManager();
 router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { nftId, minPrice, auctionEndDate, listingFee } = req.body;
-    const userId = req.session?.user?.id;
+    const userId = req.user?.id;
 
     if (!userId || !nftId || !minPrice) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -252,7 +251,7 @@ router.post("/api/marketplace/nft/:listingId/accept-bid", requireAuth, async (re
 router.post("/api/marketplace/meme/:memeId/like", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { memeId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -274,7 +273,7 @@ router.post("/api/marketplace/meme/:memeId/like", requireAuth, async (req: AuthR
 router.post("/api/marketplace/meme/:memeId/dislike", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { memeId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -296,7 +295,7 @@ router.post("/api/marketplace/meme/:memeId/dislike", requireAuth, async (req: Au
 router.delete("/api/marketplace/meme/:memeId/like", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { memeId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -318,7 +317,7 @@ router.delete("/api/marketplace/meme/:memeId/like", requireAuth, async (req: Aut
 router.delete("/api/marketplace/meme/:memeId/dislike", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { memeId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
