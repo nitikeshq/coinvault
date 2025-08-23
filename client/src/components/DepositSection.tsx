@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Copy, Upload, AlertTriangle, Wallet, CreditCard } from "lucide-react";
 import upiQrImage from "../assets/upi_qr.png";
+import bscQrImage from "../assets/bsc_qr.png";
 
 export default function DepositSection() {
   const { toast } = useToast();
@@ -373,7 +374,7 @@ export default function DepositSection() {
                     <div className="text-center mb-6">
                       <div className="bg-white p-6 rounded-xl inline-block border border-gray-200 shadow-sm">
                         <img 
-                          src="/attached_assets/generated_images/BSC_wallet_QR_code_7c2c48ea.png" 
+                          src={bscQrImage} 
                           alt="BSC Wallet QR Code" 
                           className="w-48 h-48 object-contain"
                           data-testid="crypto-qr-code"
