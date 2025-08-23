@@ -40,6 +40,9 @@ export const users = pgTable("users", {
   walletPrivateKey: varchar("wallet_private_key"), // Encrypted in production
   withdrawalAddress: varchar("withdrawal_address"), // BEP-20 address for withdrawals
   isActive: boolean("is_active").default(true),
+  // Investment tier fields
+  investmentTag: varchar("investment_tag").default("Members"), // Members, Premium, VIP, VVIP, Sharks, Whales
+  totalInvestmentInr: decimal("total_investment_inr", { precision: 20, scale: 2 }).default("0"),
   // Referral fields
   referralCode: varchar("referral_code").unique(),
   referredBy: varchar("referred_by").references(() => users.id),
