@@ -9,6 +9,7 @@ import path from "path";
 import { blockchainService } from "./blockchainService";
 import OpenAI from "openai";
 import { ObjectStorageService } from "./objectStorage";
+import marketRoutes from "./marketRoutes";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -28,6 +29,9 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
+  
+  // Mount marketplace routes (separate from existing APIs)
+  app.use(marketRoutes);
 
   // Object Storage Routes
   app.post('/api/objects/upload', requireAuth, async (req, res) => {

@@ -14,6 +14,10 @@ import {
   userNfts,
   memeGenerations,
   referralEarnings,
+  nftListings,
+  nftBids,
+  memeLikes,
+  memeDislikes,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -87,6 +91,22 @@ export interface IStorage {
   // Website settings
   getWebsiteSettings(): Promise<WebsiteSettings | undefined>;
   updateWebsiteSettings(settings: InsertWebsiteSettings): Promise<WebsiteSettings>;
+  
+  // Marketplace operations (NFT)
+  listNFTForSale(sellerId: string, nftId: string, minPrice: string): Promise<any>;
+  placeBidOnNFT(listingId: string, bidderId: string, bidAmount: string, platformFeeAmount: string): Promise<any>;
+  getActiveNFTListings(): Promise<any[]>;
+  getUserNFTListings(userId: string): Promise<any[]>;
+  getNFTBids(listingId: string): Promise<any[]>;
+  acceptNFTBid(listingId: string, bidId: string): Promise<void>;
+  
+  // Marketplace operations (Memes)
+  likeMeme(memeId: string, userId: string): Promise<void>;
+  dislikeMeme(memeId: string, userId: string): Promise<void>;
+  removeLike(memeId: string, userId: string): Promise<void>;
+  removeDislike(memeId: string, userId: string): Promise<void>;
+  getMemeStats(memeId: string): Promise<{likes: number, dislikes: number}>;
+  getMemeLeaderboard(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -734,6 +754,206 @@ export class DatabaseStorage implements IStorage {
       referralCount: result.referralCount,
       rank: index + 1
     }));
+  }
+
+  // Marketplace methods (NFT)
+  async listNFTForSale(sellerId: string, nftId: string, minPrice: string) {
+    const [listing] = await db
+      .insert(nftListings)
+      .values({
+        nftId,
+        sellerId,
+        minPrice,
+        isActive: true,
+      })
+      .returning();
+    return listing;
+  }
+
+  async placeBidOnNFT(listingId: string, bidderId: string, bidAmount: string, platformFeeAmount: string) {
+    await db.transaction(async (tx) => {
+      // Deactivate previous bids for this listing
+      await tx
+        .update(nftBids)
+        .set({ isActive: false })
+        .where(eq(nftBids.listingId, listingId));
+
+      // Insert new bid
+      await tx
+        .insert(nftBids)
+        .values({
+          listingId,
+          bidderId,
+          bidAmount,
+          platformFeeAmount,
+          platformFeePaid: true,
+          isActive: true,
+        });
+
+      // Update listing with highest bid
+      await tx
+        .update(nftListings)
+        .set({
+          currentHighestBid: bidAmount,
+          highestBidderId: bidderId,
+          updatedAt: new Date(),
+        })
+        .where(eq(nftListings.id, listingId));
+    });
+  }
+
+  async getActiveNFTListings() {
+    return await db
+      .select({
+        listing: nftListings,
+        nft: nftCollection,
+        seller: users,
+      })
+      .from(nftListings)
+      .innerJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+      .innerJoin(users, eq(nftListings.sellerId, users.id))
+      .where(eq(nftListings.isActive, true))
+      .orderBy(desc(nftListings.createdAt));
+  }
+
+  async getUserNFTListings(userId: string) {
+    return await db
+      .select({
+        listing: nftListings,
+        nft: nftCollection,
+      })
+      .from(nftListings)
+      .innerJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+      .where(eq(nftListings.sellerId, userId))
+      .orderBy(desc(nftListings.createdAt));
+  }
+
+  async getNFTBids(listingId: string) {
+    return await db
+      .select({
+        bid: nftBids,
+        bidder: users,
+      })
+      .from(nftBids)
+      .innerJoin(users, eq(nftBids.bidderId, users.id))
+      .where(eq(nftBids.listingId, listingId))
+      .orderBy(desc(nftBids.bidAmount));
+  }
+
+  async acceptNFTBid(listingId: string, bidId: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Get the winning bid details
+      const [bid] = await tx
+        .select()
+        .from(nftBids)
+        .where(eq(nftBids.id, bidId));
+
+      if (!bid) throw new Error('Bid not found');
+
+      // Get listing details
+      const [listing] = await tx
+        .select()
+        .from(nftListings)
+        .where(eq(nftListings.id, listingId));
+
+      if (!listing) throw new Error('Listing not found');
+
+      // Transfer NFT ownership
+      await tx
+        .update(userNfts)
+        .set({ userId: bid.bidderId })
+        .where(eq(userNfts.nftId, listing.nftId));
+
+      // Mark listing as sold
+      await tx
+        .update(nftListings)
+        .set({
+          isActive: false,
+          soldAt: new Date(),
+        })
+        .where(eq(nftListings.id, listingId));
+    });
+  }
+
+  // Marketplace methods (Memes)
+  async likeMeme(memeId: string, userId: string): Promise<void> {
+    // Remove dislike if exists
+    await db
+      .delete(memeDislikes)
+      .where(and(eq(memeDislikes.memeId, memeId), eq(memeDislikes.userId, userId)));
+
+    // Add like if not already liked
+    try {
+      await db
+        .insert(memeLikes)
+        .values({ memeId, userId })
+        .onConflictDoNothing();
+    } catch {
+      // Ignore if already liked
+    }
+  }
+
+  async dislikeMeme(memeId: string, userId: string): Promise<void> {
+    // Remove like if exists
+    await db
+      .delete(memeLikes)
+      .where(and(eq(memeLikes.memeId, memeId), eq(memeLikes.userId, userId)));
+
+    // Add dislike if not already disliked
+    try {
+      await db
+        .insert(memeDislikes)
+        .values({ memeId, userId })
+        .onConflictDoNothing();
+    } catch {
+      // Ignore if already disliked
+    }
+  }
+
+  async removeLike(memeId: string, userId: string): Promise<void> {
+    await db
+      .delete(memeLikes)
+      .where(and(eq(memeLikes.memeId, memeId), eq(memeLikes.userId, userId)));
+  }
+
+  async removeDislike(memeId: string, userId: string): Promise<void> {
+    await db
+      .delete(memeDislikes)
+      .where(and(eq(memeDislikes.memeId, memeId), eq(memeDislikes.userId, userId)));
+  }
+
+  async getMemeStats(memeId: string): Promise<{likes: number, dislikes: number}> {
+    const [likesResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(memeLikes)
+      .where(eq(memeLikes.memeId, memeId));
+
+    const [dislikesResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(memeDislikes)
+      .where(eq(memeDislikes.memeId, memeId));
+
+    return {
+      likes: Number(likesResult?.count) || 0,
+      dislikes: Number(dislikesResult?.count) || 0,
+    };
+  }
+
+  async getMemeLeaderboard() {
+    return await db
+      .select({
+        meme: memeGenerations,
+        user: users,
+        likes: sql<number>`COUNT(DISTINCT ${memeLikes.id})`,
+        dislikes: sql<number>`COUNT(DISTINCT ${memeDislikes.id})`,
+        score: sql<number>`COUNT(DISTINCT ${memeLikes.id}) - COUNT(DISTINCT ${memeDislikes.id})`,
+      })
+      .from(memeGenerations)
+      .innerJoin(users, eq(memeGenerations.userId, users.id))
+      .leftJoin(memeLikes, eq(memeGenerations.id, memeLikes.memeId))
+      .leftJoin(memeDislikes, eq(memeGenerations.id, memeDislikes.memeId))
+      .groupBy(memeGenerations.id, users.id)
+      .orderBy(desc(sql`COUNT(DISTINCT ${memeLikes.id}) - COUNT(DISTINCT ${memeDislikes.id})`), desc(sql`COUNT(DISTINCT ${memeLikes.id})`));
   }
 }
 

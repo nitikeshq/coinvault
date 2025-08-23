@@ -7,13 +7,14 @@ import NewsSection from "@/components/NewsSection";
 import AdminPanel from "@/components/AdminPanel";
 import DappsSection from "@/components/DappsSection";
 import AdvertisementsPage from "@/pages/Advertisements";
+import MarketSection from "@/components/MarketSection";
 import { PresaleCountdown } from "@/components/PresaleCountdown";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market'>('wallet');
   const { user, isAdmin } = useAuth();
   const { settings: websiteSettings } = useWebsiteSettings() as { settings: any };
 
@@ -45,6 +46,8 @@ export default function Home() {
         return <DappsSection />;
       case 'advertisements':
         return <AdvertisementsPage />;
+      case 'market':
+        return <MarketSection />;
       case 'admin':
         return isAdmin ? <AdminPanel /> : (
           <div className="container mx-auto px-4 space-y-6">

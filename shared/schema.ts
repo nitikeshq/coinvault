@@ -329,3 +329,80 @@ export const referralEarnings = pgTable("referral_earnings", {
 });
 
 export type ReferralEarnings = typeof referralEarnings.$inferSelect;
+
+// NFT Marketplace tables
+export const nftListings = pgTable("nft_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nftId: varchar("nft_id").notNull().references(() => nftCollection.id),
+  sellerId: varchar("seller_id").notNull().references(() => users.id),
+  minPrice: decimal("min_price", { precision: 18, scale: 8 }).notNull(), // Starting price in tokens
+  currentHighestBid: decimal("current_highest_bid", { precision: 18, scale: 8 }).default("0"),
+  highestBidderId: varchar("highest_bidder_id").references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  soldAt: timestamp("sold_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const nftBids = pgTable("nft_bids", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull().references(() => nftListings.id),
+  bidderId: varchar("bidder_id").notNull().references(() => users.id),
+  bidAmount: decimal("bid_amount", { precision: 18, scale: 8 }).notNull(),
+  platformFeeAmount: decimal("platform_fee_amount", { precision: 18, scale: 8 }).default("1"), // $1 worth of tokens
+  platformFeePaid: boolean("platform_fee_paid").default(false),
+  isActive: boolean("is_active").default(true), // Only highest bid is active
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Meme Marketplace tables
+export const memeLikes = pgTable("meme_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memeId: varchar("meme_id").notNull().references(() => memeGenerations.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const memeDislikes = pgTable("meme_dislikes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memeId: varchar("meme_id").notNull().references(() => memeGenerations.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Marketplace schemas
+export const insertNftListingSchema = createInsertSchema(nftListings).omit({
+  id: true,
+  currentHighestBid: true,
+  highestBidderId: true,
+  soldAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertNftBidSchema = createInsertSchema(nftBids).omit({
+  id: true,
+  platformFeePaid: true,
+  isActive: true,
+  createdAt: true,
+});
+
+export const insertMemeLikeSchema = createInsertSchema(memeLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMemeDislikeSchema = createInsertSchema(memeDislikes).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Marketplace types
+export type NftListing = typeof nftListings.$inferSelect;
+export type InsertNftListing = z.infer<typeof insertNftListingSchema>;
+export type NftBid = typeof nftBids.$inferSelect;
+export type InsertNftBid = z.infer<typeof insertNftBidSchema>;
+export type MemeLike = typeof memeLikes.$inferSelect;
+export type InsertMemeLike = z.infer<typeof insertMemeLikeSchema>;
+export type MemeDislike = typeof memeDislikes.$inferSelect;
+export type InsertMemeDislike = z.infer<typeof insertMemeDislikeSchema>;

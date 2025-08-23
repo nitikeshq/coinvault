@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy } from "lucide-react";
+import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
 interface NavigationProps {
-  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements';
-  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements') => void;
+  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market';
+  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => void;
   user?: any;
   isAdmin?: boolean;
 }
@@ -135,6 +135,16 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               >
                 <Trophy className="h-4 w-4 mr-1 inline" />
                 Leaderboards
+              </button>
+              <button 
+                onClick={() => onSectionChange('market')}
+                className={`hover:text-blue-600 transition-colors font-medium ${
+                  activeSection === 'market' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
+                }`}
+                data-testid="nav-market"
+              >
+                <TrendingUp className="h-4 w-4 mr-1 inline" />
+                Market
               </button>
             </div>
             
