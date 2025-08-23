@@ -1136,23 +1136,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
     try {
-      console.log('Received mint NFT request:', req.body);
+      console.log('=== MINT NFT REQUEST DEBUG ===');
+      console.log('Full request body:', JSON.stringify(req.body, null, 2));
+      console.log('Request body keys:', Object.keys(req.body));
+      console.log('Request body types:', Object.keys(req.body).map(key => `${key}: ${typeof req.body[key]}`));
+      
       const { traits, rarity, quantity = 1, referenceImageUrl, skipUniquenessCheck = false } = req.body;
       
+      console.log('Extracted values:');
+      console.log('- traits:', traits, typeof traits);
+      console.log('- rarity:', rarity, typeof rarity);
+      console.log('- quantity:', quantity, typeof quantity);
+      console.log('- skipUniquenessCheck:', skipUniquenessCheck, typeof skipUniquenessCheck);
+      
       if (!traits) {
+        console.log('ERROR: No traits provided');
         return res.status(400).json({ message: "Traits are required" });
+      }
+      
+      if (typeof traits !== 'object') {
+        console.log('ERROR: Traits is not an object, received:', typeof traits);
+        return res.status(400).json({ message: "Traits must be an object" });
       }
       
       // Validate required trait properties
       const requiredTraits = ['expression', 'mouth', 'eyewear', 'beard', 'hairStyle', 'background'];
       const missingTraits = requiredTraits.filter(trait => !traits[trait]);
       
+      console.log('Traits validation:');
+      console.log('- Required traits:', requiredTraits);
+      console.log('- Received trait keys:', Object.keys(traits));
+      console.log('- Missing traits:', missingTraits);
+      
       if (missingTraits.length > 0) {
-        console.log('Missing traits:', missingTraits);
-        console.log('Received traits:', traits);
+        console.log('ERROR: Missing required traits:', missingTraits);
         return res.status(400).json({ 
           message: `Missing required traits: ${missingTraits.join(', ')}`,
-          receivedTraits: Object.keys(traits)
+          receivedTraits: Object.keys(traits),
+          requiredTraits: requiredTraits
         });
       }
 

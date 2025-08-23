@@ -1730,12 +1730,19 @@ function NFTMintingPanel() {
   // Auto minting mutation
   const autoMintSingleMutation = useMutation({
     mutationFn: async ({ traits, rarity }: { traits: any; rarity: string }) => {
-      return apiRequest("POST", "/api/admin/mint-nft", { 
+      const requestData = { 
         traits, 
         rarity, 
         quantity: 1,
         skipUniquenessCheck: true // Skip uniqueness for auto minting
-      });
+      };
+      
+      console.log('=== CLIENT AUTO MINT REQUEST ===');
+      console.log('Sending auto mint request:', JSON.stringify(requestData, null, 2));
+      console.log('Traits object keys:', Object.keys(traits));
+      console.log('Traits object values:', Object.values(traits));
+      
+      return apiRequest("POST", "/api/admin/mint-nft", requestData);
     },
     onSuccess: () => {
       setMintedCount(prev => prev + 1);
@@ -1811,12 +1818,19 @@ function NFTMintingPanel() {
 
   const mintNftMutation = useMutation({
     mutationFn: async ({ traits, rarity, quantity, skipUniquenessCheck }: { traits: any; rarity: string; quantity: number; skipUniquenessCheck: boolean }) => {
-      return apiRequest("POST", "/api/admin/mint-nft", { 
+      const requestData = { 
         traits, 
         rarity, 
         quantity,
         skipUniquenessCheck 
-      });
+      };
+      
+      console.log('=== CLIENT REGULAR MINT REQUEST ===');
+      console.log('Sending regular mint request:', JSON.stringify(requestData, null, 2));
+      console.log('Traits object keys:', Object.keys(traits));
+      console.log('Traits object values:', Object.values(traits));
+      
+      return apiRequest("POST", "/api/admin/mint-nft", requestData);
     },
     onSuccess: (data: any) => {
       toast({
