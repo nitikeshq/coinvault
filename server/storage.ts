@@ -447,6 +447,14 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async updateDappCost(appName: string, cost: number): Promise<any> {
+    const [updated] = await db.update(dappSettings)
+      .set({ cost: cost.toString(), updatedAt: new Date() })
+      .where(eq(dappSettings.appName, appName))
+      .returning();
+    return updated;
+  }
+
   async getDappByName(appName: string): Promise<any> {
     const [dapp] = await db.select().from(dappSettings)
       .where(eq(dappSettings.appName, appName));

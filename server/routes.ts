@@ -529,6 +529,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/admin/dapps/:appName/cost', requireAdmin, async (req, res) => {
+    try {
+      const { appName } = req.params;
+      const { cost } = req.body;
+      
+      // Validate cost is a positive number
+      if (typeof cost !== 'number' || cost < 0) {
+        return res.status(400).json({ message: "Cost must be a positive number" });
+      }
+      
+      const updated = await storage.updateDappCost(appName, cost);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating dapp cost:", error);
+      res.status(500).json({ message: "Failed to update dapp cost" });
+    }
+  });
+
   // NFT routes
   app.get('/api/nfts/available', requireAuth, async (req, res) => {
     try {

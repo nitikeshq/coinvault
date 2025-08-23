@@ -1168,6 +1168,8 @@ export default function AdminPanel() {
 function DappsManagementPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [editingCost, setEditingCost] = useState<string | null>(null);
+  const [tempCost, setTempCost] = useState("");
 
   const { data: dappSettings = [] } = useQuery<any[]>({
     queryKey: ["/api/dapps/settings"],
@@ -1193,8 +1195,53 @@ function DappsManagementPanel() {
     },
   });
 
+  const updateDappCostMutation = useMutation({
+    mutationFn: async ({ appName, cost }: { appName: string; cost: number }) => {
+      return apiRequest("PUT", `/api/admin/dapps/${appName}/cost`, { cost });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dapps/settings"] });
+      setEditingCost(null);
+      setTempCost("");
+      toast({
+        title: "Success", 
+        description: "Dapp cost updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleToggleDapp = (appName: string, isEnabled: boolean) => {
     updateDappMutation.mutate({ appName, isEnabled });
+  };
+
+  const handleEditCost = (appName: string, currentCost: string) => {
+    setEditingCost(appName);
+    setTempCost(currentCost);
+  };
+
+  const handleSaveCost = (appName: string) => {
+    const cost = parseFloat(tempCost);
+    if (isNaN(cost) || cost < 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid positive number",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateDappCostMutation.mutate({ appName, cost });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCost(null);
+    setTempCost("");
   };
 
   return (
@@ -1217,7 +1264,51 @@ function DappsManagementPanel() {
                   {dapp.description}
                 </p>
                 <div className="text-sm text-gray-700">
-                  <span className="font-medium">Cost:</span> {parseFloat(dapp.cost).toLocaleString()} CHILL tokens
+                  <span className="font-medium">Cost:</span> 
+                  {editingCost === dapp.appName ? (
+                    <div className="inline-flex items-center space-x-2 ml-2">
+                      <Input
+                        type="number"
+                        value={tempCost}
+                        onChange={(e) => setTempCost(e.target.value)}
+                        className="w-24 h-6 text-xs border-gray-300 bg-white"
+                        data-testid={`input-cost-${dapp.appName}`}
+                      />
+                      <span className="text-xs">CHILL</span>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveCost(dapp.appName)}
+                        disabled={updateDappCostMutation.isPending}
+                        className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
+                        data-testid={`button-save-cost-${dapp.appName}`}
+                      >
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        disabled={updateDappCostMutation.isPending}
+                        className="h-6 px-2 text-xs border-gray-300"
+                        data-testid={`button-cancel-cost-${dapp.appName}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center space-x-2 ml-2">
+                      <span>{parseFloat(dapp.cost).toLocaleString()} CHILL tokens</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditCost(dapp.appName, dapp.cost)}
+                        className="h-6 px-2 text-xs border-gray-300 hover:bg-gray-50"
+                        data-testid={`button-edit-cost-${dapp.appName}`}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center space-x-3">
