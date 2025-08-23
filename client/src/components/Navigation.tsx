@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy } from "lucide-react";
-import { Link } from "wouter";
+import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy, ShoppingCart, Palette } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ interface NavigationProps {
 export default function Navigation({ activeSection, onSectionChange, user, isAdmin }: NavigationProps) {
   const { settings } = useWebsiteSettings();
   const { toast } = useToast();
+  const [location] = useLocation();
   
   // Fetch enabled dapps to show/hide the Dapps menu
   const { data: enabledDapps = [] } = useQuery<any[]>({
@@ -136,6 +137,27 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                 <Trophy className="h-4 w-4 mr-1 inline" />
                 Leaderboards
               </button>
+              
+              {/* Marketplace Links */}
+              <Link href="/marketplace/nfts">
+                <a className={`hover:text-purple-600 transition-colors font-medium ${
+                  location === '/marketplace/nfts' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-gray-600'
+                }`}
+                data-testid="nav-nft-marketplace">
+                  <ShoppingCart className="h-4 w-4 mr-1 inline" />
+                  NFT Market
+                </a>
+              </Link>
+              
+              <Link href="/marketplace/memes">
+                <a className={`hover:text-purple-600 transition-colors font-medium ${
+                  location === '/marketplace/memes' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-gray-600'
+                }`}
+                data-testid="nav-meme-marketplace">
+                  <Palette className="h-4 w-4 mr-1 inline" />
+                  Meme Market
+                </a>
+              </Link>
             </div>
             
             <div className="flex items-center space-x-3">

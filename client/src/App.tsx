@@ -8,6 +8,8 @@ import AuthPage from "@/pages/AuthPage";
 import LandingPage from "@/pages/LandingPage";
 import RegisterPage from "@/pages/RegisterPage";
 import Home from "@/pages/Home";
+import NftMarketplace from "@/pages/NftMarketplace";
+import MemeMarketplace from "@/pages/MemeMarketplace";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +28,8 @@ function Router() {
       <Route path="/register" component={RegisterPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/landing" component={LandingPage} />
+      <Route path="/marketplace/nfts" component={isAuthenticated ? NftMarketplace : LandingPage} />
+      <Route path="/marketplace/memes" component={isAuthenticated ? MemeMarketplace : LandingPage} />
       <Route path="/" component={isAuthenticated ? Home : LandingPage} />
       <Route component={NotFound} />
     </Switch>

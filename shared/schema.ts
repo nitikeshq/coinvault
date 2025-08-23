@@ -330,3 +330,102 @@ export const referralEarnings = pgTable("referral_earnings", {
 });
 
 export type ReferralEarnings = typeof referralEarnings.$inferSelect;
+
+// NFT Marketplace listings
+export const nftListings = pgTable("nft_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nftId: varchar("nft_id").notNull().references(() => nftCollection.id),
+  ownerId: varchar("owner_id").notNull().references(() => users.id),
+  price: decimal("price", { precision: 18, scale: 8 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Meme Marketplace listings  
+export const memeListings = pgTable("meme_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memeId: varchar("meme_id").notNull().references(() => memeGenerations.id),
+  ownerId: varchar("owner_id").notNull().references(() => users.id),
+  price: decimal("price", { precision: 18, scale: 8 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Bids table (for both NFTs and memes)
+export const bids = pgTable("bids", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  itemType: varchar("item_type").notNull(), // 'nft' or 'meme'
+  itemId: varchar("item_id").notNull(), // nftId or memeId
+  bidderId: varchar("bidder_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Meme social stats
+export const memeStats = pgTable("meme_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memeId: varchar("meme_id").notNull().unique().references(() => memeGenerations.id),
+  viewCount: integer("view_count").default(0),
+  likeCount: integer("like_count").default(0),
+  shareCount: integer("share_count").default(0),
+  downloadCount: integer("download_count").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Meme likes (for tracking individual likes)
+export const memeLikes = pgTable("meme_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memeId: varchar("meme_id").notNull().references(() => memeGenerations.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// NFT transfers
+export const nftTransfers = pgTable("nft_transfers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nftId: varchar("nft_id").notNull().references(() => nftCollection.id),
+  fromUserId: varchar("from_user_id").references(() => users.id),
+  toUserId: varchar("to_user_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 18, scale: 8 }), // Purchase amount if applicable
+  transferType: varchar("transfer_type").notNull(), // 'mint', 'sale', 'transfer'
+  transactionHash: varchar("transaction_hash"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Marketplace schemas
+export const insertNftListingSchema = createInsertSchema(nftListings).omit({
+  id: true,
+  ownerId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemeListingSchema = createInsertSchema(memeListings).omit({
+  id: true,
+  ownerId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBidSchema = createInsertSchema(bids).omit({
+  id: true,
+  bidderId: true,
+  createdAt: true,
+});
+
+// Marketplace types
+export type NftListing = typeof nftListings.$inferSelect;
+export type InsertNftListing = z.infer<typeof insertNftListingSchema>;
+export type MemeListing = typeof memeListings.$inferSelect;
+export type InsertMemeListing = z.infer<typeof insertMemeListingSchema>;
+export type Bid = typeof bids.$inferSelect;
+export type InsertBid = z.infer<typeof insertBidSchema>;
+export type MemeStats = typeof memeStats.$inferSelect;
+export type MemeLikes = typeof memeLikes.$inferSelect;
+export type NftTransfer = typeof nftTransfers.$inferSelect;

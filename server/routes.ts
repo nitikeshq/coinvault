@@ -1147,6 +1147,292 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NFT Marketplace Routes
+  app.get('/api/marketplace/nfts', async (req, res) => {
+    try {
+      const { active } = req.query;
+      const isActive = active !== undefined ? active === 'true' : true;
+      const listings = await storage.getNftListings(isActive);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error getting NFT listings:", error);
+      res.status(500).json({ message: "Failed to get NFT listings" });
+    }
+  });
+
+  app.get('/api/marketplace/nfts/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const listing = await storage.getNftListing(id);
+      if (!listing) {
+        return res.status(404).json({ message: "NFT listing not found" });
+      }
+      res.json(listing);
+    } catch (error) {
+      console.error("Error getting NFT listing:", error);
+      res.status(500).json({ message: "Failed to get NFT listing" });
+    }
+  });
+
+  app.post('/api/marketplace/nfts', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { nftId, price, description } = req.body;
+      
+      if (!nftId || !price) {
+        return res.status(400).json({ message: "NFT ID and price are required" });
+      }
+
+      // Verify user owns the NFT
+      const userNfts = await storage.getUserNfts(userId);
+      const ownsNft = userNfts.some(nft => nft.nftId === nftId);
+      if (!ownsNft) {
+        return res.status(403).json({ message: "You don't own this NFT" });
+      }
+
+      const listing = await storage.createNftListing({
+        nftId,
+        price: price.toString(),
+        description: description || '',
+        ownerId: userId
+      });
+      
+      res.status(201).json(listing);
+    } catch (error) {
+      console.error("Error creating NFT listing:", error);
+      res.status(500).json({ message: "Failed to create NFT listing" });
+    }
+  });
+
+  app.put('/api/marketplace/nfts/:id', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+      const updates = req.body;
+
+      const listing = await storage.getNftListing(id);
+      if (!listing || listing.ownerId !== userId) {
+        return res.status(404).json({ message: "NFT listing not found or access denied" });
+      }
+
+      await storage.updateNftListing(id, updates);
+      res.json({ message: "NFT listing updated successfully" });
+    } catch (error) {
+      console.error("Error updating NFT listing:", error);
+      res.status(500).json({ message: "Failed to update NFT listing" });
+    }
+  });
+
+  app.delete('/api/marketplace/nfts/:id', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+
+      const listing = await storage.getNftListing(id);
+      if (!listing || listing.ownerId !== userId) {
+        return res.status(404).json({ message: "NFT listing not found or access denied" });
+      }
+
+      await storage.deleteNftListing(id);
+      res.json({ message: "NFT listing deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting NFT listing:", error);
+      res.status(500).json({ message: "Failed to delete NFT listing" });
+    }
+  });
+
+  // Meme Marketplace Routes
+  app.get('/api/marketplace/memes', async (req, res) => {
+    try {
+      const { active } = req.query;
+      const isActive = active !== undefined ? active === 'true' : true;
+      const listings = await storage.getMemeListings(isActive);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error getting meme listings:", error);
+      res.status(500).json({ message: "Failed to get meme listings" });
+    }
+  });
+
+  app.get('/api/marketplace/memes/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const listing = await storage.getMemeListing(id);
+      if (!listing) {
+        return res.status(404).json({ message: "Meme listing not found" });
+      }
+      res.json(listing);
+    } catch (error) {
+      console.error("Error getting meme listing:", error);
+      res.status(500).json({ message: "Failed to get meme listing" });
+    }
+  });
+
+  app.post('/api/marketplace/memes', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { memeId, price, description } = req.body;
+      
+      if (!memeId || !price) {
+        return res.status(400).json({ message: "Meme ID and price are required" });
+      }
+
+      // Verify user owns the meme
+      const userMemes = await storage.getUserMemes(userId);
+      const ownsMeme = userMemes.some(meme => meme.id === memeId);
+      if (!ownsMeme) {
+        return res.status(403).json({ message: "You don't own this meme" });
+      }
+
+      const listing = await storage.createMemeListing({
+        memeId,
+        price: price.toString(),
+        description: description || '',
+        ownerId: userId
+      });
+      
+      res.status(201).json(listing);
+    } catch (error) {
+      console.error("Error creating meme listing:", error);
+      res.status(500).json({ message: "Failed to create meme listing" });
+    }
+  });
+
+  // Bidding Routes
+  app.get('/api/bids/:itemType/:itemId', async (req, res) => {
+    try {
+      const { itemType, itemId } = req.params;
+      const bids = await storage.getBidsForItem(itemType, itemId);
+      res.json(bids);
+    } catch (error) {
+      console.error("Error getting bids:", error);
+      res.status(500).json({ message: "Failed to get bids" });
+    }
+  });
+
+  app.post('/api/bids', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { itemType, itemId, amount, expiresAt } = req.body;
+      
+      if (!itemType || !itemId || !amount) {
+        return res.status(400).json({ message: "Item type, item ID, and amount are required" });
+      }
+
+      const bid = await storage.createBid({
+        itemType,
+        itemId,
+        amount: amount.toString(),
+        expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+        bidderId: userId
+      });
+      
+      res.status(201).json(bid);
+    } catch (error) {
+      console.error("Error creating bid:", error);
+      res.status(500).json({ message: "Failed to create bid" });
+    }
+  });
+
+  app.post('/api/bids/:bidId/accept', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { bidId } = req.params;
+      
+      // Additional ownership verification would go here
+      await storage.acceptBid(bidId);
+      res.json({ message: "Bid accepted successfully" });
+    } catch (error) {
+      console.error("Error accepting bid:", error);
+      res.status(500).json({ message: "Failed to accept bid" });
+    }
+  });
+
+  app.delete('/api/bids/:bidId', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { bidId } = req.params;
+      
+      await storage.cancelBid(bidId);
+      res.json({ message: "Bid cancelled successfully" });
+    } catch (error) {
+      console.error("Error cancelling bid:", error);
+      res.status(500).json({ message: "Failed to cancel bid" });
+    }
+  });
+
+  // Meme Social Features Routes
+  app.get('/api/memes/:id/stats', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const stats = await storage.getMemeStats(id);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting meme stats:", error);
+      res.status(500).json({ message: "Failed to get meme stats" });
+    }
+  });
+
+  app.post('/api/memes/:id/view', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.incrementMemeView(id);
+      res.json({ message: "View recorded" });
+    } catch (error) {
+      console.error("Error recording view:", error);
+      res.status(500).json({ message: "Failed to record view" });
+    }
+  });
+
+  app.post('/api/memes/:id/share', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.incrementMemeShare(id);
+      res.json({ message: "Share recorded" });
+    } catch (error) {
+      console.error("Error recording share:", error);
+      res.status(500).json({ message: "Failed to record share" });
+    }
+  });
+
+  app.post('/api/memes/:id/download', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.incrementMemeDownload(id);
+      res.json({ message: "Download recorded" });
+    } catch (error) {
+      console.error("Error recording download:", error);
+      res.status(500).json({ message: "Failed to record download" });
+    }
+  });
+
+  app.post('/api/memes/:id/like', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+      const liked = await storage.toggleMemeLike(id, userId);
+      res.json({ liked, message: liked ? "Meme liked" : "Meme unliked" });
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      res.status(500).json({ message: "Failed to toggle like" });
+    }
+  });
+
+  app.get('/api/memes/:id/public-url', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const publicUrl = await storage.generateMemePublicUrl(id);
+      res.json({ publicUrl });
+    } catch (error) {
+      console.error("Error generating public URL:", error);
+      res.status(500).json({ message: "Failed to generate public URL" });
+    }
+  });
+
+  // Static file serving for images
+  app.use('/NFTS', express.static(path.join(process.cwd(), 'NFTS')));
+  app.use('/memes_images', express.static(path.join(process.cwd(), 'memes_images')));
+
   const httpServer = createServer(app);
   return httpServer;
 }

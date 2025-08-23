@@ -14,6 +14,12 @@ import {
   userNfts,
   memeGenerations,
   referralEarnings,
+  nftListings,
+  memeListings,
+  bids,
+  memeStats,
+  memeLikes,
+  nftTransfers,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -33,6 +39,15 @@ import {
   type PresaleConfig,
   type InsertPresaleConfig,
   type ReferralEarnings,
+  type NftListing,
+  type InsertNftListing,
+  type MemeListing,
+  type InsertMemeListing,
+  type Bid,
+  type InsertBid,
+  type MemeStats,
+  type MemeLikes,
+  type NftTransfer,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -87,6 +102,42 @@ export interface IStorage {
   // Website settings
   getWebsiteSettings(): Promise<WebsiteSettings | undefined>;
   updateWebsiteSettings(settings: InsertWebsiteSettings): Promise<WebsiteSettings>;
+  
+  // NFT Marketplace operations
+  createNftListing(listing: InsertNftListing & { ownerId: string }): Promise<NftListing>;
+  getNftListings(isActive?: boolean): Promise<Array<NftListing & { nft: any, owner: any }>>;
+  getNftListing(id: string): Promise<(NftListing & { nft: any, owner: any }) | undefined>;
+  updateNftListing(id: string, updates: Partial<InsertNftListing>): Promise<void>;
+  deleteNftListing(id: string): Promise<void>;
+  
+  // Meme Marketplace operations
+  createMemeListing(listing: InsertMemeListing & { ownerId: string }): Promise<MemeListing>;
+  getMemeListings(isActive?: boolean): Promise<Array<MemeListing & { meme: any, owner: any }>>;
+  getMemeListing(id: string): Promise<(MemeListing & { meme: any, owner: any }) | undefined>;
+  updateMemeListing(id: string, updates: Partial<InsertMemeListing>): Promise<void>;
+  deleteMemeListing(id: string): Promise<void>;
+  
+  // Bid operations
+  createBid(bid: InsertBid & { bidderId: string }): Promise<Bid>;
+  getBidsForItem(itemType: string, itemId: string): Promise<Array<Bid & { bidder: any }>>;
+  getUserBids(userId: string): Promise<Array<Bid & { bidder: any }>>;
+  acceptBid(bidId: string): Promise<void>;
+  cancelBid(bidId: string): Promise<void>;
+  
+  // Meme social features
+  getMemeStats(memeId: string): Promise<MemeStats | undefined>;
+  updateMemeStats(memeId: string, stats: Partial<MemeStats>): Promise<void>;
+  incrementMemeView(memeId: string): Promise<void>;
+  incrementMemeShare(memeId: string): Promise<void>;
+  incrementMemeDownload(memeId: string): Promise<void>;
+  toggleMemeLike(memeId: string, userId: string): Promise<boolean>;
+  
+  // NFT Transfer operations
+  createNftTransfer(transfer: Omit<NftTransfer, 'id' | 'createdAt'>): Promise<NftTransfer>;
+  getUserNftTransfers(userId: string): Promise<NftTransfer[]>;
+  
+  // Public URLs for sharing
+  generateMemePublicUrl(memeId: string): Promise<string>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -734,6 +785,291 @@ export class DatabaseStorage implements IStorage {
       referralCount: result.referralCount,
       rank: index + 1
     }));
+  }
+
+  // NFT Marketplace operations
+  async createNftListing(listing: InsertNftListing & { ownerId: string }): Promise<NftListing> {
+    const [nftListing] = await db.insert(nftListings)
+      .values(listing)
+      .returning();
+    return nftListing;
+  }
+
+  async getNftListings(isActive?: boolean): Promise<Array<NftListing & { nft: any, owner: any }>> {
+    const query = db.select({
+      id: nftListings.id,
+      nftId: nftListings.nftId,
+      ownerId: nftListings.ownerId,
+      price: nftListings.price,
+      isActive: nftListings.isActive,
+      description: nftListings.description,
+      createdAt: nftListings.createdAt,
+      updatedAt: nftListings.updatedAt,
+      nft: nftCollection,
+      owner: users
+    })
+    .from(nftListings)
+    .leftJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+    .leftJoin(users, eq(nftListings.ownerId, users.id));
+    
+    if (isActive !== undefined) {
+      query.where(eq(nftListings.isActive, isActive));
+    }
+    
+    return await query.orderBy(desc(nftListings.createdAt));
+  }
+
+  async getNftListing(id: string): Promise<(NftListing & { nft: any, owner: any }) | undefined> {
+    const [listing] = await db.select({
+      id: nftListings.id,
+      nftId: nftListings.nftId,
+      ownerId: nftListings.ownerId,
+      price: nftListings.price,
+      isActive: nftListings.isActive,
+      description: nftListings.description,
+      createdAt: nftListings.createdAt,
+      updatedAt: nftListings.updatedAt,
+      nft: nftCollection,
+      owner: users
+    })
+    .from(nftListings)
+    .leftJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+    .leftJoin(users, eq(nftListings.ownerId, users.id))
+    .where(eq(nftListings.id, id));
+    
+    return listing;
+  }
+
+  async updateNftListing(id: string, updates: Partial<InsertNftListing>): Promise<void> {
+    await db.update(nftListings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(nftListings.id, id));
+  }
+
+  async deleteNftListing(id: string): Promise<void> {
+    await db.delete(nftListings).where(eq(nftListings.id, id));
+  }
+
+  // Meme Marketplace operations
+  async createMemeListing(listing: InsertMemeListing & { ownerId: string }): Promise<MemeListing> {
+    const [memeListing] = await db.insert(memeListings)
+      .values(listing)
+      .returning();
+    return memeListing;
+  }
+
+  async getMemeListings(isActive?: boolean): Promise<Array<MemeListing & { meme: any, owner: any }>> {
+    const query = db.select({
+      id: memeListings.id,
+      memeId: memeListings.memeId,
+      ownerId: memeListings.ownerId,
+      price: memeListings.price,
+      isActive: memeListings.isActive,
+      description: memeListings.description,
+      createdAt: memeListings.createdAt,
+      updatedAt: memeListings.updatedAt,
+      meme: memeGenerations,
+      owner: users
+    })
+    .from(memeListings)
+    .leftJoin(memeGenerations, eq(memeListings.memeId, memeGenerations.id))
+    .leftJoin(users, eq(memeListings.ownerId, users.id));
+    
+    if (isActive !== undefined) {
+      query.where(eq(memeListings.isActive, isActive));
+    }
+    
+    return await query.orderBy(desc(memeListings.createdAt));
+  }
+
+  async getMemeListing(id: string): Promise<(MemeListing & { meme: any, owner: any }) | undefined> {
+    const [listing] = await db.select({
+      id: memeListings.id,
+      memeId: memeListings.memeId,
+      ownerId: memeListings.ownerId,
+      price: memeListings.price,
+      isActive: memeListings.isActive,
+      description: memeListings.description,
+      createdAt: memeListings.createdAt,
+      updatedAt: memeListings.updatedAt,
+      meme: memeGenerations,
+      owner: users
+    })
+    .from(memeListings)
+    .leftJoin(memeGenerations, eq(memeListings.memeId, memeGenerations.id))
+    .leftJoin(users, eq(memeListings.ownerId, users.id))
+    .where(eq(memeListings.id, id));
+    
+    return listing;
+  }
+
+  async updateMemeListing(id: string, updates: Partial<InsertMemeListing>): Promise<void> {
+    await db.update(memeListings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(memeListings.id, id));
+  }
+
+  async deleteMemeListing(id: string): Promise<void> {
+    await db.delete(memeListings).where(eq(memeListings.id, id));
+  }
+
+  // Bid operations
+  async createBid(bid: InsertBid & { bidderId: string }): Promise<Bid> {
+    const [newBid] = await db.insert(bids)
+      .values(bid)
+      .returning();
+    return newBid;
+  }
+
+  async getBidsForItem(itemType: string, itemId: string): Promise<Array<Bid & { bidder: any }>> {
+    return await db.select({
+      id: bids.id,
+      itemType: bids.itemType,
+      itemId: bids.itemId,
+      bidderId: bids.bidderId,
+      amount: bids.amount,
+      isActive: bids.isActive,
+      expiresAt: bids.expiresAt,
+      createdAt: bids.createdAt,
+      bidder: users
+    })
+    .from(bids)
+    .leftJoin(users, eq(bids.bidderId, users.id))
+    .where(and(eq(bids.itemType, itemType), eq(bids.itemId, itemId), eq(bids.isActive, true)))
+    .orderBy(desc(bids.amount));
+  }
+
+  async getUserBids(userId: string): Promise<Array<Bid & { bidder: any }>> {
+    return await db.select({
+      id: bids.id,
+      itemType: bids.itemType,
+      itemId: bids.itemId,
+      bidderId: bids.bidderId,
+      amount: bids.amount,
+      isActive: bids.isActive,
+      expiresAt: bids.expiresAt,
+      createdAt: bids.createdAt,
+      bidder: users
+    })
+    .from(bids)
+    .leftJoin(users, eq(bids.bidderId, users.id))
+    .where(eq(bids.bidderId, userId))
+    .orderBy(desc(bids.createdAt));
+  }
+
+  async acceptBid(bidId: string): Promise<void> {
+    const [bid] = await db.select().from(bids).where(eq(bids.id, bidId));
+    if (!bid) throw new Error('Bid not found');
+    
+    // Transfer the item ownership logic would go here
+    // For now, just mark bid as inactive and other bids as inactive
+    await db.update(bids)
+      .set({ isActive: false })
+      .where(and(eq(bids.itemType, bid.itemType), eq(bids.itemId, bid.itemId)));
+  }
+
+  async cancelBid(bidId: string): Promise<void> {
+    await db.update(bids)
+      .set({ isActive: false })
+      .where(eq(bids.id, bidId));
+  }
+
+  // Meme social features
+  async getMemeStats(memeId: string): Promise<MemeStats | undefined> {
+    const [stats] = await db.select().from(memeStats).where(eq(memeStats.memeId, memeId));
+    if (!stats) {
+      // Create initial stats if they don't exist
+      const [newStats] = await db.insert(memeStats)
+        .values({ memeId, viewCount: 0, likeCount: 0, shareCount: 0, downloadCount: 0 })
+        .returning();
+      return newStats;
+    }
+    return stats;
+  }
+
+  async updateMemeStats(memeId: string, statsUpdate: Partial<MemeStats>): Promise<void> {
+    await db.update(memeStats)
+      .set({ ...statsUpdate, updatedAt: new Date() })
+      .where(eq(memeStats.memeId, memeId));
+  }
+
+  async incrementMemeView(memeId: string): Promise<void> {
+    await db.insert(memeStats)
+      .values({ memeId, viewCount: 1, likeCount: 0, shareCount: 0, downloadCount: 0 })
+      .onConflictDoUpdate({
+        target: memeStats.memeId,
+        set: { viewCount: sql`${memeStats.viewCount} + 1`, updatedAt: new Date() }
+      });
+  }
+
+  async incrementMemeShare(memeId: string): Promise<void> {
+    await db.insert(memeStats)
+      .values({ memeId, viewCount: 0, likeCount: 0, shareCount: 1, downloadCount: 0 })
+      .onConflictDoUpdate({
+        target: memeStats.memeId,
+        set: { shareCount: sql`${memeStats.shareCount} + 1`, updatedAt: new Date() }
+      });
+  }
+
+  async incrementMemeDownload(memeId: string): Promise<void> {
+    await db.insert(memeStats)
+      .values({ memeId, viewCount: 0, likeCount: 0, shareCount: 0, downloadCount: 1 })
+      .onConflictDoUpdate({
+        target: memeStats.memeId,
+        set: { downloadCount: sql`${memeStats.downloadCount} + 1`, updatedAt: new Date() }
+      });
+  }
+
+  async toggleMemeLike(memeId: string, userId: string): Promise<boolean> {
+    // Check if user already liked this meme
+    const [existingLike] = await db.select()
+      .from(memeLikes)
+      .where(and(eq(memeLikes.memeId, memeId), eq(memeLikes.userId, userId)));
+    
+    if (existingLike) {
+      // Unlike: remove like and decrement count
+      await db.delete(memeLikes)
+        .where(and(eq(memeLikes.memeId, memeId), eq(memeLikes.userId, userId)));
+      
+      await db.update(memeStats)
+        .set({ likeCount: sql`${memeStats.likeCount} - 1`, updatedAt: new Date() })
+        .where(eq(memeStats.memeId, memeId));
+      
+      return false; // unliked
+    } else {
+      // Like: add like and increment count
+      await db.insert(memeLikes).values({ memeId, userId });
+      
+      await db.insert(memeStats)
+        .values({ memeId, viewCount: 0, likeCount: 1, shareCount: 0, downloadCount: 0 })
+        .onConflictDoUpdate({
+          target: memeStats.memeId,
+          set: { likeCount: sql`${memeStats.likeCount} + 1`, updatedAt: new Date() }
+        });
+      
+      return true; // liked
+    }
+  }
+
+  // NFT Transfer operations
+  async createNftTransfer(transfer: Omit<NftTransfer, 'id' | 'createdAt'>): Promise<NftTransfer> {
+    const [nftTransfer] = await db.insert(nftTransfers)
+      .values(transfer)
+      .returning();
+    return nftTransfer;
+  }
+
+  async getUserNftTransfers(userId: string): Promise<NftTransfer[]> {
+    return await db.select()
+      .from(nftTransfers)
+      .where(eq(nftTransfers.toUserId, userId))
+      .orderBy(desc(nftTransfers.createdAt));
+  }
+
+  // Public URLs for sharing
+  async generateMemePublicUrl(memeId: string): Promise<string> {
+    // Generate a shareable public URL for the meme
+    return `/public/meme/${memeId}`;
   }
 }
 
