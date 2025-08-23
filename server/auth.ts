@@ -147,7 +147,7 @@ export function setupAuth(app: Express) {
   const registerValidation = [
     body('name').trim().isLength({ min: 2, max: 50 }).withMessage('Name must be 2-50 characters'),
     body('username').trim().isLength({ min: 3, max: 30 }).withMessage('Username must be 3-30 characters').matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers and underscores'),
-    body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
+    body('email').trim().notEmpty().withMessage('Email is required').isEmail().withMessage('Please provide a valid email'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('phone').optional().isMobilePhone('any').withMessage('Please provide a valid phone number'),
     body('referralCode').optional().isString().withMessage('Please provide a valid referral code'),
@@ -161,8 +161,10 @@ export function setupAuth(app: Express) {
   // Auth routes
   app.post('/api/register', registerValidation, async (req: any, res: any) => {
     try {
+      console.log('Registration request body:', req.body);
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Registration validation errors:', errors.array());
         return res.status(400).json({ message: errors.array()[0].msg });
       }
 
