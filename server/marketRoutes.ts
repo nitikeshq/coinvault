@@ -340,4 +340,30 @@ router.get("/api/marketplace/meme/leaderboard", async (req: Request, res: Respon
   }
 });
 
+// Get paginated meme feed for marketplace with user info
+router.get("/api/marketplace/meme/feed", async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 6;
+    const offset = (page - 1) * limit;
+    
+    const memes = await storage.getAllMemesWithUserInfo(limit, offset);
+    res.json(memes);
+  } catch (error) {
+    console.error("Error fetching meme feed:", error);
+    res.status(500).json({ error: "Failed to fetch meme feed" });
+  }
+});
+
+// Get total count of public memes for pagination
+router.get("/api/marketplace/meme/count", async (req: Request, res: Response) => {
+  try {
+    const count = await storage.getTotalMemesCount();
+    res.json(count);
+  } catch (error) {
+    console.error("Error fetching meme count:", error);
+    res.status(500).json({ error: "Failed to fetch meme count" });
+  }
+});
+
 export default router;

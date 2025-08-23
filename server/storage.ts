@@ -1078,6 +1078,71 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getAllMemesWithUserInfo(limit: number = 6, offset: number = 0): Promise<any[]> {
+    try {
+      // Create subqueries for like and dislike counts
+      const likes_subquery = db
+        .select({
+          memeId: memeLikes.memeId,
+          likeCount: sql<number>`count(*)`.as('like_count')
+        })
+        .from(memeLikes)
+        .groupBy(memeLikes.memeId)
+        .as('likes_subquery');
+
+      const dislikes_subquery = db
+        .select({
+          memeId: memeDislikes.memeId,
+          dislikeCount: sql<number>`count(*)`.as('dislike_count')
+        })
+        .from(memeDislikes)
+        .groupBy(memeDislikes.memeId)
+        .as('dislikes_subquery');
+
+      const allMemes = await db.select({
+        id: memeGenerations.id,
+        prompt: memeGenerations.prompt,
+        overlayText: memeGenerations.overlayText,
+        imageUrl: memeGenerations.imageUrl,
+        status: memeGenerations.status,
+        generatedAt: memeGenerations.generatedAt,
+        user: {
+          id: users.id,
+          name: users.name,
+          username: users.username
+        },
+        likeCount: sql`COALESCE(${likes_subquery.likeCount}, 0)`,
+        dislikeCount: sql`COALESCE(${dislikes_subquery.dislikeCount}, 0)`
+      })
+      .from(memeGenerations)
+      .leftJoin(users, eq(memeGenerations.userId, users.id))
+      .leftJoin(likes_subquery, eq(memeGenerations.id, likes_subquery.memeId))
+      .leftJoin(dislikes_subquery, eq(memeGenerations.id, dislikes_subquery.memeId))
+      .where(eq(memeGenerations.status, 'completed'))
+      .orderBy(desc(memeGenerations.generatedAt))
+      .limit(limit)
+      .offset(offset);
+      
+      return allMemes;
+    } catch (error) {
+      console.error('Error fetching all memes with user info:', error);
+      return [];
+    }
+  }
+
+  async getTotalMemesCount(): Promise<number> {
+    try {
+      const result = await db.select({ count: sql<number>`count(*)` })
+        .from(memeGenerations)
+        .where(eq(memeGenerations.status, 'completed'));
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error fetching total memes count:', error);
+      return 0;
+    }
+  }
+
   async getMemeLeaderboard() {
     return await db
       .select({

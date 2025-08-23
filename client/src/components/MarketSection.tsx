@@ -39,10 +39,20 @@ export default function MarketSection() {
     queryKey: ['/api/marketplace/nft/my-listings'],
   });
 
-  // Meme Data Queries  
+  // Meme Data Queries with pagination
+  const [memePage, setMemePage] = useState(1);
+  const memesPerPage = 6;
+  
   const { data: memes = [] } = useQuery<any[]>({
-    queryKey: ['/api/user/memes'],
+    queryKey: ['/api/marketplace/meme/feed', memePage],
+    queryFn: () => apiRequest(`/api/marketplace/meme/feed?page=${memePage}&limit=${memesPerPage}`),
   });
+  
+  const { data: allMemesCount = 0 } = useQuery<number>({
+    queryKey: ['/api/marketplace/meme/count'],
+  });
+  
+  const totalMemePages = Math.ceil(allMemesCount / memesPerPage);
 
   const { data: memeLeaderboard = [] } = useQuery<any[]>({
     queryKey: ['/api/marketplace/meme/leaderboard'],
@@ -334,6 +344,12 @@ export default function MarketSection() {
     </div>
   );
 
+  const handleMemePage = (page: number) => {
+    if (page >= 1 && page <= totalMemePages) {
+      setMemePage(page);
+    }
+  };
+
   const MemeMarketplace = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -361,23 +377,83 @@ export default function MarketSection() {
                     <Heart className="h-12 w-12 text-pink-400" />
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mb-4" data-testid={`meme-prompt-${meme.id}`}>
-                  "{meme.prompt}"
-                </p>
+                <div className="mb-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="text-xs font-medium text-blue-600">
+                      @{meme.user?.name || meme.user?.username || 'Anonymous'}
+                    </div>
+                    <Badge variant="secondary">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {new Date(meme.generatedAt).toLocaleDateString()}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600" data-testid={`meme-prompt-${meme.id}`}>
+                    "{meme.prompt}"
+                  </p>
+                  {meme.overlayText && (
+                    <p className="text-xs text-green-600 mt-1 font-medium">
+                      Text: "{meme.overlayText}"
+                    </p>
+                  )}
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex space-x-4">
                     <MemeVoteButtons meme={meme} />
                   </div>
-                  <Badge variant="secondary">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {new Date(meme.generatedAt).toLocaleDateString()}
-                  </Badge>
+                  <div className="flex items-center space-x-2 text-xs text-gray-500">
+                    <Eye className="h-3 w-3" />
+                    <span>{meme.views || 0} views</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+      
+      {/* Pagination */}
+      {totalMemePages > 1 && (
+        <div className="flex justify-center items-center space-x-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMemePage(memePage - 1)}
+            disabled={memePage <= 1}
+            data-testid="button-meme-prev"
+          >
+            Previous
+          </Button>
+          
+          <div className="flex space-x-1">
+            {Array.from({ length: Math.min(5, totalMemePages) }, (_, i) => {
+              const pageNum = memePage <= 3 ? i + 1 : memePage - 2 + i;
+              if (pageNum > totalMemePages) return null;
+              return (
+                <Button
+                  key={pageNum}
+                  variant={pageNum === memePage ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleMemePage(pageNum)}
+                  className="w-8 h-8 p-0"
+                  data-testid={`button-meme-page-${pageNum}`}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMemePage(memePage + 1)}
+            disabled={memePage >= totalMemePages}
+            data-testid="button-meme-next"
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Leaderboard Section */}
       <Card>
@@ -490,7 +566,7 @@ export default function MarketSection() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/memes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed'] });
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/leaderboard'] });
       toast({
         title: "Liked!",
@@ -507,7 +583,7 @@ export default function MarketSection() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/memes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed'] });
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/leaderboard'] });
       toast({
         title: "Disliked!",
