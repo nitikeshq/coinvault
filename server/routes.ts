@@ -602,15 +602,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/nfts/mint', requireAuth, async (req: any, res) => {
+  app.post('/api/nfts/buy', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const { nftId } = req.body;
       
-      // Check if NFT mint is enabled
+      // Check if NFT purchase is enabled
       const nftMintSettings = await storage.getDappByName('nft_mint');
       if (!nftMintSettings || !nftMintSettings.isEnabled) {
-        return res.status(403).json({ message: 'NFT minting is currently disabled' });
+        return res.status(403).json({ message: 'NFT purchasing is currently disabled' });
       }
 
       // Check user balance
@@ -630,13 +630,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newBalance = (userBalance - cost).toString();
       await storage.updateUserBalance(userId, newBalance, '0');
 
-      // Mint NFT
+      // Buy/Purchase NFT (assign to user)
       await storage.mintNft(userId, nftId);
       
-      res.json({ message: 'NFT minted successfully', cost, newBalance });
+      res.json({ message: 'NFT purchased successfully', cost, newBalance });
     } catch (error) {
-      console.error("Error minting NFT:", error);
-      res.status(500).json({ message: "Failed to mint NFT" });
+      console.error("Error purchasing NFT:", error);
+      res.status(500).json({ message: "Failed to purchase NFT" });
     }
   });
 

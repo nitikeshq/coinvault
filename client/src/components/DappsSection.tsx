@@ -48,14 +48,14 @@ export default function DappsSection() {
     refetchInterval: 5000, // Auto-refresh to check for completed generations
   });
 
-  const nftMintMutation = useMutation({
+  const nftBuyMutation = useMutation({
     mutationFn: async (nftId: string) => {
-      return apiRequest("POST", "/api/nfts/mint", { nftId });
+      return apiRequest("POST", "/api/nfts/buy", { nftId });
     },
     onSuccess: () => {
       toast({
         title: "Success!",
-        description: "NFT minted successfully!",
+        description: "NFT purchased successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/nfts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/nfts/available"] });
@@ -64,7 +64,7 @@ export default function DappsSection() {
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to mint NFT",
+        title: "Failed to purchase NFT",
         description: error.message,
         variant: "destructive",
       });
@@ -93,8 +93,8 @@ export default function DappsSection() {
     },
   });
 
-  const handleMintNft = (nftId: string) => {
-    nftMintMutation.mutate(nftId);
+  const handleBuyNft = (nftId: string) => {
+    nftBuyMutation.mutate(nftId);
   };
 
   const handleGenerateMeme = () => {
@@ -158,7 +158,7 @@ export default function DappsSection() {
           {isNftMintEnabled && (
             <TabsTrigger value="nft-mint" data-testid="tab-nft-mint">
               <Image className="h-4 w-4 mr-2" />
-              NFT Mint
+              NFT Store
             </TabsTrigger>
           )}
           {isMemeGeneratorEnabled && (
@@ -178,7 +178,7 @@ export default function DappsSection() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Image className="h-5 w-5" />
-                    <span>Mint NFT</span>
+                    <span>Buy NFT</span>
                     <Badge variant="outline">{nftCost?.toLocaleString()} {tokenSymbol}</Badge>
                   </CardTitle>
                 </CardHeader>
@@ -190,7 +190,7 @@ export default function DappsSection() {
                   {nftStats && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Minted:</span>
+                        <span>Sold:</span>
                         <span>{nftStats.mintedNfts || 0} / {nftStats.totalNfts || 0}</span>
                       </div>
                       <Progress 
@@ -216,12 +216,12 @@ export default function DappsSection() {
                           </div>
                         </div>
                         <Button 
-                          onClick={() => handleMintNft(availableNfts[0].id)}
-                          disabled={nftMintMutation.isPending || userBalance < nftCost}
+                          onClick={() => handleBuyNft(availableNfts[0].id)}
+                          disabled={nftBuyMutation.isPending || userBalance < nftCost}
                           className="w-full"
-                          data-testid="button-mint-nft"
+                          data-testid="button-buy-nft"
                         >
-                          {nftMintMutation.isPending ? "Minting..." : `Mint for ${nftCost?.toLocaleString()} ${tokenSymbol}`}
+                          {nftBuyMutation.isPending ? "Purchasing..." : `Buy for ${nftCost?.toLocaleString()} ${tokenSymbol}`}
                         </Button>
                         {userBalance < nftCost && (
                           <div className="text-sm text-red-600 text-center">
@@ -232,7 +232,7 @@ export default function DappsSection() {
                     ) : (
                       <div className="text-center py-8 text-gray-600">
                         <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <div>All NFTs have been minted!</div>
+                        <div>All NFTs have been sold!</div>
                       </div>
                     )}
                   </div>
@@ -263,7 +263,7 @@ export default function DappsSection() {
                     <div className="text-center py-8 text-gray-600">
                       <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <div>No NFTs owned yet</div>
-                      <div className="text-sm">Mint your first NFT to get started!</div>
+                      <div className="text-sm">Buy your first NFT to get started!</div>
                     </div>
                   )}
                 </CardContent>
