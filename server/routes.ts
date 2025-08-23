@@ -30,24 +30,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Presale API endpoints
-  app.get('/api/presale/config', (req, res) => {
-    res.json({
-      targetAmount: "1000000",
-      tokenPrice: "0.001", 
-      startDate: new Date().toISOString(),
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      minInvestment: "0.01",
-      maxInvestment: "10000"
-    });
+  app.get('/api/presale/config', async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      if (!config) {
+        // Return default config if none exists
+        return res.json({
+          targetAmount: "1000000",
+          tokenPrice: "0.001", 
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          minInvestment: "0.01",
+          maxInvestment: "10000",
+          isActive: true
+        });
+      }
+      res.json({
+        ...config,
+        tokenPrice: "0.001",
+        minInvestment: "0.01", 
+        maxInvestment: "10000"
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get presale config' });
+    }
   });
 
-  app.get('/api/presale/progress', (req, res) => {
-    res.json({
-      totalRaised: "250000",
-      targetAmount: "1000000", 
-      percentage: 25,
-      investorCount: 150
-    });
+  app.get('/api/presale/progress', async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      const depositSum = await storage.getDepositSum();
+      
+      if (!config) {
+        return res.json({
+          totalRaised: "0",
+          targetAmount: "1000000", 
+          initialLiquidity: "0",
+          fromDeposits: depositSum || "0",
+          progressPercentage: 0
+        });
+      }
+
+      const totalRaised = parseFloat(config.currentAmount || "0") + parseFloat(depositSum || "0");
+      const progressPercentage = (totalRaised / parseFloat(config.targetAmount)) * 100;
+
+      res.json({
+        totalRaised: totalRaised.toString(),
+        targetAmount: config.targetAmount,
+        initialLiquidity: config.initialLiquidity || "0",
+        fromDeposits: depositSum || "0", 
+        progressPercentage: Math.min(progressPercentage, 100)
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get presale progress' });
+    }
+  });
+
+  app.get('/api/presale/timer', async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      if (!config) {
+        return res.json({
+          days: 30,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          remainingTime: "30d 0h 0m",
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          isEnded: false
+        });
+      }
+
+      const now = new Date().getTime();
+      const endTime = new Date(config.endDate).getTime();
+      const distance = endTime - now;
+
+      if (distance <= 0) {
+        return res.json({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          remainingTime: "Presale Ended",
+          endDate: config.endDate,
+          isEnded: true
+        });
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      res.json({
+        days,
+        hours,
+        minutes,
+        seconds,
+        remainingTime: `${days}d ${hours}h ${minutes}m`,
+        endDate: config.endDate,
+        isEnded: false
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get presale timer' });
+    }
+  });
+
+  // Admin presale endpoints
+  app.put('/api/admin/presale/config', requireAdmin, async (req: any, res) => {
+    try {
+      const config = await storage.updatePresaleConfig(req.body);
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to update presale config' });
+    }
+  });
+
+  app.post('/api/admin/presale/liquidity', requireAdmin, async (req: any, res) => {
+    try {
+      const { currentAmount } = req.body;
+      const config = await storage.updatePresaleLiquidity(currentAmount);
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to update liquidity' });
+    }
   });
 
   // Admin NFT minting endpoint

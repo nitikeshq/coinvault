@@ -487,6 +487,23 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getDepositSum(): Promise<string> {
+    const result = await db
+      .select({
+        totalAmount: sql<string>`COALESCE(SUM(
+          CASE 
+            WHEN currency = 'USD' THEN original_amount
+            WHEN currency = 'INR' THEN original_amount / 83 -- Approximate INR to USD conversion
+            ELSE original_amount
+          END
+        ), 0)`
+      })
+      .from(depositRequests)
+      .where(eq(depositRequests.status, "approved"));
+
+    return result[0]?.totalAmount || "0";
+  }
+
   // Dapps methods
   async getDappSettings(): Promise<any[]> {
     return await db.select().from(dappSettings).orderBy(dappSettings.appName);
