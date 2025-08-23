@@ -43,8 +43,120 @@ const socialLinkSchema = z.object({
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("overview");
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [isLoadingTokenInfo, setIsLoadingTokenInfo] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Function to fetch token information from BSC
+  const fetchTokenInfo = async (contractAddress: string) => {
+    if (!contractAddress || contractAddress.length !== 42 || !contractAddress.startsWith('0x')) {
+      return;
+    }
+
+    setIsLoadingTokenInfo(true);
+    try {
+      // BSC RPC endpoint
+      const rpcUrl = 'https://bsc-dataseed1.binance.org/';
+      
+      // ERC-20 function selectors
+      const nameSelector = '0x06fdde03'; // name()
+      const symbolSelector = '0x95d89b41'; // symbol()
+      const decimalsSelector = '0x313ce567'; // decimals()
+
+      // Make RPC calls to get token info
+      const [nameResponse, symbolResponse, decimalsResponse] = await Promise.all([
+        fetch(rpcUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_call',
+            params: [{
+              to: contractAddress,
+              data: nameSelector
+            }, 'latest'],
+            id: 1
+          })
+        }),
+        fetch(rpcUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_call',
+            params: [{
+              to: contractAddress,
+              data: symbolSelector
+            }, 'latest'],
+            id: 2
+          })
+        }),
+        fetch(rpcUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_call',
+            params: [{
+              to: contractAddress,
+              data: decimalsSelector
+            }, 'latest'],
+            id: 3
+          })
+        })
+      ]);
+
+      const [nameData, symbolData, decimalsData] = await Promise.all([
+        nameResponse.json(),
+        symbolResponse.json(),
+        decimalsResponse.json()
+      ]);
+
+      if (nameData.result && symbolData.result && decimalsData.result) {
+        // Decode hex strings
+        const decodeName = (hex: string) => {
+          if (hex === '0x') return '';
+          const hex2 = hex.slice(2);
+          const length = parseInt(hex2.slice(64, 128), 16);
+          const nameHex = hex2.slice(128, 128 + length * 2);
+          return nameHex ? Buffer.from(nameHex, 'hex').toString('utf8') : '';
+        };
+
+        const decodeSymbol = (hex: string) => {
+          if (hex === '0x') return '';
+          const hex2 = hex.slice(2);
+          const length = parseInt(hex2.slice(64, 128), 16);
+          const symbolHex = hex2.slice(128, 128 + length * 2);
+          return symbolHex ? Buffer.from(symbolHex, 'hex').toString('utf8') : '';
+        };
+
+        const tokenName = decodeName(nameData.result);
+        const tokenSymbol = decodeSymbol(symbolData.result);
+        const decimals = parseInt(decimalsData.result, 16);
+
+        // Update form with fetched data
+        tokenForm.setValue('tokenName', tokenName);
+        tokenForm.setValue('tokenSymbol', tokenSymbol);
+        tokenForm.setValue('decimals', decimals);
+
+        toast({
+          title: "Token info fetched successfully",
+          description: `Found: ${tokenName} (${tokenSymbol}) with ${decimals} decimals`,
+        });
+      } else {
+        throw new Error('Invalid token contract or token does not exist');
+      }
+    } catch (error) {
+      console.error('Error fetching token info:', error);
+      toast({
+        title: "Failed to fetch token info",
+        description: "Please check the contract address or enter details manually",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingTokenInfo(false);
+    }
+  };
 
   // Queries
   const { data: tokenConfig } = useQuery({ queryKey: ["/api/token/config"] });
@@ -307,13 +419,35 @@ export default function AdminPanel() {
                       <FormItem>
                         <FormLabel className="text-gray-700">Contract Address</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="0x..."
-                            className="bg-gray-50 border-gray-300 text-gray-900"
-                            data-testid="input-contract-address"
-                          />
+                          <div className="relative">
+                            <Input
+                              {...field}
+                              placeholder="0x... (will auto-fetch token info)"
+                              className="bg-gray-50 border-gray-300 text-gray-900 pr-10"
+                              data-testid="input-contract-address"
+                              onChange={(e) => {
+                                field.onChange(e);
+                                const address = e.target.value.trim();
+                                if (address.length === 42 && address.startsWith('0x')) {
+                                  // Debounce the API call
+                                  setTimeout(() => {
+                                    if (tokenForm.getValues('contractAddress') === address) {
+                                      fetchTokenInfo(address);
+                                    }
+                                  }, 1000);
+                                }
+                              }}
+                            />
+                            {isLoadingTokenInfo && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                              </div>
+                            )}
+                          </div>
                         </FormControl>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Enter a valid BEP-20 token contract address to automatically fetch token details
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
