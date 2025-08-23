@@ -1,11 +1,10 @@
-import { createContext, useContext, ReactNode } from "react";
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { User, LoginUser, RegisterUser } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Create Auth Context
-const AuthContext = createContext<{
+type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
@@ -17,18 +16,21 @@ const AuthContext = createContext<{
   isLoginLoading: boolean;
   isRegisterLoading: boolean;
   isLogoutLoading: boolean;
-} | null>(null);
+}
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+const AuthContext = React.createContext<AuthContextType | null>(null);
+
+export function AuthProvider(props: { children: React.ReactNode }) {
   const authData = useAuthLogic();
-  return (
-    <AuthContext.Provider value={authData}>
-      {children}
-    </AuthContext.Provider>
+  
+  return React.createElement(
+    AuthContext.Provider,
+    { value: authData },
+    props.children
   );
 }
 
-function useAuthLogic() {
+function useAuthLogic(): AuthContextType {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -135,8 +137,8 @@ function useAuthLogic() {
   };
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+export function useAuth(): AuthContextType {
+  const context = React.useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

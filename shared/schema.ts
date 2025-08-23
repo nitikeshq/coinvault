@@ -25,7 +25,7 @@ export const sessions = pgTable(
 );
 
 // User storage table
-export const users = pgTable("users", {
+export const users: any = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(),
   username: varchar("username").unique().notNull(),
@@ -45,7 +45,7 @@ export const users = pgTable("users", {
   totalInvestmentInr: decimal("total_investment_inr", { precision: 20, scale: 2 }).default("0"),
   // Referral fields
   referralCode: varchar("referral_code").unique(),
-  referredBy: varchar("referred_by").references(() => users.id),
+  referredBy: varchar("referred_by"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
