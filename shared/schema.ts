@@ -138,6 +138,8 @@ export const websiteSettings = pgTable("website_settings", {
   description: text("description"),
   primaryColor: varchar("primary_color").default("#6366f1"),
   secondaryColor: varchar("secondary_color").default("#8b5cf6"),
+  auditReportUrl: varchar("audit_report_url"),
+  whitepaperUrl: varchar("whitepaper_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

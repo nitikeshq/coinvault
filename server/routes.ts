@@ -569,6 +569,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin NFT minting endpoint
+  app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
+    try {
+      const { theme, rarity, quantity } = req.body;
+      
+      if (!theme || !rarity || !quantity || quantity < 1) {
+        return res.status(400).json({ message: 'Invalid input parameters' });
+      }
+      
+      const mintedNfts = [];
+      
+      for (let i = 0; i < quantity; i++) {
+        // Generate AI description based on theme and rarity
+        const description = `A ${rarity.toLowerCase()} ${theme.toLowerCase()} NFT with unique characteristics and mystical properties. This digital collectible represents the essence of ${theme} with ${rarity.toLowerCase()} traits that make it truly special.`;
+        
+        const nft = await storage.createNFTForCollection({
+          description,
+          rarity,
+          attributes: { theme, rarity }
+        });
+        mintedNfts.push(nft);
+      }
+      
+      res.json({ 
+        message: `Successfully created ${quantity} NFT(s)`,
+        nfts: mintedNfts
+      });
+    } catch (error) {
+      console.error("Error creating NFTs:", error);
+      res.status(500).json({ message: "Failed to create NFTs" });
+    }
+  });
+
   app.post('/api/nfts/mint', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;

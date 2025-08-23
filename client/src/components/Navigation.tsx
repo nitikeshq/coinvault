@@ -60,6 +60,33 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
             </div>
             
             <div className="flex space-x-6">
+              {(settings?.auditReportUrl || settings?.whitepaperUrl) && (
+                <div className="flex space-x-4">
+                  {settings?.auditReportUrl && (
+                    <a 
+                      href={settings.auditReportUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-blue-600 transition-colors font-medium text-gray-600"
+                      data-testid="nav-audit-report"
+                    >
+                      Audit Report
+                    </a>
+                  )}
+                  {settings?.whitepaperUrl && (
+                    <a 
+                      href={settings.whitepaperUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-blue-600 transition-colors font-medium text-gray-600"
+                      data-testid="nav-whitepaper"
+                    >
+                      Whitepaper
+                    </a>
+                  )}
+                  <div className="border-l border-gray-300 mx-2"></div>
+                </div>
+              )}
               <button 
                 onClick={() => onSectionChange('wallet')}
                 className={`hover:text-blue-600 transition-colors font-medium ${

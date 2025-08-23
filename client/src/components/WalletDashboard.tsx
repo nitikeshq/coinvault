@@ -65,6 +65,13 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     return num.toFixed(2);
   };
 
+  const calculateUsdValue = (tokenBalance: string, tokenPrice: string) => {
+    const balance = parseFloat(tokenBalance || "0");
+    const price = parseFloat(tokenPrice || "0");
+    const usdValue = balance * price;
+    return formatBalance(usdValue.toString());
+  };
+
   const handleDepositClick = () => {
     if (onSectionChange) {
       onSectionChange('deposit');
@@ -88,7 +95,7 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
           <div className="text-right">
             <p className="text-blue-100 text-sm">USD Value</p>
             <p className="text-xl font-semibold text-yellow-300" data-testid="text-usd-value">
-              ${formatBalance(balance?.usdValue || "0")}
+              ${calculateUsdValue(tokenBalance?.balance || balance?.balance || "0", tokenPrice?.priceUsd || "0")}
             </p>
             <p className="text-xs text-green-300 flex items-center justify-end">
               <TrendingUp className="h-3 w-3 mr-1" />

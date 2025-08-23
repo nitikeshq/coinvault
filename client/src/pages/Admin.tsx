@@ -61,6 +61,18 @@ export default function Admin() {
     isActive: true,
   });
 
+  // Website Settings State
+  const [websiteSettings, setWebsiteSettings] = useState({
+    siteName: "",
+    logoUrl: "",
+    faviconUrl: "",
+    description: "",
+    primaryColor: "#6366f1",
+    secondaryColor: "#8b5cf6",
+    auditReportUrl: "",
+    whitepaperUrl: "",
+  });
+
   // Fetch data
   const { data: currentConfig } = useQuery<any>({
     queryKey: ['/api/token/config'],
@@ -76,6 +88,10 @@ export default function Admin() {
 
   const { data: allSocialLinks = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/social-links'],
+  });
+
+  const { data: currentWebsiteSettings } = useQuery<any>({
+    queryKey: ['/api/website/settings'],
   });
 
   // Update token config mutation
@@ -100,6 +116,31 @@ export default function Admin() {
         return;
       }
       toast({ title: "Error", description: "Failed to update token configuration", variant: "destructive" });
+    },
+  });
+
+  // Website settings mutation
+  const updateWebsiteSettingsMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest('PUT', '/api/admin/website/settings', data);
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Website settings updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/website/settings'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({ title: "Error", description: "Failed to update website settings", variant: "destructive" });
     },
   });
 
@@ -192,6 +233,11 @@ export default function Admin() {
     updateConfigMutation.mutate(tokenConfig);
   };
 
+  const handleWebsiteSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateWebsiteSettingsMutation.mutate(websiteSettings);
+  };
+
   const handleNewsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createNewsMutation.mutate(newsForm);
@@ -218,6 +264,22 @@ export default function Admin() {
     }
   }, [currentConfig]);
 
+  // Load current website settings when available
+  useEffect(() => {
+    if (currentWebsiteSettings) {
+      setWebsiteSettings({
+        siteName: currentWebsiteSettings.siteName || "",
+        logoUrl: currentWebsiteSettings.logoUrl || "",
+        faviconUrl: currentWebsiteSettings.faviconUrl || "",
+        description: currentWebsiteSettings.description || "",
+        primaryColor: currentWebsiteSettings.primaryColor || "#6366f1",
+        secondaryColor: currentWebsiteSettings.secondaryColor || "#8b5cf6",
+        auditReportUrl: currentWebsiteSettings.auditReportUrl || "",
+        whitepaperUrl: currentWebsiteSettings.whitepaperUrl || "",
+      });
+    }
+  }, [currentWebsiteSettings]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-crypto-navy flex items-center justify-center">
@@ -237,8 +299,9 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="token" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 bg-crypto-dark">
+          <TabsList className="grid w-full grid-cols-8 bg-crypto-dark">
             <TabsTrigger value="token" data-testid="tab-token">Token Config</TabsTrigger>
+            <TabsTrigger value="website" data-testid="tab-website">Website</TabsTrigger>
             <TabsTrigger value="deposits" data-testid="tab-deposits">Deposits</TabsTrigger>
             <TabsTrigger value="news" data-testid="tab-news">News</TabsTrigger>
             <TabsTrigger value="social" data-testid="tab-social">Social Links</TabsTrigger>
@@ -308,6 +371,139 @@ export default function Admin() {
                     data-testid="button-update-config"
                   >
                     {updateConfigMutation.isPending ? "Updating..." : "Update Configuration"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Website Settings */}
+          <TabsContent value="website">
+            <Card className="bg-crypto-dark border-white/10">
+              <CardHeader>
+                <CardTitle>Website Settings</CardTitle>
+                <p className="text-gray-400 text-sm">
+                  Configure your website branding, colors, and important document links.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleWebsiteSettingsSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="siteName">Site Name</Label>
+                      <Input
+                        id="siteName"
+                        value={websiteSettings.siteName}
+                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, siteName: e.target.value }))}
+                        placeholder="e.g., CryptoWallet Pro"
+                        className="bg-crypto-gray border-white/20"
+                        data-testid="input-site-name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        value={websiteSettings.description}
+                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Brief description of your platform"
+                        className="bg-crypto-gray border-white/20"
+                        data-testid="input-description"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="logoUrl">Logo URL</Label>
+                      <Input
+                        id="logoUrl"
+                        value={websiteSettings.logoUrl}
+                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, logoUrl: e.target.value }))}
+                        placeholder="https://example.com/logo.png"
+                        className="bg-crypto-gray border-white/20"
+                        data-testid="input-logo-url"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="faviconUrl">Favicon URL</Label>
+                      <Input
+                        id="faviconUrl"
+                        value={websiteSettings.faviconUrl}
+                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, faviconUrl: e.target.value }))}
+                        placeholder="https://example.com/favicon.ico"
+                        className="bg-crypto-gray border-white/20"
+                        data-testid="input-favicon-url"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="primaryColor">Primary Color</Label>
+                      <Input
+                        id="primaryColor"
+                        type="color"
+                        value={websiteSettings.primaryColor}
+                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
+                        className="bg-crypto-gray border-white/20 h-10"
+                        data-testid="input-primary-color"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="secondaryColor">Secondary Color</Label>
+                      <Input
+                        id="secondaryColor"
+                        type="color"
+                        value={websiteSettings.secondaryColor}
+                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                        className="bg-crypto-gray border-white/20 h-10"
+                        data-testid="input-secondary-color"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/10 pt-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Important Documents</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="auditReportUrl">Audit Report URL</Label>
+                        <Input
+                          id="auditReportUrl"
+                          value={websiteSettings.auditReportUrl}
+                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, auditReportUrl: e.target.value }))}
+                          placeholder="https://example.com/audit-report.pdf"
+                          className="bg-crypto-gray border-white/20"
+                          data-testid="input-audit-report-url"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Link to your smart contract audit report (appears in header)
+                        </p>
+                      </div>
+                      <div>
+                        <Label htmlFor="whitepaperUrl">Whitepaper URL</Label>
+                        <Input
+                          id="whitepaperUrl"
+                          value={websiteSettings.whitepaperUrl}
+                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, whitepaperUrl: e.target.value }))}
+                          placeholder="https://example.com/whitepaper.pdf"
+                          className="bg-crypto-gray border-white/20"
+                          data-testid="input-whitepaper-url"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Link to your project whitepaper (appears in header)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="bg-crypto-blue hover:bg-blue-600"
+                    disabled={updateWebsiteSettingsMutation.isPending}
+                    data-testid="button-update-website-settings"
+                  >
+                    {updateWebsiteSettingsMutation.isPending ? "Updating..." : "Update Website Settings"}
                   </Button>
                 </form>
               </CardContent>
