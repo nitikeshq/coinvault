@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, User, LogOut, Settings } from "lucide-react";
+import { Wallet, User, LogOut, Settings, Copy } from "lucide-react";
 import { Link } from "wouter";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavigationProps {
   activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin';
@@ -12,9 +13,20 @@ interface NavigationProps {
 
 export default function Navigation({ activeSection, onSectionChange, user, isAdmin }: NavigationProps) {
   const { settings } = useWebsiteSettings();
+  const { toast } = useToast();
   
   const handleLogout = () => {
     window.location.href = "/api/logout";
+  };
+
+  const copyWalletAddress = () => {
+    if (user?.walletAddress) {
+      navigator.clipboard.writeText(user.walletAddress);
+      toast({
+        title: "Copied!",
+        description: "Wallet address copied to clipboard",
+      });
+    }
   };
 
   return (
@@ -79,9 +91,15 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
             
             <div className="flex items-center space-x-3">
               {user?.walletAddress && (
-                <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full font-mono" data-testid="text-wallet-address">
-                  {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
-                </div>
+                <button
+                  onClick={copyWalletAddress}
+                  className="text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full font-mono transition-colors flex items-center space-x-1 cursor-pointer"
+                  data-testid="button-copy-wallet-address"
+                  title="Click to copy full wallet address"
+                >
+                  <span>{user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}</span>
+                  <Copy className="h-3 w-3" />
+                </button>
               )}
               {isAdmin && (
                 <Button 
