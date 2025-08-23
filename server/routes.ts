@@ -146,6 +146,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Token config endpoint
+  app.get('/api/token/config', async (req, res) => {
+    try {
+      const config = await storage.getActiveTokenConfig();
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get token config' });
+    }
+  });
+
+  // Token info endpoint for contract address
+  app.get('/api/token/info/:address', async (req, res) => {
+    try {
+      const { address } = req.params;
+      // Mock token info for testing - in real app this would call blockchain
+      const tokenInfo = {
+        name: "Sample Token",
+        symbol: "SMPL",
+        decimals: 18
+      };
+      res.json(tokenInfo);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch token info' });
+    }
+  });
+
+  // Admin dapps endpoint
+  app.get('/api/admin/dapps', requireAdmin, async (req, res) => {
+    try {
+      const dapps = await storage.getDappsSettings();
+      res.json(dapps);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get dapps' });
+    }
+  });
+
   // Admin users endpoint
   app.get('/api/admin/users', requireAdmin, async (req, res) => {
     try {
@@ -157,12 +193,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin token config endpoint
+  app.put('/api/admin/token/config', requireAdmin, async (req: any, res) => {
+    try {
+      const config = await storage.updateTokenConfig(req.body);
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to update token config' });
+    }
+  });
+
   // Admin presale endpoints
   app.put('/api/admin/presale/config', requireAdmin, async (req: any, res) => {
     try {
+      console.log('Presale config update attempt:', req.body);
       const config = await storage.updatePresaleConfig(req.body);
       res.json(config);
     } catch (error) {
+      console.error('Presale config update error:', error);
       res.status(500).json({ message: 'Failed to update presale config' });
     }
   });
