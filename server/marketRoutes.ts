@@ -41,9 +41,9 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
 
     // Verify user owns the NFT and get the actual NFT collection ID
     const userNfts = await storage.getUserNfts(userId);
-    let actualNftId = null;
+    let actualNftId: string | null = null;
     
-    const userNft = userNfts.find(userNft => {
+    const userNft = userNfts.find((userNft: any) => {
       // Check if the NFT matches by user_nft ID or actual NFT ID
       if (userNft.id === nftId || userNft.nftId === nftId) {
         actualNftId = userNft.nftId; // Get the actual NFT collection ID
@@ -52,7 +52,7 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
       return false;
     });
     
-    if (!userNft) {
+    if (!userNft || !actualNftId) {
       return res.status(403).json({ error: "You don't own this NFT" });
     }
 
