@@ -341,6 +341,7 @@ export const nftListings = pgTable("nft_listings", {
   minPrice: decimal("min_price", { precision: 18, scale: 8 }).notNull(), // Starting price in tokens
   currentHighestBid: decimal("current_highest_bid", { precision: 18, scale: 8 }).default("0"),
   highestBidderId: varchar("highest_bidder_id").references(() => users.id),
+  auctionEndDate: timestamp("auction_end_date"),
   isActive: boolean("is_active").default(true),
   soldAt: timestamp("sold_at"),
   createdAt: timestamp("created_at").defaultNow(),

@@ -16,11 +16,15 @@ const imageManager = new ImageManager();
 // NFT Marketplace Routes
 router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const { nftId, minPrice } = req.body;
+    const { nftId, minPrice, auctionEndDate } = req.body;
     const userId = req.session?.user?.id;
 
     if (!userId || !nftId || !minPrice) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (auctionEndDate && new Date(auctionEndDate) <= new Date()) {
+      return res.status(400).json({ error: "Auction end date must be in the future" });
     }
 
     // Verify user owns the NFT
@@ -31,7 +35,7 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
       return res.status(403).json({ error: "You don't own this NFT" });
     }
 
-    const listing = await storage.listNFTForSale(userId, nftId, minPrice);
+    const listing = await storage.listNFTForSale(userId, nftId, minPrice, auctionEndDate);
     
     res.status(201).json({
       success: true,
@@ -53,25 +57,53 @@ router.post("/api/marketplace/nft/bid", requireAuth, async (req: AuthRequest, re
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check user balance (simplified - in real app check if they have enough tokens)
+    // Get listing to check if auction is still active
+    const listings = await storage.getActiveNFTListings();
+    const listing = listings.find((l: any) => l.listing.id === listingId);
+    
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found or no longer active" });
+    }
+
+    // Check if auction has ended
+    if (listing.listing.auctionEndDate && new Date(listing.listing.auctionEndDate) <= new Date()) {
+      return res.status(400).json({ error: "Auction has already ended" });
+    }
+
+    // Check minimum bid amount
+    const currentHighestBid = parseFloat(listing.listing.currentHighestBid || "0");
+    const minPrice = parseFloat(listing.listing.minPrice);
+    const requiredBid = Math.max(currentHighestBid + 0.01, minPrice);
+    
+    if (parseFloat(bidAmount) < requiredBid) {
+      return res.status(400).json({ 
+        error: `Bid must be at least $${requiredBid.toFixed(2)}`,
+        minimumBid: requiredBid
+      });
+    }
+
+    // Check user balance - they need bid amount + platform fee in tokens
     const userBalance = await storage.getUserBalance(userId);
     const balanceAmount = userBalance?.balance || "0";
     const usdAmount = userBalance?.usdValue || "0";
+    const totalRequired = parseFloat(bidAmount) + parseFloat(platformFeeAmount);
     
-    if (!userBalance || parseFloat(balanceAmount) < parseFloat(bidAmount) + parseFloat(platformFeeAmount)) {
-      return res.status(400).json({ error: "Insufficient balance for bid and platform fee" });
+    if (!userBalance || parseFloat(balanceAmount) < totalRequired) {
+      return res.status(400).json({ 
+        error: `Insufficient balance. You need $${totalRequired.toFixed(2)} (bid + $1 fee) but only have $${parseFloat(balanceAmount).toFixed(2)}`,
+        required: totalRequired,
+        current: parseFloat(balanceAmount)
+      });
     }
 
-    // Deduct platform fee from user balance
-    const newBalance = (parseFloat(balanceAmount) - parseFloat(platformFeeAmount)).toString();
-    await storage.updateUserBalance(userId, newBalance, usdAmount);
-
+    // Reserve the bid amount + fee (don't actually deduct until auction ends)
     await storage.placeBidOnNFT(listingId, userId, bidAmount, platformFeeAmount);
     
     res.json({
       success: true,
       message: "Bid placed successfully",
-      platformFeePaid: platformFeeAmount
+      platformFeePaid: platformFeeAmount,
+      bidAmount: parseFloat(bidAmount)
     });
   } catch (error) {
     console.error("Error placing bid:", error);
@@ -86,6 +118,45 @@ router.get("/api/marketplace/nft/listings", async (req: Request, res: Response) 
   } catch (error) {
     console.error("Error fetching NFT listings:", error);
     res.status(500).json({ error: "Failed to fetch listings" });
+  }
+});
+
+// Get bids for a specific listing (sale detail page)
+router.get("/api/marketplace/nft/listing/:listingId/bids", async (req: Request, res: Response) => {
+  try {
+    const { listingId } = req.params;
+    
+    if (!listingId) {
+      return res.status(400).json({ error: "Listing ID is required" });
+    }
+
+    const bids = await storage.getListingBids(listingId);
+    res.json(bids);
+  } catch (error) {
+    console.error("Error fetching listing bids:", error);
+    res.status(500).json({ error: "Failed to fetch listing bids" });
+  }
+});
+
+// Get sale details for a specific listing
+router.get("/api/marketplace/nft/listing/:listingId", async (req: Request, res: Response) => {
+  try {
+    const { listingId } = req.params;
+    
+    if (!listingId) {
+      return res.status(400).json({ error: "Listing ID is required" });
+    }
+
+    const listing = await storage.getListingDetails(listingId);
+    
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+
+    res.json(listing);
+  } catch (error) {
+    console.error("Error fetching listing details:", error);
+    res.status(500).json({ error: "Failed to fetch listing details" });
   }
 });
 

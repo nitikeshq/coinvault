@@ -816,13 +816,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Marketplace methods (NFT)
-  async listNFTForSale(sellerId: string, nftId: string, minPrice: string) {
+  async listNFTForSale(sellerId: string, nftId: string, minPrice: string, auctionEndDate?: string) {
     const [listing] = await db
       .insert(nftListings)
       .values({
         nftId,
         sellerId,
         minPrice,
+        auctionEndDate: auctionEndDate ? new Date(auctionEndDate) : undefined,
         isActive: true,
       })
       .returning();
@@ -859,6 +860,36 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(nftListings.id, listingId));
     });
+  }
+
+  async getListingBids(listingId: string) {
+    const bids = await db
+      .select({
+        bid: nftBids,
+        bidder: users
+      })
+      .from(nftBids)
+      .innerJoin(users, eq(nftBids.bidderId, users.id))
+      .where(eq(nftBids.listingId, listingId))
+      .orderBy(desc(nftBids.bidAmount), desc(nftBids.createdAt));
+
+    return bids;
+  }
+
+  async getListingDetails(listingId: string) {
+    const [listing] = await db
+      .select({
+        listing: nftListings,
+        nft: nftCollection,
+        seller: users
+      })
+      .from(nftListings)
+      .innerJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+      .innerJoin(users, eq(nftListings.sellerId, users.id))
+      .where(eq(nftListings.id, listingId))
+      .limit(1);
+
+    return listing;
   }
 
   async getActiveNFTListings() {

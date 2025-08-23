@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Heart, ThumbsDown, TrendingUp, Trophy, Zap, Clock, Star } from "lucide-react";
+import { Heart, ThumbsDown, TrendingUp, Trophy, Zap, Clock, Star, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -127,20 +127,40 @@ export default function MarketSection() {
                           ${formatBalance(listing.listing.currentHighestBid || "0")}
                         </span>
                       </div>
-                      <Button 
-                        size="sm" 
-                        className="w-full"
-                        data-testid={`button-bid-${listing.listing.id}`}
-                        onClick={() => {
-                          toast({
-                            title: "Bidding Feature",
-                            description: "Bidding system will be implemented with $1 platform fee",
-                          });
-                        }}
-                      >
-                        <Zap className="h-4 w-4 mr-2" />
-                        Place Bid ($1 fee)
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <Eye className="h-4 w-4 mr-1" />
+                              Details
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Sale Details</DialogTitle>
+                            </DialogHeader>
+                            <SaleDetailsDialog listing={listing.listing} nft={listing.nft} seller={listing.seller} />
+                          </DialogContent>
+                        </Dialog>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              data-testid={`button-bid-${listing.listing.id}`}
+                            >
+                              <Zap className="h-4 w-4 mr-1" />
+                              Place Bid
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Place Bid</DialogTitle>
+                            </DialogHeader>
+                            <BidDialog listing={listing.listing} nft={listing.nft} />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -206,20 +226,40 @@ export default function MarketSection() {
                           ${formatBalance(listing.listing.currentHighestBid || "0")}
                         </span>
                       </div>
-                      <Button 
-                        size="sm" 
-                        className="w-full"
-                        data-testid={`button-bid-user-${listing.listing.id}`}
-                        onClick={() => {
-                          toast({
-                            title: "Bidding Feature",
-                            description: "Bidding system will be implemented with $1 platform fee",
-                          });
-                        }}
-                      >
-                        <Zap className="h-4 w-4 mr-2" />
-                        Place Bid ($1 fee)
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <Eye className="h-4 w-4 mr-1" />
+                              Details
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Sale Details</DialogTitle>
+                            </DialogHeader>
+                            <SaleDetailsDialog listing={listing.listing} nft={listing.nft} seller={listing.seller} />
+                          </DialogContent>
+                        </Dialog>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              data-testid={`button-bid-user-${listing.listing.id}`}
+                            >
+                              <Zap className="h-4 w-4 mr-1" />
+                              Place Bid
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Place Bid</DialogTitle>
+                            </DialogHeader>
+                            <BidDialog listing={listing.listing} nft={listing.nft} />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -413,10 +453,14 @@ export default function MarketSection() {
 
   // NFT Listing Mutation
   const listNFTMutation = useMutation({
-    mutationFn: async ({ nftId, minPrice }: { nftId: string, minPrice: string }) => {
+    mutationFn: async ({ nftId, minPrice, auctionEndDate }: { nftId: string, minPrice: string, auctionEndDate?: string }) => {
       return apiRequest(`/api/marketplace/nft/list`, {
         method: 'POST',
-        body: JSON.stringify({ nftId, minPrice: parseFloat(minPrice) }),
+        body: JSON.stringify({ 
+          nftId, 
+          minPrice: parseFloat(minPrice),
+          auctionEndDate 
+        }),
       });
     },
     onSuccess: () => {
@@ -475,6 +519,7 @@ export default function MarketSection() {
   // List NFT Dialog Component
   const ListNFTDialog = ({ nft, onClose }: { nft: any, onClose: () => void }) => {
     const [price, setPrice] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     const handleSubmit = () => {
       if (!price || parseFloat(price) <= 0) {
@@ -486,12 +531,33 @@ export default function MarketSection() {
         return;
       }
 
+      if (!endDate) {
+        toast({
+          title: "End Date Required",
+          description: "Please select when the auction should end",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const auctionEndDate = new Date(endDate);
+      if (auctionEndDate <= new Date()) {
+        toast({
+          title: "Invalid End Date",
+          description: "Auction end date must be in the future",
+          variant: "destructive",
+        });
+        return;
+      }
+
       listNFTMutation.mutate({ 
         nftId: nft.nftId || nft.id, 
-        minPrice: price 
+        minPrice: price,
+        auctionEndDate: auctionEndDate.toISOString()
       });
       onClose();
       setPrice('');
+      setEndDate('');
     };
 
     const nftData = nft.nft || nft;
@@ -510,17 +576,32 @@ export default function MarketSection() {
             <Badge variant="outline">{nftData?.rarity || 'Common'}</Badge>
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="price">Minimum Price ($)</Label>
-          <Input
-            id="price"
-            type="number"
-            step="0.01"
-            min="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="Enter minimum price"
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="price">Minimum Price ($)</Label>
+            <Input
+              id="price"
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Enter minimum price"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="endDate">Auction End Date & Time</Label>
+            <Input
+              id="endDate"
+              type="datetime-local"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+            />
+            <p className="text-xs text-gray-500">
+              When the auction ends, the highest bidder will automatically win the NFT
+            </p>
+          </div>
         </div>
         <div className="flex justify-end space-x-2">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -530,6 +611,233 @@ export default function MarketSection() {
           >
             {listNFTMutation.isPending ? 'Listing...' : 'List NFT'}
           </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Bidding Mutation
+  const bidMutation = useMutation({
+    mutationFn: async ({ listingId, bidAmount }: { listingId: string, bidAmount: string }) => {
+      return apiRequest(`/api/marketplace/nft/bid`, {
+        method: 'POST',
+        body: JSON.stringify({ listingId, bidAmount: parseFloat(bidAmount) }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/listings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/platform-listings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/user-generated-listings'] });
+      toast({
+        title: "Success!",
+        description: "Your bid has been placed successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to place bid",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Bid Dialog Component
+  const BidDialog = ({ listing, nft, onClose }: { listing: any, nft: any, onClose?: () => void }) => {
+    const [bidAmount, setBidAmount] = useState('');
+
+    const handleSubmit = () => {
+      const currentHighestBid = parseFloat(listing.currentHighestBid || "0");
+      const minPrice = parseFloat(listing.minPrice);
+      const requiredBid = Math.max(currentHighestBid + 0.01, minPrice);
+      
+      if (!bidAmount || parseFloat(bidAmount) < requiredBid) {
+        toast({
+          title: "Invalid Bid Amount",
+          description: `Bid must be at least $${requiredBid.toFixed(2)}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      bidMutation.mutate({ 
+        listingId: listing.id, 
+        bidAmount 
+      });
+      setBidAmount('');
+      if (onClose) onClose();
+    };
+
+    const currentHighestBid = parseFloat(listing.currentHighestBid || "0");
+    const minPrice = parseFloat(listing.minPrice);
+    const requiredBid = Math.max(currentHighestBid + 0.01, minPrice);
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+            {nft?.imageUrl ? (
+              <img src={nft.imageUrl} alt={nft.name} className="w-full h-full object-cover rounded-lg" />
+            ) : (
+              <Star className="h-8 w-8 text-purple-400" />
+            )}
+          </div>
+          <div>
+            <h3 className="font-semibold">{nft?.name}</h3>
+            <Badge variant="outline">{nft?.rarity || 'Common'}</Badge>
+          </div>
+        </div>
+        
+        <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Current Highest Bid:</span>
+            <span className="font-medium">${currentHighestBid.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Minimum Bid Required:</span>
+            <span className="font-medium text-green-600">${requiredBid.toFixed(2)}</span>
+          </div>
+          <div className="text-xs text-gray-500">
+            Platform fee: $1.00 (will be deducted from your balance)
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="bidAmount">Your Bid Amount ($)</Label>
+          <Input
+            id="bidAmount"
+            type="number"
+            step="0.01"
+            min={requiredBid}
+            value={bidAmount}
+            onChange={(e) => setBidAmount(e.target.value)}
+            placeholder={`Enter at least $${requiredBid.toFixed(2)}`}
+          />
+        </div>
+        
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button 
+            onClick={handleSubmit}
+            disabled={bidMutation.isPending}
+          >
+            {bidMutation.isPending ? 'Placing Bid...' : 'Place Bid'}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Sale Details Dialog Component  
+  const SaleDetailsDialog = ({ listing, nft, seller }: { listing: any, nft: any, seller: any }) => {
+    const { data: listingBids = [] } = useQuery<any[]>({
+      queryKey: [`/api/marketplace/nft/listing/${listing.id}/bids`],
+    });
+
+    const auctionEndDate = listing.auctionEndDate ? new Date(listing.auctionEndDate) : null;
+    const isExpired = auctionEndDate && auctionEndDate <= new Date();
+
+    return (
+      <div className="space-y-6">
+        {/* NFT Info */}
+        <div className="flex items-center space-x-4">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+            {nft?.imageUrl ? (
+              <img src={nft.imageUrl} alt={nft.name} className="w-full h-full object-cover rounded-lg" />
+            ) : (
+              <Star className="h-10 w-10 text-purple-400" />
+            )}
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold">{nft?.name}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="outline">{nft?.rarity || 'Common'}</Badge>
+              <Badge variant="secondary">
+                {nft?.isUserGenerated ? 'User-Generated' : 'Limited Platform'}
+              </Badge>
+            </div>
+            <p className="text-sm text-gray-600 mt-1">Sold by: {seller?.name}</p>
+          </div>
+        </div>
+
+        {/* Auction Info */}
+        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div>
+            <span className="text-sm text-gray-500">Minimum Price</span>
+            <p className="font-semibold">${parseFloat(listing.minPrice).toFixed(2)}</p>
+          </div>
+          <div>
+            <span className="text-sm text-gray-500">Current Highest Bid</span>
+            <p className="font-semibold text-green-600">
+              ${parseFloat(listing.currentHighestBid || "0").toFixed(2)}
+            </p>
+          </div>
+          {auctionEndDate && (
+            <>
+              <div>
+                <span className="text-sm text-gray-500">Auction Status</span>
+                <p className={`font-semibold ${isExpired ? 'text-red-600' : 'text-blue-600'}`}>
+                  {isExpired ? 'ENDED' : 'ACTIVE'}
+                </p>
+              </div>
+              <div>
+                <span className="text-sm text-gray-500">
+                  {isExpired ? 'Ended On' : 'Ends On'}
+                </span>
+                <p className="font-semibold">
+                  {auctionEndDate.toLocaleDateString()} {auctionEndDate.toLocaleTimeString()}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Bid History */}
+        <div>
+          <h4 className="font-semibold mb-3 flex items-center">
+            <Trophy className="h-5 w-5 mr-2" />
+            Bid History
+          </h4>
+          {listingBids.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Zap className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+              <p>No bids placed yet</p>
+              <p className="text-sm">Be the first to bid on this NFT!</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {listingBids.map((bidItem: any, index: number) => (
+                <div
+                  key={bidItem.bid.id}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    index === 0 ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                      index === 0 ? 'bg-green-500' : 'bg-gray-400'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium">{bidItem.bidder.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(bidItem.bid.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-semibold ${index === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                      ${parseFloat(bidItem.bid.bidAmount).toFixed(2)}
+                    </p>
+                    {index === 0 && (
+                      <Badge variant="default" className="text-xs">Highest Bid</Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
