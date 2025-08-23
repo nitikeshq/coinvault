@@ -127,46 +127,49 @@ export default function MarketSection() {
                 </p>
               </div>
             ) : (
-              myNFTs.map((userNft: any) => (
-                <Card key={userNft.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="aspect-square bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg mb-4 flex items-center justify-center">
-                      {userNft.nft.imageUrl ? (
-                        <img 
-                          src={userNft.nft.imageUrl} 
-                          alt={userNft.nft.name}
-                          className="w-full h-full object-cover rounded-lg"
-                          data-testid={`owned-nft-image-${userNft.nft.id}`}
-                        />
-                      ) : (
-                        <Star className="h-12 w-12 text-purple-400" />
-                      )}
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2" data-testid={`owned-nft-name-${userNft.nft.id}`}>
-                      {userNft.nft.name}
-                    </h3>
-                    <Badge variant="outline" className="mb-2">
-                      {userNft.nft.rarity}
-                    </Badge>
-                    <div className="space-y-2">
-                      <Button 
-                        size="sm" 
-                        className="w-full"
-                        data-testid={`button-list-${userNft.nft.id}`}
-                        onClick={() => {
-                          toast({
-                            title: "List NFT",
-                            description: "NFT listing feature will allow you to set a price and list for sale",
-                          });
-                        }}
-                      >
-                        <TrendingUp className="h-4 w-4 mr-2" />
-                        List for Sale
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+              myNFTs.map((userNft: any) => {
+                const nft = userNft.nft || userNft; // Handle both nested and flat structure
+                return (
+                  <Card key={userNft.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="aspect-square bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg mb-4 flex items-center justify-center">
+                        {nft?.imageUrl ? (
+                          <img 
+                            src={nft.imageUrl} 
+                            alt={nft.name || 'NFT'}
+                            className="w-full h-full object-cover rounded-lg"
+                            data-testid={`owned-nft-image-${nft.id || userNft.id}`}
+                          />
+                        ) : (
+                          <Star className="h-12 w-12 text-purple-400" />
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-lg mb-2" data-testid={`owned-nft-name-${nft?.id || userNft.id}`}>
+                        {nft?.name || `NFT #${nft?.tokenId || userNft.id?.slice(-4)}`}
+                      </h3>
+                      <Badge variant="outline" className="mb-2">
+                        {nft?.rarity || 'Common'}
+                      </Badge>
+                      <div className="space-y-2">
+                        <Button 
+                          size="sm" 
+                          className="w-full"
+                          data-testid={`button-list-${nft?.id || userNft.id}`}
+                          onClick={() => {
+                            toast({
+                              title: "List NFT",
+                              description: "NFT listing feature will allow you to set a price and list for sale",
+                            });
+                          }}
+                        >
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          List for Sale
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </TabsContent>
