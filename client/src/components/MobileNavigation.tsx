@@ -53,35 +53,35 @@ export default function MobileNavigation({ activeSection, onSectionChange, user,
         <div className="px-3 py-2">
           <div className="flex justify-between items-center">
             {/* Logo and Site Name */}
-            <div className="flex items-center space-x-2 flex-shrink-0 max-w-[200px]">
+            <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[120px]">
               {settings?.logoUrl ? (
                 <img 
                   src={settings.logoUrl} 
-                  alt={`${settings?.siteName || 'CryptoWallet Pro'} Logo`} 
-                  className="w-7 h-7 rounded object-cover"
+                  alt={`${settings?.siteName || 'Crypto Wallet'} Logo`} 
+                  className="w-7 h-7 rounded object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
+                <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center flex-shrink-0">
                   <Wallet className="text-white h-4 w-4" />
                 </div>
               )}
-              <h1 className="text-base font-bold text-gray-800 truncate">
-                {settings?.siteName || "CryptoWallet Pro"}
+              <h1 className="text-sm font-bold text-gray-800 truncate">
+                {settings?.siteName || "Crypto Wallet"}
               </h1>
             </div>
 
             {/* Documentation Links & User Actions */}
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 flex-shrink-0">
               {/* Documentation Dropdown */}
               {(settings?.auditReportUrl || settings?.whitepaperUrl) && (
                 <div className="relative">
                   <button
                     onClick={() => setShowDocMenu(!showDocMenu)}
-                    className="p-2 text-gray-600 hover:text-blue-600 rounded-full hover:bg-gray-100"
+                    className="p-1.5 text-gray-600 hover:text-blue-600 rounded-full hover:bg-gray-100"
                     data-testid="mobile-docs-toggle"
                     aria-label="Documentation"
                   >
-                    <FileText className="h-5 w-5" />
+                    <FileText className="h-4 w-4" />
                   </button>
                   {showDocMenu && (
                     <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-32 z-50">
@@ -118,24 +118,24 @@ export default function MobileNavigation({ activeSection, onSectionChange, user,
               {isAdmin && (
                 <button 
                   onClick={() => onSectionChange('admin')}
-                  className={`p-2 rounded-full transition-colors ${
+                  className={`p-1.5 rounded-full transition-colors ${
                     activeSection === 'admin' ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600 hover:bg-gray-100'
                   }`}
                   data-testid="mobile-admin-button"
                   aria-label="Admin Panel"
                 >
-                  <Settings className="h-5 w-5" />
+                  <Settings className="h-4 w-4" />
                 </button>
               )}
 
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                className="p-1.5 text-red-600 hover:bg-red-50 rounded-full transition-colors"
                 data-testid="mobile-logout-button"
                 aria-label="Logout"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-4 w-4" />
               </button>
             </div>
           </div>

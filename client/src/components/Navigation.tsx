@@ -50,7 +50,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               {settings?.logoUrl ? (
                 <img 
                   src={settings.logoUrl} 
-                  alt={`${settings?.siteName || 'CryptoWallet Pro'} Logo`} 
+                  alt={`${settings?.siteName || 'Crypto Wallet'} Logo`} 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover"
                 />
               ) : (
@@ -58,7 +58,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                   <Wallet className="text-white h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               )}
-              <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{settings?.siteName || "CryptoWallet Pro"}</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{settings?.siteName || "Crypto Wallet"}</h1>
             </div>
             
             {/* Mobile Navigation */}
@@ -186,39 +186,6 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                 </button>
               </div>
 
-              {/* Mobile Navigation Buttons - Compact */}
-              <div className="flex lg:hidden space-x-1">
-                <button 
-                  onClick={() => onSectionChange('wallet')}
-                  className={`p-2 rounded transition-colors ${
-                    activeSection === 'wallet' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                  data-testid="nav-wallet-mobile"
-                  title="Wallet"
-                >
-                  <Wallet className="h-4 w-4" />
-                </button>
-                <button 
-                  onClick={() => onSectionChange('deposit')}
-                  className={`p-2 rounded transition-colors ${
-                    activeSection === 'deposit' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                  data-testid="nav-deposit-mobile"
-                  title="Deposit"
-                >
-                  <Copy className="h-4 w-4" />
-                </button>
-                <button 
-                  onClick={() => onSectionChange('market')}
-                  className={`p-2 rounded transition-colors ${
-                    activeSection === 'market' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                  data-testid="nav-market-mobile"
-                  title="Market"
-                >
-                  <TrendingUp className="h-4 w-4" />
-                </button>
-              </div>
             </div>
             
             <div className="flex items-center space-x-2 sm:space-x-3">

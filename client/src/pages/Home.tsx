@@ -27,7 +27,7 @@ export default function Home() {
 
   // Update document title based on website settings
   useEffect(() => {
-    document.title = websiteSettings?.siteName || "CryptoWallet Pro";
+    document.title = websiteSettings?.siteName || "Crypto Wallet";
   }, [websiteSettings]);
 
   const renderSection = () => {
@@ -109,7 +109,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">{websiteSettings?.siteName || "CryptoWallet Pro"}</h3>
+                    <h3 className="text-xl font-bold text-gray-800">{websiteSettings?.siteName || "Crypto Wallet"}</h3>
                     <p className="text-sm text-purple-600">Professional Edition</p>
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function Home() {
             
             <div className="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
               <div className="flex items-center space-x-6">
-                <p className="text-sm text-gray-500">&copy; 2024 {websiteSettings?.siteName || "CryptoWallet Pro"}. All rights reserved.</p>
+                <p className="text-sm text-gray-500">&copy; 2024 {websiteSettings?.siteName || "Crypto Wallet"}. All rights reserved.</p>
                 <div className="hidden md:flex items-center space-x-4">
                   <span className="px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full border border-green-200">
                     Secure & Encrypted

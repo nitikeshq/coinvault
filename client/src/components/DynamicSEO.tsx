@@ -7,7 +7,7 @@ export function DynamicSEO() {
   useEffect(() => {
     if (settings) {
       // Update title
-      const title = settings.seoTitle || `${settings.siteName} - Secure BEP-20 Token Wallet`;
+      const title = settings.seoTitle || `${settings.siteName || 'Crypto Wallet'} - Secure BEP-20 Token Wallet`;
       document.title = title;
       
       // Update meta description
@@ -58,7 +58,7 @@ export function DynamicSEO() {
       // Update apple-mobile-web-app-title
       let appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
       if (appleTitle) {
-        appleTitle.setAttribute('content', settings.siteName);
+        appleTitle.setAttribute('content', settings.siteName || 'Crypto Wallet');
       }
     }
   }, [settings]);

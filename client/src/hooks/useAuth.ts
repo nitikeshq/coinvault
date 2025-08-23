@@ -63,7 +63,7 @@ export function useAuth() {
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/me"], data.user);
       toast({
-        title: "Welcome to CryptoWallet Pro!",
+        title: "Welcome to your Crypto Wallet!",
         description: "Your account has been created successfully.",
       });
     },

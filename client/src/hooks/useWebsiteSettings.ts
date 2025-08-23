@@ -9,7 +9,7 @@ export function useWebsiteSettings() {
 
   // Return default values if no settings found
   const defaultSettings = {
-    siteName: "CryptoWallet Pro",
+    siteName: "Crypto Wallet",
     logoUrl: "",
     faviconUrl: "",
     description: "Secure BEP-20 cryptocurrency wallet with PancakeSwap integration",
