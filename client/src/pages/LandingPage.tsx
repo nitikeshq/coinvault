@@ -254,6 +254,14 @@ export default function LandingPage() {
                 </h1>
               </div>
               <div className="flex items-center space-x-4">
+                <Button 
+                  onClick={() => window.location.href = '/api/login'}
+                  variant="outline" 
+                  className="border-white/30 text-white hover:bg-white/10"
+                  data-testid="button-members-login"
+                >
+                  Members
+                </Button>
                 <Link href="/register">
                   <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                     Join Presale
