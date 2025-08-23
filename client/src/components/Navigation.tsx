@@ -23,7 +23,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
     retry: false,
   });
 
-  const hasDappsEnabled = enabledDapps.length > 0;
+  const hasDappsEnabled = enabledDapps.length > 0 || isAdmin; // Show dapps for admin always
   
   const handleLogout = () => {
     window.location.href = "/api/logout";

@@ -136,6 +136,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dapps settings endpoint
+  app.get('/api/dapps/settings', async (req, res) => {
+    try {
+      const settings = await storage.getDappSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get dapps settings' });
+    }
+  });
+
   // Admin presale endpoints
   app.put('/api/admin/presale/config', requireAdmin, async (req: any, res) => {
     try {
