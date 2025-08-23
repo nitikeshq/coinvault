@@ -276,8 +276,21 @@ export const requireAuth = (req: any, res: any, next: any) => {
 };
 
 export const requireAdmin = (req: any, res: any, next: any) => {
+  console.log('🔐 requireAdmin middleware hit!');
+  console.log('🔐 req.isAuthenticated():', req.isAuthenticated());
+  console.log('🔐 req.user:', req.user);
+  console.log('🔐 req.user?.isActive:', req.user?.isActive);
+  console.log('🔐 req.user?.isAdmin:', req.user?.isAdmin);
+  
   if (req.isAuthenticated() && req.user?.isActive && req.user?.isAdmin) {
+    console.log('🔐 PASSED: Admin access granted');
     return next();
   }
+  
+  console.log('🔐 BLOCKED: Admin access denied');
+  console.log('🔐 - isAuthenticated:', req.isAuthenticated());
+  console.log('🔐 - isActive:', req.user?.isActive);
+  console.log('🔐 - isAdmin:', req.user?.isAdmin);
+  
   res.status(403).json({ message: 'Admin access required' });
 };

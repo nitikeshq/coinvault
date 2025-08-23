@@ -1135,11 +1135,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
+    console.log('🔥 MINT NFT ENDPOINT HIT!');
+    console.log('🔥 Raw req.body:', req.body);
+    console.log('🔥 req.body type:', typeof req.body);
+    console.log('🔥 req.body keys:', req.body ? Object.keys(req.body) : 'NO BODY');
+    
     try {
       console.log('=== MINT NFT REQUEST DEBUG ===');
       console.log('Full request body:', JSON.stringify(req.body, null, 2));
-      console.log('Request body keys:', Object.keys(req.body));
-      console.log('Request body types:', Object.keys(req.body).map(key => `${key}: ${typeof req.body[key]}`));
+      console.log('Request body keys:', Object.keys(req.body || {}));
+      console.log('Request body types:', Object.keys(req.body || {}).map(key => `${key}: ${typeof req.body[key]}`));
       
       const { traits, rarity, quantity = 1, referenceImageUrl, skipUniquenessCheck = false } = req.body;
       
@@ -1312,8 +1317,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ message: `Successfully created ${quantity} high-quality NFT(s) with AI-generated images and metadata`, nfts: results });
     } catch (error) {
-      console.error("Error minting NFT:", error);
-      res.status(500).json({ message: "Failed to mint NFT" });
+      console.error('🚨 MINT NFT ERROR CAUGHT:', error);
+      console.error('🚨 Error type:', typeof error);
+      console.error('🚨 Error message:', error.message);
+      console.error('🚨 Error stack:', error.stack);
+      res.status(500).json({ message: error.message || "Failed to mint NFT" });
     }
   });
 
