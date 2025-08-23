@@ -17,6 +17,14 @@
     
     <!-- SEO -->
     <title>CryptoWallet Pro - Secure BEP-20 Token Wallet</title>
+    <script>
+      // Update title dynamically once website settings are loaded
+      window.updateTitle = function(siteName) {
+        if (siteName && siteName !== 'CryptoWallet Pro') {
+          document.title = siteName + ' - Secure BEP-20 Token Wallet';
+        }
+      };
+    </script>
     <meta name="description" content="Secure cryptocurrency wallet for BEP-20 tokens with NFT marketplace, trading, and DeFi features">
     <meta name="keywords" content="cryptocurrency, wallet, BEP-20, NFT, trading, DeFi, blockchain">
     

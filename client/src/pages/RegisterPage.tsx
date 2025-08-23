@@ -66,10 +66,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 pt-[30px]">
-      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 items-start mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-3 md:p-4 pt-[20px] md:pt-[30px]">
+      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-4 md:gap-6 items-start mx-auto">
         {/* Left Side - Hero Content */}
-        <div className="flex flex-col justify-center space-y-6 text-gray-800 px-4">
+        <div className="flex flex-col justify-center space-y-4 md:space-y-6 text-gray-800 px-2 md:px-4 order-2 lg:order-1">
           <div className="space-y-5">
             {/* Welcome message at the top */}
             <div className="inline-block bg-green-50 text-green-700 rounded-lg px-4 py-2 border border-green-200">
@@ -171,7 +171,7 @@ export default function RegisterPage() {
             <Form {...registerForm}>
               <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-5">
                 {/* Row 1: Name and Username */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
                     control={registerForm.control}
                     name="name"
@@ -212,7 +212,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Row 2: Email and Phone */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
                     control={registerForm.control}
                     name="email"
@@ -255,7 +255,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Row 3: Password and Referral Code */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
                     control={registerForm.control}
                     name="password"

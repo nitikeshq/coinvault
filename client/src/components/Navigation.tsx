@@ -43,7 +43,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <nav className="hidden md:block fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
@@ -282,68 +282,6 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
           </div>
         </div>
       </nav>
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg lg:hidden">
-        <div className="flex justify-around items-center py-2">
-          <button 
-            onClick={() => onSectionChange('wallet')}
-            className={`flex flex-col items-center p-2 transition-colors ${
-              activeSection === 'wallet' ? 'text-blue-600' : 'text-gray-600'
-            }`}
-            data-testid="nav-wallet-bottom"
-          >
-            <Wallet className="h-5 w-5" />
-            <span className="text-xs mt-1">Wallet</span>
-          </button>
-          
-          <button 
-            onClick={() => onSectionChange('news')}
-            className={`flex flex-col items-center p-2 transition-colors ${
-              activeSection === 'news' ? 'text-blue-600' : 'text-gray-600'
-            }`}
-            data-testid="nav-news-bottom"
-          >
-            <User className="h-5 w-5" />
-            <span className="text-xs mt-1">News</span>
-          </button>
-          
-          <button 
-            onClick={() => onSectionChange('deposit')}
-            className={`flex flex-col items-center p-2 transition-colors ${
-              activeSection === 'deposit' ? 'text-blue-600' : 'text-gray-600'
-            }`}
-            data-testid="nav-deposit-bottom"
-          >
-            <Copy className="h-5 w-5" />
-            <span className="text-xs mt-1">Deposit</span>
-          </button>
-          
-          <button 
-            onClick={() => onSectionChange('market')}
-            className={`flex flex-col items-center p-2 transition-colors ${
-              activeSection === 'market' ? 'text-blue-600' : 'text-gray-600'
-            }`}
-            data-testid="nav-market-bottom"
-          >
-            <TrendingUp className="h-5 w-5" />
-            <span className="text-xs mt-1">Market</span>
-          </button>
-          
-          <button 
-            onClick={() => onSectionChange('advertisements')}
-            className={`flex flex-col items-center p-2 transition-colors ${
-              activeSection === 'advertisements' ? 'text-blue-600' : 'text-gray-600'
-            }`}
-            data-testid="nav-leaderboard-bottom"
-          >
-            <Trophy className="h-5 w-5" />
-            <span className="text-xs mt-1">Board</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Add padding to prevent content from being hidden behind bottom nav on mobile */}
-      <div className="lg:hidden h-16"></div>
     </>
   );
 }

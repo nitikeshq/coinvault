@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Wallet, Shield, Zap, TrendingUp, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -31,6 +32,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const { login, register, isLoginLoading, isRegisterLoading } = useAuth();
+  const { settings } = useWebsiteSettings();
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -53,7 +55,7 @@ export default function AuthPage() {
   });
 
   const onLogin = (data: LoginForm) => {
-    login(data);
+    login(data as any);
   };
 
   const onRegister = (data: RegisterForm) => {
@@ -65,13 +67,13 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-3 md:p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="hidden lg:flex flex-col space-y-8 text-gray-800">
           <div className="space-y-4">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              CryptoWallet Pro
+              {settings?.siteName || "CryptoWallet Pro"}
             </h1>
             <p className="text-xl text-gray-600">
               Your secure gateway to the future of cryptocurrency management
@@ -147,13 +149,13 @@ export default function AuthPage() {
         </div>
 
         {/* Auth Card */}
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-sm md:max-w-md mx-auto">
           <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg">
             <CardHeader className="text-center pb-2">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
-                <Wallet className="h-8 w-8 text-white" />
+              <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-3 md:mb-4">
+                <Wallet className="h-6 w-6 md:h-8 md:w-8 text-white" />
               </div>
-              <CardTitle className="text-2xl font-bold text-gray-800">
+              <CardTitle className="text-xl md:text-2xl font-bold text-gray-800">
                 {activeTab === "login" ? "Welcome Back" : "Create Account"}
               </CardTitle>
               <CardDescription className="text-gray-600">

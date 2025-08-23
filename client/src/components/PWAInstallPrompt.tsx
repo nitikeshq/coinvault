@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, X } from "lucide-react";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -11,6 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const { settings } = useWebsiteSettings();
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -82,7 +84,7 @@ export function PWAInstallPrompt() {
             <Download className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-sm mb-1">Install CryptoWallet Pro</h3>
+            <h3 className="font-semibold text-sm mb-1">Install {settings?.siteName || "CryptoWallet Pro"}</h3>
             <p className="text-xs text-muted-foreground mb-3">
               Add to your home screen for quick access to your crypto wallet, NFTs, and marketplace.
             </p>

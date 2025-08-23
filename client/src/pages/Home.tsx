@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import WalletDashboard from "@/components/WalletDashboard";
 import DepositSection from "@/components/DepositSection";
 import SwapTrading from "@/components/SwapTrading";
@@ -68,19 +69,28 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="relative z-10">
+        {/* Desktop Navigation */}
         <Navigation 
           activeSection={activeSection} 
           onSectionChange={setActiveSection}
           user={user}
           isAdmin={isAdmin}
         />
+
+        {/* Mobile Navigation */}
+        <MobileNavigation 
+          activeSection={activeSection} 
+          onSectionChange={setActiveSection}
+          user={user}
+          isAdmin={isAdmin}
+        />
         
-        <div className="pt-20 pb-8">
+        <div className="pt-20 pb-8 md:pb-8 pb-20">
           {renderSection()}
         </div>
 
-        {/* Clean Footer */}
-        <footer className="bg-white/80 backdrop-blur-md border-t border-gray-200 mt-16">
+        {/* Clean Footer - Hidden on mobile */}
+        <footer className="bg-white/80 backdrop-blur-md border-t border-gray-200 mt-16 hidden md:block">
           <div className="container mx-auto px-4 py-12">
             <div className="grid md:grid-cols-4 gap-8">
               <div className="space-y-4">
@@ -92,7 +102,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">CryptoWallet Pro</h3>
+                    <h3 className="text-xl font-bold text-gray-800">{websiteSettings?.siteName || "CryptoWallet Pro"}</h3>
                     <p className="text-sm text-purple-600">Professional Edition</p>
                   </div>
                 </div>
@@ -172,7 +182,7 @@ export default function Home() {
             
             <div className="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
               <div className="flex items-center space-x-6">
-                <p className="text-sm text-gray-500">&copy; 2024 CryptoWallet Pro. All rights reserved.</p>
+                <p className="text-sm text-gray-500">&copy; 2024 {websiteSettings?.siteName || "CryptoWallet Pro"}. All rights reserved.</p>
                 <div className="hidden md:flex items-center space-x-4">
                   <span className="px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full border border-green-200">
                     Secure & Encrypted
