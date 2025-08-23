@@ -335,9 +335,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fallback to database price if blockchain call fails
       try {
         const price = await storage.getLatestTokenPrice(config!.id);
-        res.json(price || { priceUsd: "0", priceChange24h: "0" });
+        if (price && price.priceUsd && parseFloat(price.priceUsd) > 0) {
+          res.json(price);
+        } else {
+          // Use the admin-configured default price as final fallback
+          const defaultPrice = {
+            priceUsd: config!.defaultPriceUsd || "0.001",
+            priceChange24h: "0.00",
+            high24h: config!.defaultPriceUsd || "0.001",
+            low24h: config!.defaultPriceUsd || "0.001",
+            volume24h: "0",
+            marketCap: "0"
+          };
+          res.json(defaultPrice);
+        }
       } catch {
-        res.status(500).json({ message: "Failed to fetch token price" });
+        // Final fallback to admin-configured default price
+        const defaultPrice = {
+          priceUsd: config!.defaultPriceUsd || "0.001",
+          priceChange24h: "0.00",
+          high24h: config!.defaultPriceUsd || "0.001",
+          low24h: config!.defaultPriceUsd || "0.001",
+          volume24h: "0",
+          marketCap: "0"
+        };
+        res.json(defaultPrice);
       }
     }
   });

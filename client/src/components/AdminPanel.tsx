@@ -24,6 +24,7 @@ const tokenConfigSchema = z.object({
   tokenName: z.string().min(1, "Token name is required"),
   tokenSymbol: z.string().min(1, "Token symbol is required"),
   decimals: z.number().min(0).max(18),
+  defaultPriceUsd: z.number().min(0, "Default price must be positive"),
   isActive: z.boolean(),
 });
 
@@ -109,6 +110,7 @@ export default function AdminPanel() {
       tokenName: "",
       tokenSymbol: "",
       decimals: 18,
+      defaultPriceUsd: 0.001,
       isActive: true,
     },
   });
@@ -641,7 +643,7 @@ export default function AdminPanel() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <FormField
                       control={tokenForm.control}
                       name="decimals"
@@ -666,12 +668,38 @@ export default function AdminPanel() {
 
                     <FormField
                       control={tokenForm.control}
+                      name="defaultPriceUsd"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Default Price (USD)</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.000001"
+                              min="0"
+                              placeholder="0.001"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              data-testid="input-default-price"
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          <div className="text-xs text-gray-500 mt-1">
+                            Fallback when API fails
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={tokenForm.control}
                       name="isActive"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4 bg-gray-50">
-                          <div className="space-y-0.5">
+                        <FormItem className="flex flex-col items-start justify-start rounded-lg border border-gray-200 p-4 bg-gray-50">
+                          <div className="space-y-0.5 mb-2">
                             <FormLabel className="text-gray-700">Active</FormLabel>
-                            <div className="text-sm text-gray-500">Enable this token configuration</div>
+                            <div className="text-xs text-gray-500">Enable this token configuration</div>
                           </div>
                           <FormControl>
                             <Switch

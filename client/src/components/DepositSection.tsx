@@ -9,12 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Copy, Upload, AlertTriangle, Wallet, CreditCard } from "lucide-react";
+import { Copy, Upload, AlertTriangle, Wallet, CreditCard, Calculator } from "lucide-react";
+import { useTokenInfo } from "@/hooks/useTokenInfo";
 import upiQrImage from "../assets/upi_qr.png";
 import bscQrImage from "../assets/bsc_qr.png";
 
 export default function DepositSection() {
   const { toast } = useToast();
+  const { tokenConfig } = useTokenInfo();
+  
   const [upiForm, setUpiForm] = useState({
     amount: "",
     utrId: "",
@@ -34,6 +37,20 @@ export default function DepositSection() {
   const { data: deposits = [] } = useQuery<any[]>({
     queryKey: ['/api/deposits'],
   });
+
+  // Fetch token price for calculation
+  const { data: tokenPrice } = useQuery<any>({
+    queryKey: ['/api/token/price'],
+  });
+
+  // Calculate token amounts
+  const calculateTokens = (usdAmount: string) => {
+    if (!usdAmount || !tokenPrice?.priceUsd) return "0";
+    const amount = parseFloat(usdAmount);
+    const price = parseFloat(tokenPrice.priceUsd);
+    if (isNaN(amount) || isNaN(price) || price === 0) return "0";
+    return (amount / price).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
 
   const upiDepositMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -265,6 +282,20 @@ export default function DepositSection() {
                         data-testid="input-upi-amount"
                         required
                       />
+                      {upiForm.amount && tokenPrice && (
+                        <div className="mt-2 p-3 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Calculator className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-purple-800">Token Calculation</span>
+                          </div>
+                          <div className="mt-1 text-lg font-bold text-purple-900" data-testid="text-token-calculation">
+                            ≈ {calculateTokens(upiForm.amount)} {tokenConfig?.tokenSymbol || "TOKEN"}
+                          </div>
+                          <div className="text-xs text-purple-600 mt-1">
+                            At current rate: ₹{parseFloat(tokenPrice.priceUsd || "0").toFixed(4)} per {tokenConfig?.tokenSymbol || "TOKEN"}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div>
@@ -421,18 +452,32 @@ export default function DepositSection() {
 
                   <form onSubmit={handleBscSubmit} className="space-y-4">
                     <div>
-                      <Label htmlFor="bsc-amount" className="text-gray-700">Deposit Amount *</Label>
+                      <Label htmlFor="bsc-amount" className="text-gray-700">Deposit Amount (USD) *</Label>
                       <Input
                         id="bsc-amount"
                         type="number"
-                        step="0.00000001"
+                        step="0.01"
                         value={bscForm.amount}
                         onChange={(e) => setBscForm(prev => ({ ...prev, amount: e.target.value }))}
-                        placeholder="Enter amount sent in tokens"
+                        placeholder="Enter USD value of tokens sent"
                         className="bg-gray-50 border-gray-300 text-gray-900"
                         data-testid="input-bsc-amount"
                         required
                       />
+                      {bscForm.amount && tokenPrice && (
+                        <div className="mt-2 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Calculator className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">Token Calculation</span>
+                          </div>
+                          <div className="mt-1 text-lg font-bold text-blue-900" data-testid="text-bsc-token-calculation">
+                            ≈ {calculateTokens(bscForm.amount)} {tokenConfig?.tokenSymbol || "TOKEN"}
+                          </div>
+                          <div className="text-xs text-blue-600 mt-1">
+                            At current rate: ${parseFloat(tokenPrice.priceUsd || "0").toFixed(4)} per {tokenConfig?.tokenSymbol || "TOKEN"}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div>

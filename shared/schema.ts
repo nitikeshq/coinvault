@@ -51,6 +51,7 @@ export const tokenConfig = pgTable("token_config", {
   tokenName: varchar("token_name").notNull(),
   tokenSymbol: varchar("token_symbol").notNull(),
   decimals: integer("decimals").notNull(),
+  defaultPriceUsd: decimal("default_price_usd", { precision: 18, scale: 8 }).default("0.001"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
