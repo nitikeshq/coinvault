@@ -154,7 +154,7 @@ export function setupAuth(app: Express) {
   ];
 
   const loginValidation = [
-    body('email').isEmail().withMessage('Please provide a valid email'),
+    body('email').trim().notEmpty().withMessage('Email is required').isEmail().withMessage('Please provide a valid email'),
     body('password').notEmpty().withMessage('Password is required'),
   ];
 
@@ -218,8 +218,10 @@ export function setupAuth(app: Express) {
   });
 
   app.post('/api/login', loginValidation, (req: any, res: any, next: any) => {
+    console.log('Login request body:', req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ message: errors.array()[0].msg });
     }
 
