@@ -89,6 +89,28 @@ router.get("/api/marketplace/nft/listings", async (req: Request, res: Response) 
   }
 });
 
+// Get platform NFTs (admin-created, limited)
+router.get("/api/marketplace/nft/platform-listings", async (req: Request, res: Response) => {
+  try {
+    const listings = await storage.getPlatformNFTListings();
+    res.json(listings);
+  } catch (error) {
+    console.error("Error fetching platform NFT listings:", error);
+    res.status(500).json({ error: "Failed to fetch platform listings" });
+  }
+});
+
+// Get user-generated NFTs (unlimited)
+router.get("/api/marketplace/nft/user-generated-listings", async (req: Request, res: Response) => {
+  try {
+    const listings = await storage.getUserGeneratedNFTListings();
+    res.json(listings);
+  } catch (error) {
+    console.error("Error fetching user-generated NFT listings:", error);
+    res.status(500).json({ error: "Failed to fetch user-generated listings" });
+  }
+});
+
 router.get("/api/marketplace/nft/my-listings", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.session?.user?.id;

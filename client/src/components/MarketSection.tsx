@@ -23,6 +23,14 @@ export default function MarketSection() {
     queryKey: ['/api/marketplace/nft/listings'],
   });
 
+  const { data: platformNFTListings = [] } = useQuery<any[]>({
+    queryKey: ['/api/marketplace/nft/platform-listings'],
+  });
+
+  const { data: userGeneratedNFTListings = [] } = useQuery<any[]>({
+    queryKey: ['/api/marketplace/nft/user-generated-listings'],
+  });
+
   const { data: myNFTs = [] } = useQuery<any[]>({
     queryKey: ['/api/user/nfts'],
   });
@@ -46,11 +54,15 @@ export default function MarketSection() {
 
   const NFTMarketplace = () => (
     <div className="space-y-6">
-      <Tabs defaultValue="listings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="listings" data-testid="tab-listed-nfts">
+      <Tabs defaultValue="platform-nfts" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="platform-nfts" data-testid="tab-platform-nfts">
+            <Trophy className="h-4 w-4 mr-2" />
+            Platform NFTs (Limited)
+          </TabsTrigger>
+          <TabsTrigger value="user-generated-nfts" data-testid="tab-user-generated-nfts">
             <TrendingUp className="h-4 w-4 mr-2" />
-            Listed for Sale NFTs
+            User NFTs (Unlimited)
           </TabsTrigger>
           <TabsTrigger value="my-nfts" data-testid="tab-my-nfts">
             <Star className="h-4 w-4 mr-2" />
@@ -58,18 +70,27 @@ export default function MarketSection() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="listings" className="space-y-4">
+        <TabsContent value="platform-nfts" className="space-y-4">
+          <div className="mb-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200">
+            <h3 className="font-semibold text-gray-800 flex items-center mb-2">
+              <Trophy className="h-5 w-5 mr-2 text-purple-600" />
+              Platform NFTs - Limited Collection
+            </h3>
+            <p className="text-sm text-gray-600">
+              These are premium NFTs created by the platform admin with detailed traits and limited quantities. Each one is unique and scarce.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {nftListings.length === 0 ? (
+            {platformNFTListings.length === 0 ? (
               <div className="col-span-full text-center py-12">
                 <Trophy className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-500">No NFTs listed for sale yet</p>
+                <p className="text-gray-500">No platform NFTs listed for sale yet</p>
                 <p className="text-sm text-gray-400 mt-2">
-                  List your NFTs to start trading in the marketplace
+                  Premium limited NFTs will appear here when available
                 </p>
               </div>
             ) : (
-              nftListings.map((listing: any) => (
+              platformNFTListings.map((listing: any) => (
                 <Card key={listing.listing.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-4">
                     <div className="aspect-square bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg mb-4 flex items-center justify-center">
@@ -87,9 +108,14 @@ export default function MarketSection() {
                     <h3 className="font-semibold text-lg mb-2" data-testid={`nft-name-${listing.nft.id}`}>
                       {listing.nft.name}
                     </h3>
-                    <Badge variant="outline" className="mb-2">
-                      {listing.nft.rarity}
-                    </Badge>
+                    <div className="flex gap-2 mb-2">
+                      <Badge variant="outline">
+                        {listing.nft.rarity}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        Limited
+                      </Badge>
+                    </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Min Price:</span>
@@ -105,6 +131,85 @@ export default function MarketSection() {
                         size="sm" 
                         className="w-full"
                         data-testid={`button-bid-${listing.listing.id}`}
+                        onClick={() => {
+                          toast({
+                            title: "Bidding Feature",
+                            description: "Bidding system will be implemented with $1 platform fee",
+                          });
+                        }}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        Place Bid ($1 fee)
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="user-generated-nfts" className="space-y-4">
+          <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+            <h3 className="font-semibold text-gray-800 flex items-center mb-2">
+              <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+              User-Generated NFTs - Unlimited Collection
+            </h3>
+            <p className="text-sm text-gray-600">
+              These NFTs are created by users through AI generation with automatic rarity distribution (50% Common, 30% Rare, 15% Epic, 5% Legendary).
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {userGeneratedNFTListings.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <Star className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500">No user-generated NFTs listed for sale yet</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Generate your own unique NFT and list it here
+                </p>
+              </div>
+            ) : (
+              userGeneratedNFTListings.map((listing: any) => (
+                <Card key={listing.listing.id} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="aspect-square bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg mb-4 flex items-center justify-center">
+                      {listing.nft.imageUrl ? (
+                        <img 
+                          src={listing.nft.imageUrl} 
+                          alt={listing.nft.name}
+                          className="w-full h-full object-cover rounded-lg"
+                          data-testid={`user-nft-image-${listing.nft.id}`}
+                        />
+                      ) : (
+                        <Star className="h-12 w-12 text-green-400" />
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-lg mb-2" data-testid={`user-nft-name-${listing.nft.id}`}>
+                      {listing.nft.name}
+                    </h3>
+                    <div className="flex gap-2 mb-2">
+                      <Badge variant="outline">
+                        {listing.nft.rarity}
+                      </Badge>
+                      <Badge variant="default" className="text-xs bg-green-500">
+                        User-Generated
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Min Price:</span>
+                        <span className="font-medium">${formatBalance(listing.listing.minPrice)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Highest Bid:</span>
+                        <span className="font-medium text-green-600">
+                          ${formatBalance(listing.listing.currentHighestBid || "0")}
+                        </span>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        data-testid={`button-bid-user-${listing.listing.id}`}
                         onClick={() => {
                           toast({
                             title: "Bidding Feature",

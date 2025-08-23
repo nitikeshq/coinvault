@@ -875,6 +875,44 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(nftListings.createdAt));
   }
 
+  async getPlatformNFTListings() {
+    return await db
+      .select({
+        listing: nftListings,
+        nft: nftCollection,
+        seller: users,
+      })
+      .from(nftListings)
+      .innerJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+      .innerJoin(users, eq(nftListings.sellerId, users.id))
+      .where(
+        and(
+          eq(nftListings.isActive, true),
+          eq(nftCollection.isUserGenerated, false)
+        )
+      )
+      .orderBy(desc(nftListings.createdAt));
+  }
+
+  async getUserGeneratedNFTListings() {
+    return await db
+      .select({
+        listing: nftListings,
+        nft: nftCollection,
+        seller: users,
+      })
+      .from(nftListings)
+      .innerJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+      .innerJoin(users, eq(nftListings.sellerId, users.id))
+      .where(
+        and(
+          eq(nftListings.isActive, true),
+          eq(nftCollection.isUserGenerated, true)
+        )
+      )
+      .orderBy(desc(nftListings.createdAt));
+  }
+
   async getUserNFTListings(userId: string) {
     return await db
       .select({

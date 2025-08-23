@@ -807,17 +807,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Generate rarity based on distribution: 50% Common, 30% Rare, 15% Epic, 5% Legendary
+      function getRandomRarity(): string {
+        const rand = Math.random() * 100;
+        if (rand < 50) return "Common";
+        if (rand < 80) return "Rare"; // 30% (50 + 30 = 80)
+        if (rand < 95) return "Epic"; // 15% (80 + 15 = 95) - using "Epic" instead of "Unique"
+        return "Legendary"; // 5% (95 + 5 = 100)
+      }
+
+      const generatedRarity = getRandomRarity();
+
       // Generate AI metadata first
-      const metadataPrompt = `Create detailed metadata for a unique NFT with theme: "${theme.trim()}" ${style ? `and style: "${style}"` : ''}. 
-      Include: name, description, and 3-5 special attributes (like power, element, style, background, etc.).
-      Make it creative and engaging. Respond in JSON format:
+      const metadataPrompt = `Create detailed metadata for a unique NFT with theme: "${theme.trim()}" ${style ? `and style: "${style}"` : ''} and rarity: "${generatedRarity}". 
+      Include: name, description, and 3-5 special attributes (like power, element, style, background, etc.) that match the rarity level.
+      Make it creative and engaging. For higher rarities, make the attributes more powerful/unique.
+      Respond in JSON format:
       {
         "name": "Unique NFT Name",
         "description": "Engaging description under 200 words",
         "attributes": [
           {"trait_type": "Power", "value": "Fire Magic"},
           {"trait_type": "Background", "value": "Mystic Forest"},
-          {"trait_type": "Rarity", "value": "Unique"}
+          {"trait_type": "Rarity", "value": "${generatedRarity}"}
         ]
       }`;
       
@@ -845,7 +857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl = await imageManager.generateAndSaveNFTImage({
           name: metadata.name,
           description: metadata.description,
-          rarity: 'Unique',
+          rarity: generatedRarity,
           attributes: metadata.attributes
         }, `${characterPrompt}, ${theme.trim()}${style ? `, ${style} style` : ''}`);
       } catch (imageError) {
@@ -859,13 +871,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: metadata.name,
         description: metadata.description,
         imageUrl: imageUrl || undefined,
-        rarity: 'Unique',
+        rarity: generatedRarity,
         attributes: metadata.attributes,
         isUserGenerated: true
       });
 
       res.json({ 
-        message: 'NFT generated successfully!', 
+        message: `NFT generated successfully with ${generatedRarity} rarity!`, 
         cost, 
         newBalance, 
         nft: {
@@ -873,7 +885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: metadata.name,
           description: metadata.description,
           imageUrl: imageUrl,
-          rarity: 'Unique'
+          rarity: generatedRarity
         }
       });
     } catch (error) {
