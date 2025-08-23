@@ -13,6 +13,7 @@ import {
   nftCollection,
   userNfts,
   memeGenerations,
+  referralEarnings,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -31,6 +32,7 @@ import {
   type InsertWebsiteSettings,
   type PresaleConfig,
   type InsertPresaleConfig,
+  type ReferralEarnings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -635,6 +637,96 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return meme;
+  }
+
+  // Referral system methods
+  async generateReferralCode(userId: string): Promise<string> {
+    const referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    await db.update(users)
+      .set({ referralCode })
+      .where(eq(users.id, userId));
+    return referralCode;
+  }
+
+  async getUserByReferralCode(referralCode: string): Promise<User | undefined> {
+    const [user] = await db.select()
+      .from(users)
+      .where(eq(users.referralCode, referralCode));
+    return user;
+  }
+
+  async recordReferralEarning(data: {
+    referrerId: string;
+    referredUserId: string;
+    depositAmount: number;
+    earningsAmount: number;
+  }): Promise<ReferralEarnings> {
+    const [earning] = await db.insert(referralEarnings)
+      .values({
+        referrerId: data.referrerId,
+        referredUserId: data.referredUserId,
+        depositAmount: data.depositAmount.toString(),
+        earningsAmount: data.earningsAmount.toString(),
+      })
+      .returning();
+    return earning;
+  }
+
+  async getUserReferralEarnings(userId: string): Promise<ReferralEarnings[]> {
+    return await db.select()
+      .from(referralEarnings)
+      .where(eq(referralEarnings.referrerId, userId))
+      .orderBy(desc(referralEarnings.createdAt));
+  }
+
+  async getTopInvestors(limit: number = 10): Promise<Array<{
+    user: User;
+    totalInvested: string;
+    rank: number;
+  }>> {
+    const results = await db.select({
+      userId: depositRequests.userId,
+      totalInvested: sql<string>`SUM(${depositRequests.amount})::text`,
+      user: users
+    })
+    .from(depositRequests)
+    .innerJoin(users, eq(depositRequests.userId, users.id))
+    .where(eq(depositRequests.status, 'approved'))
+    .groupBy(depositRequests.userId, users.id)
+    .orderBy(desc(sql`SUM(${depositRequests.amount})`))
+    .limit(limit);
+
+    return results.map((result, index) => ({
+      user: result.user,
+      totalInvested: result.totalInvested,
+      rank: index + 1
+    }));
+  }
+
+  async getTopReferrers(limit: number = 10): Promise<Array<{
+    user: User;
+    totalEarnings: string;
+    referralCount: number;
+    rank: number;
+  }>> {
+    const results = await db.select({
+      referrerId: referralEarnings.referrerId,
+      totalEarnings: sql<string>`SUM(${referralEarnings.earningsAmount})::text`,
+      referralCount: sql<number>`COUNT(DISTINCT ${referralEarnings.referredUserId})`,
+      user: users
+    })
+    .from(referralEarnings)
+    .innerJoin(users, eq(referralEarnings.referrerId, users.id))
+    .groupBy(referralEarnings.referrerId, users.id)
+    .orderBy(desc(sql`SUM(${referralEarnings.earningsAmount})`))
+    .limit(limit);
+
+    return results.map((result, index) => ({
+      user: result.user,
+      totalEarnings: result.totalEarnings,
+      referralCount: result.referralCount,
+      rank: index + 1
+    }));
   }
 }
 

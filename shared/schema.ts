@@ -40,6 +40,9 @@ export const users = pgTable("users", {
   walletPrivateKey: varchar("wallet_private_key"), // Encrypted in production
   withdrawalAddress: varchar("withdrawal_address"), // BEP-20 address for withdrawals
   isActive: boolean("is_active").default(true),
+  // Referral fields
+  referralCode: varchar("referral_code").unique(),
+  referredBy: varchar("referred_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -311,3 +314,15 @@ export type NftCollection = typeof nftCollection.$inferSelect;
 export type InsertNftCollection = z.infer<typeof insertNftCollectionSchema>;
 export type UserNfts = typeof userNfts.$inferSelect;
 export type MemeGenerations = typeof memeGenerations.$inferSelect;
+
+// Referral earnings table
+export const referralEarnings = pgTable("referral_earnings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id),
+  referredUserId: varchar("referred_user_id").notNull().references(() => users.id),
+  depositAmount: decimal("deposit_amount", { precision: 18, scale: 8 }).notNull(),
+  earningsAmount: decimal("earnings_amount", { precision: 18, scale: 8 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ReferralEarnings = typeof referralEarnings.$inferSelect;

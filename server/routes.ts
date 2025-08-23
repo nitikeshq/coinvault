@@ -958,6 +958,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Referral system endpoints
+  app.get('/api/user/referral-code', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.referralCode) {
+        // Generate referral code if not exists
+        const referralCode = await storage.generateReferralCode(userId);
+        return res.json({ referralCode });
+      }
+      
+      res.json({ referralCode: user.referralCode });
+    } catch (error) {
+      console.error("Error getting referral code:", error);
+      res.status(500).json({ message: "Failed to get referral code" });
+    }
+  });
+
+  app.get('/api/user/referral-earnings', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const earnings = await storage.getUserReferralEarnings(userId);
+      res.json(earnings);
+    } catch (error) {
+      console.error("Error getting referral earnings:", error);
+      res.status(500).json({ message: "Failed to get referral earnings" });
+    }
+  });
+
+  app.post('/api/user/set-referrer', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { referralCode } = req.body;
+      
+      if (!referralCode) {
+        return res.status(400).json({ message: "Referral code is required" });
+      }
+
+      // Check if user already has a referrer
+      const user = await storage.getUser(userId);
+      if (user?.referredBy) {
+        return res.status(400).json({ message: "User already has a referrer" });
+      }
+
+      // Find referrer by code
+      const referrer = await storage.getUserByReferralCode(referralCode);
+      if (!referrer) {
+        return res.status(404).json({ message: "Invalid referral code" });
+      }
+
+      if (referrer.id === userId) {
+        return res.status(400).json({ message: "Cannot refer yourself" });
+      }
+
+      // Update user with referrer
+      await storage.updateUser(userId, { referredBy: referrer.id });
+      
+      res.json({ 
+        message: "Referrer set successfully",
+        referrer: { name: referrer.name, email: referrer.email }
+      });
+    } catch (error) {
+      console.error("Error setting referrer:", error);
+      res.status(500).json({ message: "Failed to set referrer" });
+    }
+  });
+
+  // Leaderboard endpoints
+  app.get('/api/leaderboard/investors', async (req, res) => {
+    try {
+      const topInvestors = await storage.getTopInvestors(10);
+      res.json(topInvestors);
+    } catch (error) {
+      console.error("Error getting top investors:", error);
+      res.status(500).json({ message: "Failed to get top investors" });
+    }
+  });
+
+  app.get('/api/leaderboard/referrers', async (req, res) => {
+    try {
+      const topReferrers = await storage.getTopReferrers(10);
+      res.json(topReferrers);
+    } catch (error) {
+      console.error("Error getting top referrers:", error);
+      res.status(500).json({ message: "Failed to get top referrers" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

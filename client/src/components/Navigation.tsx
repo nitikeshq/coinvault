@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, User, LogOut, Settings, Copy, Sparkles } from "lucide-react";
+import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy } from "lucide-react";
 import { Link } from "wouter";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
 interface NavigationProps {
-  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps';
-  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps') => void;
+  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements';
+  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements') => void;
   user?: any;
   isAdmin?: boolean;
 }
@@ -126,6 +126,16 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                   Dapps
                 </button>
               )}
+              <button 
+                onClick={() => onSectionChange('advertisements')}
+                className={`hover:text-blue-600 transition-colors font-medium ${
+                  activeSection === 'advertisements' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
+                }`}
+                data-testid="nav-advertisements"
+              >
+                <Trophy className="h-4 w-4 mr-1 inline" />
+                Leaderboards
+              </button>
             </div>
             
             <div className="flex items-center space-x-3">

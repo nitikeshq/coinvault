@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, ExternalLink, ArrowRightLeft } from "lucide-react";
+import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, ExternalLink, ArrowRightLeft, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { NFTModal } from "@/components/NFTModal";
@@ -36,6 +37,14 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
 
   const { data: user } = useQuery<any>({
     queryKey: ['/api/me'],
+  });
+
+  const { data: referralData } = useQuery<any>({
+    queryKey: ['/api/user/referral-code'],
+  });
+
+  const { data: referralEarnings = [] } = useQuery<any[]>({
+    queryKey: ['/api/user/referral-earnings'],
   });
 
   const { data: presaleTimer } = useQuery<any>({
@@ -110,6 +119,36 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
       title: "Copied!",
       description: "Content copied to clipboard",
     });
+  };
+
+  const copyReferralCode = () => {
+    if (referralData?.referralCode) {
+      navigator.clipboard.writeText(referralData.referralCode);
+      toast({
+        title: "Copied!",
+        description: "Referral code copied to clipboard",
+      });
+    }
+  };
+
+  const shareReferralCode = (platform: string) => {
+    const referralCode = referralData?.referralCode;
+    if (!referralCode) return;
+    
+    const shareText = `Join me on ${tokenConfig?.tokenName || 'CryptoWallet Pro'} using my referral code: ${referralCode}`;
+    const currentUrl = window.location.origin;
+    
+    if (platform === 'telegram') {
+      shareOnTelegram(shareText, currentUrl);
+    } else if (platform === 'twitter') {
+      shareOnTwitter(shareText, currentUrl);
+    }
+  };
+
+  const calculateTotalReferralEarnings = () => {
+    return referralEarnings.reduce((total, earning) => {
+      return total + parseFloat(earning.earningsAmount || '0');
+    }, 0).toFixed(2);
   };
 
   return (
@@ -240,6 +279,105 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
               ${formatPrice(tokenPrice?.priceUsd || "0")}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Referral Section */}
+      <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 mb-6 border border-green-200 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4 text-green-800 flex items-center gap-2">
+          <Users className="h-5 w-5 text-green-600" />
+          Referral Program - Earn 5% Bonus!
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Referral Code */}
+          <div className="bg-white rounded-lg p-4 border border-green-200">
+            <h4 className="font-semibold text-gray-800 mb-2">Your Referral Code</h4>
+            {referralData?.referralCode ? (
+              <div className="space-y-3">
+                <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                  <code className="text-lg font-mono font-bold text-green-700" data-testid="text-referral-code">
+                    {referralData.referralCode}
+                  </code>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={copyReferralCode}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    data-testid="button-copy-referral"
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    Copy Code
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => shareReferralCode('telegram')}
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    data-testid="button-share-telegram-referral"
+                  >
+                    <Share2 className="h-3 w-3 mr-1" />
+                    Telegram
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => shareReferralCode('twitter')}
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    data-testid="button-share-twitter-referral"
+                  >
+                    <Share2 className="h-3 w-3 mr-1" />
+                    Twitter
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm">Loading referral code...</p>
+              </div>
+            )}
+          </div>
+
+          {/* Referral Earnings */}
+          <div className="bg-white rounded-lg p-4 border border-green-200">
+            <h4 className="font-semibold text-gray-800 mb-2">Referral Earnings</h4>
+            <div className="space-y-3">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600" data-testid="text-total-referral-earnings">
+                  ${calculateTotalReferralEarnings()}
+                </p>
+                <p className="text-sm text-gray-600">Total Earned</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-gray-700" data-testid="text-referral-count">
+                  {referralEarnings.length}
+                </p>
+                <p className="text-sm text-gray-600">Successful Referrals</p>
+              </div>
+              {referralEarnings.length > 0 && (
+                <div className="max-h-24 overflow-y-auto">
+                  <div className="text-xs text-gray-500 space-y-1">
+                    {referralEarnings.slice(0, 3).map((earning, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span>${parseFloat(earning.earningsAmount).toFixed(2)}</span>
+                        <span>{new Date(earning.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    ))}
+                    {referralEarnings.length > 3 && (
+                      <p className="text-center text-gray-400">+{referralEarnings.length - 3} more...</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 p-3 bg-green-100 rounded-lg border border-green-200">
+          <p className="text-sm text-green-700 text-center">
+            💰 <strong>How it works:</strong> Share your referral code with friends. When they make their first deposit, you'll earn 5% of their deposit value as bonus tokens!
+          </p>
         </div>
       </div>
 
