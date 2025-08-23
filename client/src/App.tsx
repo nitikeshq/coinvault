@@ -1,61 +1,41 @@
 import { Switch, Route } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import Home from "@/pages/Home";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
 import AuthPage from "@/pages/AuthPage";
-import LandingPage from "@/pages/LandingPage";
-import NftMarketplace from "@/pages/NftMarketplace";
-import MemeMarketplace from "@/pages/MemeMarketplace";
+import Home from "@/pages/Home";
+import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: true, // Enable to maintain auth session
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
-
-function AppContent() {
-  const { user, isLoading } = useAuth();
+function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
     <Switch>
-      {!user ? (
-        <>
-          <Route path="/auth" component={AuthPage} />
-          <Route path="/register" component={AuthPage} />
-          <Route component={LandingPage} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/nft-marketplace" component={NftMarketplace} />
-          <Route path="/meme-marketplace" component={MemeMarketplace} />
-          <Route component={Home} />
-        </>
-      )}
+      <Route path="/" component={!isAuthenticated ? AuthPage : Home} />
+      <Route component={NotFound} />
     </Switch>
   );
 }
 
-export default function App() {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
+      <TooltipProvider>
         <Toaster />
-      </AuthProvider>
+        <Router />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
+
+export default App;

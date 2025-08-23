@@ -1,11 +1,11 @@
-const CACHE_NAME = 'cryptowallet-pro-v2';
+const CACHE_NAME = 'cryptowallet-pro-v1';
 const urlsToCache = [
   '/',
+  '/static/js/bundle.js',
+  '/static/css/main.css',
   '/manifest.json',
-  '/src/main.tsx',
-  '/src/index.css',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
 // Install event - cache resources

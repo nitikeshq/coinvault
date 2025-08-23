@@ -50,8 +50,6 @@ const websiteSettingsSchema = z.object({
   description: z.string().optional().or(z.literal("")),
   primaryColor: z.string().min(1, "Primary color is required"),
   secondaryColor: z.string().min(1, "Secondary color is required"),
-  auditReportUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  whitepaperUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 export default function AdminPanel() {
@@ -147,8 +145,6 @@ export default function AdminPanel() {
       description: "",
       primaryColor: "#6366f1",
       secondaryColor: "#8b5cf6",
-      auditReportUrl: "",
-      whitepaperUrl: "",
     },
   });
 
@@ -533,71 +529,6 @@ export default function AdminPanel() {
                       )}
                     />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={websiteForm.control}
-                      name="auditReportUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">Audit Report URL</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="https://example.com/audit-report.pdf"
-                              className="bg-gray-50 border-gray-300 text-gray-900"
-                              data-testid="input-audit-report-url"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={websiteForm.control}
-                      name="whitepaperUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">Whitepaper URL</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="https://example.com/whitepaper.pdf"
-                              className="bg-gray-50 border-gray-300 text-gray-900"
-                              data-testid="input-whitepaper-url"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={websiteForm.control}
-                    name="nftCollectionLimit"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700">NFT Collection Limit</FormLabel>
-                        <FormDescription className="text-gray-500">
-                          Maximum number of NFTs that can be minted in the collection
-                        </FormDescription>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="1"
-                            placeholder="10000"
-                            className="bg-gray-50 border-gray-300 text-gray-900"
-                            data-testid="input-nft-collection-limit"
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <Button 
                     type="submit" 

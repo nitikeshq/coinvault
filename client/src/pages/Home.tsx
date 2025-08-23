@@ -23,7 +23,7 @@ export default function Home() {
 
   // Update document title based on website settings
   useEffect(() => {
-    document.title = (websiteSettings?.siteName as string) || "CryptoWallet Pro";
+    document.title = (websiteSettings?.siteName) || "CryptoWallet Pro";
   }, [websiteSettings]);
 
   const renderSection = () => {

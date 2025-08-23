@@ -25,7 +25,7 @@ export const sessions = pgTable(
 );
 
 // User storage table
-export const users: any = pgTable("users", {
+export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(),
   username: varchar("username").unique().notNull(),
@@ -40,12 +40,9 @@ export const users: any = pgTable("users", {
   walletPrivateKey: varchar("wallet_private_key"), // Encrypted in production
   withdrawalAddress: varchar("withdrawal_address"), // BEP-20 address for withdrawals
   isActive: boolean("is_active").default(true),
-  // Investment tier fields
-  investmentTag: varchar("investment_tag").default("Members"), // Members, Premium, VIP, VVIP, Sharks, Whales
-  totalInvestmentInr: decimal("total_investment_inr", { precision: 20, scale: 2 }).default("0"),
   // Referral fields
   referralCode: varchar("referral_code").unique(),
-  referredBy: varchar("referred_by"),
+  referredBy: varchar("referred_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -150,7 +147,6 @@ export const websiteSettings = pgTable("website_settings", {
   secondaryColor: varchar("secondary_color").default("#8b5cf6"),
   auditReportUrl: varchar("audit_report_url"),
   whitepaperUrl: varchar("whitepaper_url"),
-  nftCollectionLimit: integer("nft_collection_limit").default(10000),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -268,7 +264,7 @@ export const dappSettings = pgTable("dapp_settings", {
 // NFT Collection table
 export const nftCollection = pgTable("nft_collection", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  tokenId: integer("token_id").notNull().unique(), // NFT token ID (configured by admin)
+  tokenId: integer("token_id").notNull().unique(), // NFT token ID (1-10000)
   name: varchar("name").notNull(),
   description: text("description"),
   imageUrl: varchar("image_url"),
@@ -333,163 +329,3 @@ export const referralEarnings = pgTable("referral_earnings", {
 });
 
 export type ReferralEarnings = typeof referralEarnings.$inferSelect;
-
-// NFT Marketplace listings
-export const nftListings = pgTable("nft_listings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  nftId: varchar("nft_id").notNull().references(() => nftCollection.id),
-  ownerId: varchar("owner_id").notNull().references(() => users.id),
-  price: decimal("price", { precision: 18, scale: 8 }).notNull(),
-  isActive: boolean("is_active").default(true),
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Meme Marketplace listings  
-export const memeListings = pgTable("meme_listings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  memeId: varchar("meme_id").notNull().references(() => memeGenerations.id),
-  ownerId: varchar("owner_id").notNull().references(() => users.id),
-  price: decimal("price", { precision: 18, scale: 8 }).notNull(),
-  isActive: boolean("is_active").default(true),
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Bids table (for both NFTs and memes)
-export const bids = pgTable("bids", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  itemType: varchar("item_type").notNull(), // 'nft' or 'meme'
-  itemId: varchar("item_id").notNull(), // nftId or memeId
-  bidderId: varchar("bidder_id").notNull().references(() => users.id),
-  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
-  isActive: boolean("is_active").default(true),
-  expiresAt: timestamp("expires_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Meme social stats
-export const memeStats = pgTable("meme_stats", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  memeId: varchar("meme_id").notNull().unique().references(() => memeGenerations.id),
-  viewCount: integer("view_count").default(0),
-  likeCount: integer("like_count").default(0),
-  shareCount: integer("share_count").default(0),
-  downloadCount: integer("download_count").default(0),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Meme likes (for tracking individual likes)
-export const memeLikes = pgTable("meme_likes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  memeId: varchar("meme_id").notNull().references(() => memeGenerations.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// NFT transfers
-export const nftTransfers = pgTable("nft_transfers", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  nftId: varchar("nft_id").notNull().references(() => nftCollection.id),
-  fromUserId: varchar("from_user_id").references(() => users.id),
-  toUserId: varchar("to_user_id").notNull().references(() => users.id),
-  amount: decimal("amount", { precision: 18, scale: 8 }), // Purchase amount if applicable
-  transferType: varchar("transfer_type").notNull(), // 'mint', 'sale', 'transfer'
-  transactionHash: varchar("transaction_hash"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Marketplace schemas
-export const insertNftListingSchema = createInsertSchema(nftListings).omit({
-  id: true,
-  ownerId: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertMemeListingSchema = createInsertSchema(memeListings).omit({
-  id: true,
-  ownerId: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertBidSchema = createInsertSchema(bids).omit({
-  id: true,
-  bidderId: true,
-  createdAt: true,
-});
-
-// Marketplace types
-export type NftListing = typeof nftListings.$inferSelect;
-export type InsertNftListing = z.infer<typeof insertNftListingSchema>;
-export type MemeListing = typeof memeListings.$inferSelect;
-export type InsertMemeListing = z.infer<typeof insertMemeListingSchema>;
-export type Bid = typeof bids.$inferSelect;
-export type InsertBid = z.infer<typeof insertBidSchema>;
-export type MemeStats = typeof memeStats.$inferSelect;
-export type MemeLikes = typeof memeLikes.$inferSelect;
-export type NftTransfer = typeof nftTransfers.$inferSelect;
-
-// Weekly reward pool system
-export const rewardPools = pgTable("reward_pools", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  weekStartDate: timestamp("week_start_date").notNull(),
-  weekEndDate: timestamp("week_end_date").notNull(),
-  totalPoolAmount: decimal("total_pool_amount", { precision: 18, scale: 2 }).default("0"),
-  totalEligibleMembers: integer("total_eligible_members").default(0),
-  rewardPerMember: decimal("reward_per_member", { precision: 18, scale: 8 }).default("0"),
-  status: varchar("status").notNull().default("collecting"), // collecting, distributing, completed
-  createdAt: timestamp("created_at").defaultNow(),
-  distributedAt: timestamp("distributed_at"),
-});
-
-// Individual reward distributions
-export const rewardDistributions = pgTable("reward_distributions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  rewardPoolId: varchar("reward_pool_id").notNull().references(() => rewardPools.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  rewardAmount: decimal("reward_amount", { precision: 18, scale: 8 }).notNull(),
-  claimedAt: timestamp("claimed_at"),
-  status: varchar("status").notNull().default("pending"), // pending, claimed
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Reward pool contributions (tracking deposits that contributed to pools)
-export const rewardContributions = pgTable("reward_contributions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  rewardPoolId: varchar("reward_pool_id").notNull().references(() => rewardPools.id),
-  depositRequestId: varchar("deposit_request_id").notNull().references(() => depositRequests.id),
-  contributionAmount: decimal("contribution_amount", { precision: 18, scale: 8 }).notNull(), // 10% of deposit
-  originalDepositAmount: decimal("original_deposit_amount", { precision: 18, scale: 8 }).notNull(),
-  contributorUserId: varchar("contributor_user_id").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Schemas for reward system
-export const insertRewardPoolSchema = createInsertSchema(rewardPools).omit({
-  id: true,
-  createdAt: true,
-  distributedAt: true,
-});
-
-export const insertRewardDistributionSchema = createInsertSchema(rewardDistributions).omit({
-  id: true,
-  createdAt: true,
-  claimedAt: true,
-});
-
-export const insertRewardContributionSchema = createInsertSchema(rewardContributions).omit({
-  id: true,
-  createdAt: true,
-});
-
-// Types for reward system
-export type RewardPool = typeof rewardPools.$inferSelect;
-export type InsertRewardPool = z.infer<typeof insertRewardPoolSchema>;
-export type RewardDistribution = typeof rewardDistributions.$inferSelect;
-export type InsertRewardDistribution = z.infer<typeof insertRewardDistributionSchema>;
-export type RewardContribution = typeof rewardContributions.$inferSelect;
-export type InsertRewardContribution = z.infer<typeof insertRewardContributionSchema>;

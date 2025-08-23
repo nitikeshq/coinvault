@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, ExternalLink, ArrowRightLeft, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -178,6 +177,27 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
           </div>
         </div>
         
+        {/* Wallet Address */}
+        {user?.walletAddress && (
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-4">
+            <p className="text-xs text-blue-100 mb-1">Wallet Address</p>
+            <div className="flex items-center justify-between">
+              <code className="text-sm font-mono text-white break-all" data-testid="text-wallet-address">
+                {user.walletAddress}
+              </code>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={copyAddress}
+                className="ml-2 p-1 hover:bg-white/20 text-yellow-300"
+                data-testid="button-copy-address"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        
         {/* Action Buttons */}
         <div className={`grid gap-3 ${presaleEnded ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <Button 
@@ -280,33 +300,6 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
                     {referralData.referralCode}
                   </code>
                 </div>
-                
-                {/* Referral URL Section */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Your Referral Link</label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      value={`${window.location.origin}/register?ref=${referralData.referralCode}`}
-                      readOnly
-                      className="font-mono bg-gray-50 text-sm"
-                      data-testid="input-referral-url"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        const referralUrl = `${window.location.origin}/register?ref=${referralData.referralCode}`;
-                        navigator.clipboard.writeText(referralUrl);
-                        alert('Referral link copied to clipboard!');
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      data-testid="button-copy-referral-url"
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copy Link
-                    </Button>
-                  </div>
-                </div>
-                
                 <div className="flex gap-2">
                   <Button
                     size="sm"
