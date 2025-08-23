@@ -58,7 +58,11 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
   };
 
   const formatPrice = (price: string) => {
-    return parseFloat(price || "0").toFixed(2);
+    const num = parseFloat(price || "0");
+    if (num === 0) return "0.00";
+    if (num < 0.01) return num.toFixed(6);
+    if (num < 1) return num.toFixed(4);
+    return num.toFixed(2);
   };
 
   const handleDepositClick = () => {
