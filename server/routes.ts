@@ -171,8 +171,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const data = { ...req.body };
       
+      console.log('Deposit request data:', data); // Debug log
+      
       if (req.file) {
         data.screenshot = req.file.path;
+      }
+      
+      // Ensure amount is provided
+      if (!data.amount) {
+        return res.status(400).json({ message: "Deposit amount is required" });
       }
       
       // Convert INR to USD for UPI deposits (approximately 83 INR = 1 USD)
