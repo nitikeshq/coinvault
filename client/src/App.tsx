@@ -114,14 +114,42 @@ export default function App() {
           </button>
         </div>
         
-        <div className="mt-8 bg-slate-800 p-6 rounded-lg">
-          <h4 className="text-lg font-semibold text-white mb-4">✅ Investment Tagging System Features</h4>
-          <div className="text-left text-gray-300 space-y-2">
-            <p>• Database schema updated with investment tag fields</p>
-            <p>• Automatic tag calculation based on approved deposit amounts</p>
-            <p>• Six tier system: Members → Premium → VIP → VVIP → Sharks → Whales</p>
-            <p>• Tags display in navigation with icons and investment amounts</p>
-            <p>• System integrates with deposit approval workflow</p>
+        <div className="mt-8 space-y-6">
+          <div className="bg-slate-800 p-6 rounded-lg">
+            <h4 className="text-lg font-semibold text-white mb-4">✅ Investment Tagging System Features</h4>
+            <div className="text-left text-gray-300 space-y-2">
+              <p>• Database schema updated with investment tag fields</p>
+              <p>• Automatic tag calculation based on approved deposit amounts</p>
+              <p>• Six tier system: Members → Premium → VIP → VVIP → Sharks → Whales</p>
+              <p>• Tags display in navigation with icons and investment amounts</p>
+              <p>• System integrates with deposit approval workflow</p>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-green-900 to-blue-900 p-6 rounded-lg">
+            <h4 className="text-lg font-semibold text-white mb-4">🎁 Weekly Rewards Pool</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-black/20 p-4 rounded-lg text-center">
+                <div className="text-2xl font-bold text-green-400">₹45</div>
+                <div className="text-sm text-gray-300">Current Pool</div>
+              </div>
+              <div className="bg-black/20 p-4 rounded-lg text-center">
+                <div className="text-2xl font-bold text-blue-400">5</div>
+                <div className="text-sm text-gray-300">New Contributors</div>
+              </div>
+              <div className="bg-black/20 p-4 rounded-lg text-center">
+                <div className="text-2xl font-bold text-purple-400">100</div>
+                <div className="text-sm text-gray-300">Eligible Members</div>
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm text-gray-300 mb-2">Estimated reward per member this week:</div>
+              <div className="text-xl font-bold text-yellow-400">₹0.45 each</div>
+            </div>
+            <div className="mt-4 text-xs text-gray-400 text-center">
+              <p>10% of deposits from new members goes to existing members weekly</p>
+              <p>Example: 5 people deposit ₹100 each → ₹50 goes to pool → ₹0.50 per existing member</p>
+            </div>
           </div>
         </div>
         

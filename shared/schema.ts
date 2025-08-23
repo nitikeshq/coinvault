@@ -432,3 +432,64 @@ export type InsertBid = z.infer<typeof insertBidSchema>;
 export type MemeStats = typeof memeStats.$inferSelect;
 export type MemeLikes = typeof memeLikes.$inferSelect;
 export type NftTransfer = typeof nftTransfers.$inferSelect;
+
+// Weekly reward pool system
+export const rewardPools = pgTable("reward_pools", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weekStartDate: timestamp("week_start_date").notNull(),
+  weekEndDate: timestamp("week_end_date").notNull(),
+  totalPoolAmount: decimal("total_pool_amount", { precision: 18, scale: 2 }).default("0"),
+  totalEligibleMembers: integer("total_eligible_members").default(0),
+  rewardPerMember: decimal("reward_per_member", { precision: 18, scale: 8 }).default("0"),
+  status: varchar("status").notNull().default("collecting"), // collecting, distributing, completed
+  createdAt: timestamp("created_at").defaultNow(),
+  distributedAt: timestamp("distributed_at"),
+});
+
+// Individual reward distributions
+export const rewardDistributions = pgTable("reward_distributions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  rewardPoolId: varchar("reward_pool_id").notNull().references(() => rewardPools.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  rewardAmount: decimal("reward_amount", { precision: 18, scale: 8 }).notNull(),
+  claimedAt: timestamp("claimed_at"),
+  status: varchar("status").notNull().default("pending"), // pending, claimed
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Reward pool contributions (tracking deposits that contributed to pools)
+export const rewardContributions = pgTable("reward_contributions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  rewardPoolId: varchar("reward_pool_id").notNull().references(() => rewardPools.id),
+  depositRequestId: varchar("deposit_request_id").notNull().references(() => depositRequests.id),
+  contributionAmount: decimal("contribution_amount", { precision: 18, scale: 8 }).notNull(), // 10% of deposit
+  originalDepositAmount: decimal("original_deposit_amount", { precision: 18, scale: 8 }).notNull(),
+  contributorUserId: varchar("contributor_user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Schemas for reward system
+export const insertRewardPoolSchema = createInsertSchema(rewardPools).omit({
+  id: true,
+  createdAt: true,
+  distributedAt: true,
+});
+
+export const insertRewardDistributionSchema = createInsertSchema(rewardDistributions).omit({
+  id: true,
+  createdAt: true,
+  claimedAt: true,
+});
+
+export const insertRewardContributionSchema = createInsertSchema(rewardContributions).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for reward system
+export type RewardPool = typeof rewardPools.$inferSelect;
+export type InsertRewardPool = z.infer<typeof insertRewardPoolSchema>;
+export type RewardDistribution = typeof rewardDistributions.$inferSelect;
+export type InsertRewardDistribution = z.infer<typeof insertRewardDistributionSchema>;
+export type RewardContribution = typeof rewardContributions.$inferSelect;
+export type InsertRewardContribution = z.infer<typeof insertRewardContributionSchema>;
