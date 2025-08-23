@@ -342,7 +342,7 @@ export default function LandingPage() {
                   size="lg" 
                   variant="outline"
                   onClick={handleAddToWallet}
-                  className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg flex items-center gap-2"
+                  className="border-white/30 !text-white hover:bg-white/10 hover:!text-white px-8 py-4 text-lg flex items-center gap-2"
                   data-testid="button-add-to-wallet"
                 >
                   <Wallet className="h-5 w-5" />
