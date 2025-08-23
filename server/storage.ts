@@ -715,6 +715,7 @@ export class DatabaseStorage implements IStorage {
     console.log('⚠️  Skipping traits combination check for now to avoid SQL syntax error');
     console.log('   traitsHash:', traitsHash);
     console.log('   traitsString:', traitsString);
+    console.log('✅ checkTraitsCombinationExists returning empty array');
     return [];
   }
 

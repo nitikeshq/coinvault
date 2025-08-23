@@ -1103,40 +1103,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
-    console.log('\n===========================================');
-    console.log('🔥🔥🔥 MINT NFT ENDPOINT HIT! 🔥🔥🔥');
-    console.log('===========================================');
-    console.log('📍 Timestamp:', new Date().toISOString());
-    console.log('📍 Method:', req.method);
-    console.log('📍 URL:', req.url);
-    console.log('📍 Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('📍 Raw req.body:', JSON.stringify(req.body, null, 2));
-    console.log('📍 req.body type:', typeof req.body);
-    console.log('📍 req.body keys:', req.body ? Object.keys(req.body) : 'NO BODY');
-    console.log('===========================================\n');
-    
     try {
-      console.log('🚀 ENTERING TRY BLOCK - Starting request processing...');
-      console.log('=== MINT NFT REQUEST DEBUG ===');
-      console.log('Full request body:', JSON.stringify(req.body, null, 2));
-      console.log('Request body keys:', Object.keys(req.body || {}));
-      console.log('Request body types:', Object.keys(req.body || {}).map(key => `${key}: ${typeof req.body[key]}`));
-      
-      const { traits, rarity, quantity = 1, referenceImageUrl, skipUniquenessCheck = false } = req.body;
-      
-      console.log('Extracted values:');
-      console.log('- traits:', traits, typeof traits);
-      console.log('- rarity:', rarity, typeof rarity);
-      console.log('- quantity:', quantity, typeof quantity);
-      console.log('- skipUniquenessCheck:', skipUniquenessCheck, typeof skipUniquenessCheck);
+      const { traits, rarity, quantity = 1, skipUniquenessCheck = false } = req.body;
       
       if (!traits) {
-        console.log('ERROR: No traits provided');
         return res.status(400).json({ message: "Traits are required" });
       }
       
       if (typeof traits !== 'object') {
-        console.log('ERROR: Traits is not an object, received:', typeof traits);
         return res.status(400).json({ message: "Traits must be an object" });
       }
       
@@ -1144,13 +1118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requiredTraits = ['expression', 'mouth', 'eyewear', 'beard', 'hairStyle', 'background'];
       const missingTraits = requiredTraits.filter(trait => !traits[trait]);
       
-      console.log('Traits validation:');
-      console.log('- Required traits:', requiredTraits);
-      console.log('- Received trait keys:', Object.keys(traits));
-      console.log('- Missing traits:', missingTraits);
-      
       if (missingTraits.length > 0) {
-        console.log('ERROR: Missing required traits:', missingTraits);
         return res.status(400).json({ 
           message: `Missing required traits: ${missingTraits.join(', ')}`,
           receivedTraits: Object.keys(traits),
@@ -1158,43 +1126,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Generate trait variations for quantity > 1
-      const traitVariations = quantity > 1 ? 
-        generateTraitVariations(traits, quantity) : 
-        [traits];
-
-      // Check uniqueness for all variations unless skipped
-      if (!skipUniquenessCheck) {
-        for (let variation of traitVariations) {
-          const traitsString = `${variation.expression}-${variation.mouth}-${variation.eyewear}-${variation.beard}-${variation.hairStyle}-${variation.background}`;
-          const traitsHash = createHash('md5').update(traitsString).digest('hex');
-          
-          const existingNFTs = await storage.checkTraitsCombinationExists(traitsHash, traitsString);
-          if (existingNFTs.length > 0) {
-            return res.status(400).json({ 
-              message: `Trait combination already exists: ${traitsString}`,
-              existingNFT: existingNFTs[0],
-              suggestion: "Try different traits or use 'Skip Uniqueness Check' option"
-            });
-          }
-        }
-      }
-
       const results = [];
-      
+
+      // Generate NFTs one by one based on quantity
       for (let i = 0; i < quantity; i++) {
-        const currentTraits = traitVariations[i] || traits;
-        // Step 1: Generate AI metadata based on detailed traits
+        console.log(`🎨 Generating NFT ${i + 1} of ${quantity}...`);
+        
+        // Step 1: Generate AI metadata using the traits
         const traitDescription = `
         Character Traits:
-        - Expression: ${currentTraits.expression}
-        - Mouth/Extras: ${currentTraits.mouth}
-        - Eyewear: ${currentTraits.eyewear}
-        - Beard/Mustache: ${currentTraits.beard}
-        - Hair Style/Color: ${currentTraits.hairStyle}
-        - Background: ${currentTraits.background}
-        ${currentTraits.accessories ? `- Accessories: ${currentTraits.accessories}` : ''}
-        ${currentTraits.customTheme ? `- Custom Theme: ${currentTraits.customTheme}` : ''}
+        - Expression: ${traits.expression}
+        - Mouth/Extras: ${traits.mouth}
+        - Eyewear: ${traits.eyewear}
+        - Beard/Mustache: ${traits.beard}
+        - Hair Style/Color: ${traits.hairStyle}
+        - Background: ${traits.background}
+        ${traits.accessories ? `- Accessories: ${traits.accessories}` : ''}
+        ${traits.customTheme ? `- Custom Theme: ${traits.customTheme}` : ''}
         `;
 
         const metadataPrompt = `Create detailed metadata for a unique NFT with these specific character traits and rarity: "${rarity || 'Common'}". 
@@ -1206,13 +1154,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "name": "Unique NFT Name incorporating the traits",
           "description": "Engaging description under 200 words that mentions the specific character traits",
           "attributes": [
-            {"trait_type": "Expression", "value": "${currentTraits.expression}"},
-            {"trait_type": "Mouth", "value": "${currentTraits.mouth}"},
-            {"trait_type": "Eyewear", "value": "${currentTraits.eyewear}"},
-            {"trait_type": "Beard", "value": "${currentTraits.beard}"},
-            {"trait_type": "Hair", "value": "${currentTraits.hairStyle}"},
-            {"trait_type": "Background", "value": "${currentTraits.background}"},
-            ${currentTraits.accessories ? `{"trait_type": "Accessories", "value": "${currentTraits.accessories}"},` : ''}
+            {"trait_type": "Expression", "value": "${traits.expression}"},
+            {"trait_type": "Mouth", "value": "${traits.mouth}"},
+            {"trait_type": "Eyewear", "value": "${traits.eyewear}"},
+            {"trait_type": "Beard", "value": "${traits.beard}"},
+            {"trait_type": "Hair", "value": "${traits.hairStyle}"},
+            {"trait_type": "Background", "value": "${traits.background}"},
+            ${traits.accessories ? `{"trait_type": "Accessories", "value": "${traits.accessories}"},` : ''}
             {"trait_type": "Rarity", "value": "${rarity || 'Common'}"}
           ]
         }`;
@@ -1221,6 +1169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error('OpenAI API key not configured');
         }
         
+        console.log('🤖 Calling OpenAI for metadata generation...');
         const metadataResponse = await openai.chat.completions.create({
           model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
           messages: [{ role: "user", content: metadataPrompt }],
@@ -1228,45 +1177,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           max_tokens: 300,
         });
 
+        console.log('✅ OpenAI metadata response received');
         const messageContent = metadataResponse.choices[0]?.message?.content;
         if (!messageContent) {
           throw new Error('No metadata response received');
         }
         const metadata = JSON.parse(messageContent);
+        console.log('📋 Metadata parsed:', metadata.name);
         
         // Step 2: Get NFT character setting from admin
         const websiteSettings = await storage.getWebsiteSettings();
-        const characterPrompt = websiteSettings?.nftCharacterPrompt;
-        
-        if (!characterPrompt) {
-          throw new Error("Admin must set NFT character first before generating NFTs");
-        }
+        const characterPrompt = websiteSettings?.nftCharacterPrompt || "Cool man with messy gray hair, thick full beard with curled mustache";
         
         // Step 3: Generate AI image using the character prompt + traits
-        const imageManager = new ImageManager();
-        let imageUrl = null;
-        try {
-          // Combine base character prompt with specific traits for image generation
-          const detailedImagePrompt = `${characterPrompt}. 
-          Character has: ${currentTraits.expression} expression, ${currentTraits.mouth} mouth, ${currentTraits.eyewear} eyewear, ${currentTraits.beard} beard, ${currentTraits.hairStyle} hair, on ${currentTraits.background} background.
-          ${currentTraits.accessories ? `Additional accessories: ${currentTraits.accessories}.` : ''}
-          ${currentTraits.customTheme ? `Theme style: ${currentTraits.customTheme}.` : ''}
-          High quality digital art, detailed, professional NFT artwork.`;
-          
-          imageUrl = await imageManager.generateAndSaveNFTImage({
-            name: metadata.name,
-            description: metadata.description,
-            rarity: rarity || 'Common',
-            attributes: metadata.attributes
-          }, detailedImagePrompt);
-        } catch (imageError) {
-          console.error("Error generating AI image:", imageError);
-          // Fallback to placeholder if image generation fails
-          imageUrl = `https://via.placeholder.com/512x512/1a1a2e/ffffff?text=${encodeURIComponent(metadata.name)}`;
-        }
+        const detailedImagePrompt = `${characterPrompt}. 
+        Character has: ${traits.expression} expression, ${traits.mouth} mouth, ${traits.eyewear} eyewear, ${traits.beard} beard, ${traits.hairStyle} hair, on ${traits.background} background.
+        ${traits.accessories ? `Additional accessories: ${traits.accessories}.` : ''}
+        ${traits.customTheme ? `Theme style: ${traits.customTheme}.` : ''}
+        High quality digital art, detailed, professional NFT artwork.`;
+        
+        console.log('🎨 Calling OpenAI DALL-E for image generation...');
+        const imageResponse = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: detailedImagePrompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard",
+        });
+
+        const imageUrl = imageResponse.data[0].url;
+        console.log('🖼️ AI image generated successfully!');
         
         // Create traits hash for uniqueness tracking
-        const traitsString = `${currentTraits.expression}-${currentTraits.mouth}-${currentTraits.eyewear}-${currentTraits.beard}-${currentTraits.hairStyle}-${currentTraits.background}`;
+        const traitsString = `${traits.expression}-${traits.mouth}-${traits.eyewear}-${traits.beard}-${traits.hairStyle}-${traits.background}`;
         const traitsHash = createHash('md5').update(traitsString).digest('hex');
 
         // Step 4: Create NFT in database with all generated content
@@ -1274,29 +1217,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: metadata.name,
           description: metadata.description,
           rarity: rarity || 'Common',
-          attributes: JSON.stringify({
-            ...metadata.attributes,
-            rarity: rarity || 'Common',
-            createdBy: 'admin',
-            hasReferenceImage: !!referenceImageUrl,
-            traitsHash,
-            traitsString
-          }),
+          attributes: JSON.stringify(metadata.attributes),
           imageUrl,
-          referenceImageUrl,
           traitsHash,
           traitsString
         });
         
-        results.push(nft);
+        console.log(`✅ NFT ${i + 1} created successfully: ${metadata.name}`);
+        results.push({
+          id: nft.id,
+          name: metadata.name,
+          description: metadata.description,
+          rarity: rarity || 'Common',
+          imageUrl,
+          attributes: metadata.attributes
+        });
       }
 
-      res.json({ message: `Successfully created ${quantity} high-quality NFT(s) with AI-generated images and metadata`, nfts: results });
+      return res.status(200).json({
+        success: true,
+        message: `🎉 Successfully created ${quantity} AI-generated NFT${quantity > 1 ? 's' : ''} with unique traits!`,
+        nfts: results,
+        totalGenerated: results.length
+      });
+
     } catch (error) {
-      console.error('🚨 MINT NFT ERROR CAUGHT:', error);
-      console.error('🚨 Error type:', typeof error);
-      console.error('🚨 Error message:', error.message);
-      console.error('🚨 Error stack:', error.stack);
+      console.error('❌ Mint NFT error:', error);
       res.status(500).json({ message: error.message || "Failed to mint NFT" });
     }
   });
