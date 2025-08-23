@@ -41,9 +41,15 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
 
     // Verify user owns the NFT
     const userNfts = await storage.getUserNfts(userId);
+    console.log("User NFTs structure:", JSON.stringify(userNfts[0], null, 2));
+    
     const ownsNFT = userNfts.some(userNft => {
-      const nft = userNft.nft || userNft;
-      return nft?.id === nftId;
+      // Handle different possible NFT structures
+      const nftId1 = userNft?.nft?.id;
+      const nftId2 = userNft?.id;
+      const nftId3 = userNft?.nftId;
+      
+      return nftId1 === nftId || nftId2 === nftId || nftId3 === nftId;
     });
     
     if (!ownsNFT) {
