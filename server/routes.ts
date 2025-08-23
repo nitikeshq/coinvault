@@ -778,7 +778,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUserBalance(userId, newBalance, '0');
 
       // Create meme generation record
-      const meme = await storage.createMemeGeneration(userId, prompt.trim());
+      const meme = await storage.createMemeGeneration({
+        userId,
+        prompt: prompt.trim(),
+        style: 'funny',
+        cost: cost.toString(),
+        status: 'processing'
+      });
       
       // Simulate AI meme generation (in real implementation, use actual AI service)
       setTimeout(async () => {

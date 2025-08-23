@@ -640,7 +640,7 @@ export class DatabaseStorage implements IStorage {
         style: data.style || 'funny',
         generatedDescription: data.generatedDescription,
         cost: data.cost,
-        status: 'completed'
+        status: data.status || 'processing'
       })
       .returning();
     return meme;
