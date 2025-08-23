@@ -309,71 +309,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Token price routes
   app.get('/api/token/price', async (req, res) => {
-    let config;
     try {
-      config = await storage.getActiveTokenConfig();
+      const config = await storage.getActiveTokenConfig();
       if (!config) {
         return res.status(404).json({ message: "No active token configuration found" });
       }
       
-      // Fetch real-time price from PancakeSwap
-      const realTimePrice = await blockchainService.getTokenPrice(config.contractAddress);
+      // Just use the admin-configured default price directly
+      const price = {
+        priceUsd: config.defaultPriceUsd || "0.001",
+        priceChange24h: "0.00",
+        high24h: config.defaultPriceUsd || "0.001",
+        low24h: config.defaultPriceUsd || "0.001",
+        volume24h: "0",
+        marketCap: "0"
+      };
       
-      // Update the database with latest price data
-      await storage.updateTokenPrice(config.id, {
-        priceUsd: realTimePrice.priceUsd,
-        priceChange24h: realTimePrice.priceChange24h,
-        high24h: realTimePrice.high24h,
-        low24h: realTimePrice.low24h,
-        volume24h: realTimePrice.volume24h,
-        marketCap: realTimePrice.marketCap,
-        updatedAt: new Date()
-      });
-      
-      res.json(realTimePrice);
+      res.json(price);
     } catch (error) {
       console.error("Error fetching token price:", error);
-      
-      // Ensure we have config for fallbacks
-      if (!config) {
-        try {
-          config = await storage.getActiveTokenConfig();
-        } catch (configError) {
-          console.error("Error fetching config for fallback:", configError);
-          return res.status(500).json({ message: "Failed to fetch token configuration" });
-        }
-      }
-      
-      // Fallback to database price if blockchain call fails
-      try {
-        const price = await storage.getLatestTokenPrice(config.id);
-        if (price && price.priceUsd && parseFloat(price.priceUsd) > 0) {
-          res.json(price);
-        } else {
-          // Use the admin-configured default price as final fallback
-          const defaultPrice = {
-            priceUsd: config.defaultPriceUsd || "0.001",
-            priceChange24h: "0.00",
-            high24h: config.defaultPriceUsd || "0.001",
-            low24h: config.defaultPriceUsd || "0.001",
-            volume24h: "0",
-            marketCap: "0"
-          };
-          res.json(defaultPrice);
-        }
-      } catch (fallbackError) {
-        console.error("Error in fallback price fetch:", fallbackError);
-        // Final fallback to admin-configured default price
-        const defaultPrice = {
-          priceUsd: config.defaultPriceUsd || "0.001",
-          priceChange24h: "0.00",
-          high24h: config.defaultPriceUsd || "0.001",
-          low24h: config.defaultPriceUsd || "0.001",
-          volume24h: "0",
-          marketCap: "0"
-        };
-        res.json(defaultPrice);
-      }
+      res.status(500).json({ message: "Failed to fetch token price" });
     }
   });
 
