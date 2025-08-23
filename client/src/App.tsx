@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Home from "@/pages/Home";
 import AuthPage from "@/pages/AuthPage";
+import LandingPage from "@/pages/LandingPage";
 import NftMarketplace from "@/pages/NftMarketplace";
 import MemeMarketplace from "@/pages/MemeMarketplace";
 
@@ -32,7 +33,8 @@ function AppContent() {
       {!user ? (
         <>
           <Route path="/auth" component={AuthPage} />
-          <Route component={AuthPage} />
+          <Route path="/register" component={AuthPage} />
+          <Route component={LandingPage} />
         </>
       ) : (
         <>
