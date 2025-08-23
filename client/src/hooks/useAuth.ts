@@ -81,7 +81,7 @@ export function useAuth() {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData(["/api/me"], null);
       queryClient.clear();
       toast({
         title: "Logged out",

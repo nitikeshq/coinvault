@@ -32,11 +32,13 @@ export function setupAuth(app: Express) {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    name: 'cryptowallet.sid', // Custom session name
     cookie: {
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
+      secure: false, // Keep false for development
       maxAge: sessionTtl,
-      sameSite: 'lax', // Ensure cookie works across refreshes
+      sameSite: 'lax',
+      path: '/', // Explicitly set path
     },
   }));
 
