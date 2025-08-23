@@ -133,11 +133,11 @@ export default function AuthPage() {
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-700">
-                  <TabsTrigger value="login" className="text-gray-300 data-[state=active]:text-white">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-200">
+                  <TabsTrigger value="login" className="text-black data-[state=active]:text-white data-[state=active]:bg-blue-600">
                     Sign In
                   </TabsTrigger>
-                  <TabsTrigger value="register" className="text-gray-300 data-[state=active]:text-white">
+                  <TabsTrigger value="register" className="text-black data-[state=active]:text-white data-[state=active]:bg-purple-600">
                     Register
                   </TabsTrigger>
                 </TabsList>
@@ -150,7 +150,7 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Email</FormLabel>
+                            <FormLabel className="text-black">Email</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -170,7 +170,7 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Password</FormLabel>
+                            <FormLabel className="text-black">Password</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Input
@@ -223,7 +223,7 @@ export default function AuthPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full border-slate-600 text-gray-300 hover:bg-slate-700"
+                      className="w-full border-slate-600 text-black hover:bg-gray-100"
                       onClick={handleGoogleAuth}
                       data-testid="button-google-login"
                     >
@@ -232,10 +232,10 @@ export default function AuthPage() {
                   </div>
 
                   <div className="text-center text-sm">
-                    <p className="text-gray-400">
+                    <p className="text-black">
                       Demo accounts: admin@cryptowallet.com / user@example.com
                     </p>
-                    <p className="text-gray-400">Password: password123</p>
+                    <p className="text-black">Password: password123</p>
                   </div>
                 </TabsContent>
 
@@ -247,7 +247,7 @@ export default function AuthPage() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Full Name</FormLabel>
+                            <FormLabel className="text-black">Full Name</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -266,7 +266,7 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Username</FormLabel>
+                            <FormLabel className="text-black">Username</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -285,7 +285,7 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Email</FormLabel>
+                            <FormLabel className="text-black">Email</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -305,7 +305,7 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Password</FormLabel>
+                            <FormLabel className="text-black">Password</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Input
@@ -341,7 +341,7 @@ export default function AuthPage() {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Phone (Optional)</FormLabel>
+                            <FormLabel className="text-black">Phone (Optional)</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -378,7 +378,7 @@ export default function AuthPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full border-slate-600 text-gray-300 hover:bg-slate-700"
+                      className="w-full border-slate-600 text-black hover:bg-gray-100"
                       onClick={handleGoogleAuth}
                       data-testid="button-google-register"
                     >
