@@ -55,8 +55,8 @@ function useAuthLogic(): AuthContextType {
     },
     retry: false,
     refetchOnWindowFocus: false,
-    staleTime: 1 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
   const loginMutation = useMutation({
