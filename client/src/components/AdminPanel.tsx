@@ -50,6 +50,8 @@ const websiteSettingsSchema = z.object({
   description: z.string().optional().or(z.literal("")),
   primaryColor: z.string().min(1, "Primary color is required"),
   secondaryColor: z.string().min(1, "Secondary color is required"),
+  auditReportUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  whitepaperUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 export default function AdminPanel() {
@@ -145,6 +147,8 @@ export default function AdminPanel() {
       description: "",
       primaryColor: "#6366f1",
       secondaryColor: "#8b5cf6",
+      auditReportUrl: "",
+      whitepaperUrl: "",
     },
   });
 
@@ -522,6 +526,46 @@ export default function AdminPanel() {
                               type="color"
                               className="bg-gray-50 border-gray-300 text-gray-900 h-12"
                               data-testid="input-secondary-color"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={websiteForm.control}
+                      name="auditReportUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Audit Report URL</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://example.com/audit-report.pdf"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              data-testid="input-audit-report-url"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={websiteForm.control}
+                      name="whitepaperUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Whitepaper URL</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://example.com/whitepaper.pdf"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              data-testid="input-whitepaper-url"
                             />
                           </FormControl>
                           <FormMessage />
