@@ -28,6 +28,7 @@ const getRarityColor = (rarity: string) => {
 export default function DappsSection() {
   const { toast } = useToast();
   const [memePrompt, setMemePrompt] = useState("");
+  const [nftTheme, setNftTheme] = useState("");
   const { tokenSymbol } = useTokenInfo();
   const [location] = useLocation();
 
@@ -107,6 +108,28 @@ export default function DappsSection() {
     },
   });
 
+  const nftGenerationMutation = useMutation({
+    mutationFn: async (theme: string) => {
+      return apiRequest("POST", "/api/nfts/generate", { theme });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: `NFT Generated! 🎉`,
+        description: `You got a ${data.nft?.rarity || 'Common'} rarity NFT!`,
+      });
+      setNftTheme("");
+      queryClient.invalidateQueries({ queryKey: ["/api/user/nfts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/balance"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to generate NFT",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleBuyNft = (nftId: string) => {
     nftBuyMutation.mutate(nftId);
   };
@@ -114,6 +137,11 @@ export default function DappsSection() {
   const handleGenerateMeme = () => {
     if (!memePrompt.trim()) return;
     memeGenerationMutation.mutate(memePrompt.trim());
+  };
+
+  const handleGenerateNft = () => {
+    if (!nftTheme.trim()) return;
+    nftGenerationMutation.mutate(nftTheme.trim());
   };
 
   const isNftMintEnabled = dappSettings.some(d => d.appName === 'nft_mint' && d.isEnabled);

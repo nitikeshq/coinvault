@@ -682,6 +682,32 @@ export class DatabaseStorage implements IStorage {
     return nft;
   }
 
+  // Create user-owned NFT
+  async createUserNFT(nftData: any): Promise<any> {
+    // Get the next token ID
+    const [maxToken] = await db.select({
+      maxId: sql<number>`max(token_id)`
+    }).from(nftCollection);
+    
+    const nextTokenId = (maxToken.maxId || 0) + 1;
+    
+    const [nft] = await db.insert(nftCollection)
+      .values({
+        tokenId: nextTokenId,
+        name: nftData.name || `${nftData.theme} NFT #${nextTokenId}`,
+        description: nftData.description,
+        imageUrl: nftData.imageUrl || `https://via.placeholder.com/512x512.png?text=NFT+${nextTokenId}`,
+        rarity: nftData.rarity || 'Common',
+        attributes: nftData.attributes,
+        referenceImageUrl: nftData.referenceImageUrl,
+        ownerId: nftData.userId, // Set owner immediately
+        isMinted: true // User generated NFTs are considered minted
+      })
+      .returning();
+      
+    return nft;
+  }
+
   // Update createMemeGeneration to match the new signature
   async createMemeGeneration(data: any): Promise<any> {
     const [meme] = await db.insert(memeGenerations)

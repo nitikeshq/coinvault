@@ -166,6 +166,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User NFT generation endpoint with random rarity
+  app.post("/api/nfts/generate", requireAuth, async (req: any, res) => {
+    try {
+      const { theme } = req.body;
+      const userId = req.user?.id;
+      
+      if (!theme) {
+        return res.status(400).json({ message: "Theme is required" });
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Check if user has enough balance
+      const balance = await storage.getUserBalance(userId);
+      const dappSettings = await storage.getDappSettings();
+      const nftMintSettings = dappSettings.find(d => d.appName === 'nft_mint');
+      const cost = parseFloat(nftMintSettings?.cost || '10');
+      
+      if (parseFloat(balance?.balance || '0') < cost) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
+      // Random rarity assignment with specified percentages
+      function getRandomRarity(): string {
+        const rand = Math.random() * 100;
+        if (rand < 50) return 'Common';      // 50%
+        if (rand < 80) return 'Rare';        // 30% 
+        if (rand < 95) return 'Unique';      // 15%
+        return 'Legendary';                  // 5%
+      }
+
+      const rarity = getRandomRarity();
+
+      // Generate AI description using OpenAI
+      let description = `A unique ${rarity.toLowerCase()} NFT with ${theme} theme`;
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system", 
+              content: "You are an NFT description generator. Create engaging, unique descriptions for NFTs."
+            },
+            {
+              role: "user",
+              content: `Create a detailed, engaging description for a ${rarity} rarity NFT with the theme: ${theme}`
+            }
+          ],
+          max_tokens: 150
+        });
+        description = completion.choices[0]?.message?.content || description;
+      } catch (error) {
+        console.log("AI description generation failed, using default");
+      }
+
+      // Create NFT owned by user
+      const nft = await storage.createUserNFT({
+        userId,
+        name: `${theme} NFT`,
+        description,
+        rarity,
+        theme,
+        cost,
+        attributes: { theme, generated: true, userGenerated: true }
+      });
+
+      // Deduct cost from user balance
+      await storage.updateUserBalance(userId, -cost);
+
+      res.json({ 
+        message: `Successfully generated NFT!`,
+        nft: {
+          ...nft,
+          rarity // Show the rarity after creation
+        }
+      });
+    } catch (error) {
+      console.error("User NFT generation failed:", error);
+      res.status(500).json({ message: "Failed to generate NFT" });
+    }
+  });
+
   // NFT purchase endpoint
   app.post("/api/nfts/buy", requireAuth, async (req: any, res) => {
     try {
