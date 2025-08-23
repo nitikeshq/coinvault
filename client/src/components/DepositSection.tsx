@@ -126,93 +126,150 @@ export default function DepositSection() {
                 </TabsList>
 
                 <TabsContent value="direct" className="space-y-6 mt-6">
-                  {/* Payment Method Selection */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Crypto Transfer */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                          <Wallet className="h-5 w-5 text-white" />
+                  {/* Nested Payment Method Tabs */}
+                  <Tabs defaultValue="upi" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                      <TabsTrigger value="upi" className="text-gray-700 data-[state=active]:bg-purple-600 data-[state=active]:text-white" data-testid="tab-upi">UPI Payment</TabsTrigger>
+                      <TabsTrigger value="bep20" className="text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-bep20">BEP-20 (USDT/BNB)</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="upi" className="mt-6">
+                      <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+                        <div className="flex items-center space-x-3 mb-6">
+                          <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                            <CreditCard className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800">UPI Payment</h3>
+                            <p className="text-sm text-gray-600">Pay via PhonePe, GPay, Paytm, or any UPI app</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-800">Crypto Transfer</h3>
-                          <p className="text-sm text-gray-600">Send BEP-20 tokens directly</p>
+                        
+                        {/* UPI QR Code */}
+                        <div className="text-center mb-6">
+                          <div className="bg-white p-6 rounded-xl inline-block border border-gray-200 shadow-sm">
+                            <img 
+                              src={upiQrImage} 
+                              alt="UPI QR Code" 
+                              className="w-48 h-48 object-contain"
+                              data-testid="upi-qr-code"
+                            />
+                          </div>
+                          <p className="text-sm text-gray-600 mt-3 font-medium">Scan with any UPI app to pay</p>
+                        </div>
+
+                        {/* UPI Instructions */}
+                        <div className="bg-white rounded-lg p-4 border border-gray-200">
+                          <p className="text-sm font-medium text-gray-800 mb-3">Payment Steps:</p>
+                          <div className="space-y-2">
+                            <p className="text-sm text-gray-700 flex items-center">
+                              <span className="w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 font-semibold">1</span>
+                              Open any UPI app (PhonePe, GPay, Paytm)
+                            </p>
+                            <p className="text-sm text-gray-700 flex items-center">
+                              <span className="w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 font-semibold">2</span>
+                              Scan QR code above
+                            </p>
+                            <p className="text-sm text-gray-700 flex items-center">
+                              <span className="w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 font-semibold">3</span>
+                              Enter amount and complete payment
+                            </p>
+                            <p className="text-sm text-gray-700 flex items-center">
+                              <span className="w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 font-semibold">4</span>
+                              Take screenshot and verify in next tab
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      
-                      {/* Crypto QR Code */}
-                      <div className="text-center mb-4">
-                        <div className="bg-white p-4 rounded-xl inline-block border border-gray-200">
-                          <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300" data-testid="crypto-qr-code">
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">📱</div>
-                              <p className="text-gray-600 text-xs">Wallet QR</p>
-                              <p className="text-gray-500 text-xs">Scan to send</p>
+                    </TabsContent>
+
+                    <TabsContent value="bep20" className="mt-6">
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                        <div className="flex items-center space-x-3 mb-6">
+                          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <Wallet className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800">BEP-20 Crypto Transfer</h3>
+                            <p className="text-sm text-gray-600">Send USDT, BNB, CAKE or other BSC tokens</p>
+                          </div>
+                        </div>
+
+                        {/* Supported Tokens */}
+                        <div className="mb-6">
+                          <p className="text-sm font-medium text-gray-800 mb-3">Supported BEP-20 Tokens:</p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                              <div className="w-8 h-8 bg-yellow-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                <span className="text-yellow-600 font-bold text-sm">₿</span>
+                              </div>
+                              <p className="text-xs font-semibold text-gray-800">BNB</p>
+                              <p className="text-xs text-gray-500">Binance Coin</p>
+                            </div>
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                              <div className="w-8 h-8 bg-green-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                <span className="text-green-600 font-bold text-sm">₮</span>
+                              </div>
+                              <p className="text-xs font-semibold text-gray-800">USDT</p>
+                              <p className="text-xs text-gray-500">Tether USD</p>
+                            </div>
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                              <div className="w-8 h-8 bg-orange-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                <span className="text-orange-600 font-bold text-sm">🥞</span>
+                              </div>
+                              <p className="text-xs font-semibold text-gray-800">CAKE</p>
+                              <p className="text-xs text-gray-500">PancakeSwap</p>
+                            </div>
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                <span className="text-blue-600 font-bold text-sm">+</span>
+                              </div>
+                              <p className="text-xs font-semibold text-gray-800">More</p>
+                              <p className="text-xs text-gray-500">BSC Tokens</p>
                             </div>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">Scan QR code with your crypto wallet</p>
-                      </div>
-
-                      {/* Wallet Address */}
-                      {user?.walletAddress && (
-                        <div className="bg-white rounded-lg p-3 border border-gray-200">
-                          <p className="text-xs text-gray-500 mb-2">Wallet Address (BEP-20)</p>
-                          <div className="flex items-center justify-between">
-                            <code className="text-xs font-mono text-gray-800 break-all mr-2" data-testid="text-crypto-address">
-                              {user.walletAddress}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={copyAddress}
-                              className="p-1 hover:bg-gray-200 text-blue-600"
-                              data-testid="button-copy-crypto-address"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                        
+                        {/* Crypto QR Code */}
+                        <div className="text-center mb-6">
+                          <div className="bg-white p-6 rounded-xl inline-block border border-gray-200 shadow-sm">
+                            <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300" data-testid="crypto-qr-code">
+                              <div className="text-center">
+                                <div className="text-5xl mb-3">📱</div>
+                                <p className="text-gray-600 text-sm font-medium">Wallet QR</p>
+                                <p className="text-gray-500 text-xs">Scan to send</p>
+                              </div>
+                            </div>
                           </div>
+                          <p className="text-sm text-gray-600 mt-3 font-medium">Scan QR code with your crypto wallet</p>
                         </div>
-                      )}
-                    </div>
 
-                    {/* UPI Transfer */}
-                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                          <CreditCard className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-800">UPI Payment</h3>
-                          <p className="text-sm text-gray-600">Pay via PhonePe, GPay, Paytm</p>
-                        </div>
+                        {/* Wallet Address */}
+                        {user?.walletAddress && (
+                          <div className="bg-white rounded-lg p-4 border border-gray-200">
+                            <p className="text-sm font-medium text-gray-800 mb-3">Wallet Address (BEP-20 Network)</p>
+                            <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                              <code className="text-sm font-mono text-gray-800 break-all mr-3" data-testid="text-crypto-address">
+                                {user.walletAddress}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={copyAddress}
+                                className="p-2 hover:bg-gray-200 text-blue-600 shrink-0"
+                                data-testid="button-copy-crypto-address"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <p className="text-xs text-orange-600 mt-2 font-medium">
+                              ⚠️ Only send BEP-20 tokens to this address. Sending tokens from other networks will result in permanent loss!
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      
-                      {/* UPI QR Code */}
-                      <div className="text-center mb-4">
-                        <div className="bg-white p-4 rounded-xl inline-block border border-gray-200">
-                          <img 
-                            src={upiQrImage} 
-                            alt="UPI QR Code" 
-                            className="w-40 h-40 object-contain"
-                            data-testid="upi-qr-code"
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">Scan with any UPI app</p>
-                      </div>
-
-                      {/* UPI Instructions */}
-                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                        <p className="text-xs text-gray-500 mb-2">Quick Payment</p>
-                        <div className="space-y-1">
-                          <p className="text-xs text-gray-700">• Open any UPI app</p>
-                          <p className="text-xs text-gray-700">• Scan QR code above</p>
-                          <p className="text-xs text-gray-700">• Enter amount and pay</p>
-                          <p className="text-xs text-gray-700">• Screenshot & verify below</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    </TabsContent>
+                  </Tabs>
                 </TabsContent>
 
                 <TabsContent value="verify" className="space-y-4 mt-6">
