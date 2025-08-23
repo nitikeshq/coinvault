@@ -99,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if presale is active
       const presaleConfig = await storage.getPresaleConfig();
-      const isPresaleActive = presaleConfig?.isActive && new Date() < new Date(presaleConfig.endDate);
+      const isPresaleActive = presaleConfig?.isActive && presaleConfig.endDate && new Date() < new Date(presaleConfig.endDate);
       
       if (isPresaleActive) {
         // During presale: Read from database
@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const tokenPrice = tokenConfig ? await storage.getLatestTokenPrice(tokenConfig.id) : null;
         
         if (balance && tokenPrice) {
-          const usdValue = (parseFloat(balance.balance) * parseFloat(tokenPrice.priceUsd)).toString();
+          const usdValue = (parseFloat(balance.balance || '0') * parseFloat(tokenPrice.priceUsd || '0')).toString();
           res.json({ 
             balance: balance.balance || '0', 
             usdValue: usdValue || '0' 
@@ -229,7 +229,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status, adminNotes } = req.body;
       
       // Get deposit details before updating
-      const depositRequest = await storage.getDepositRequest(id);
+      const allDeposits = await storage.getDepositRequests();
+      const depositRequest = allDeposits.find(d => d.id === id);
       if (!depositRequest) {
         return res.status(404).json({ message: "Deposit request not found" });
       }
@@ -258,12 +259,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Update user's token balance (convert USD to tokens)
-        const tokenConfig = await storage.getTokenConfig();
-        if (tokenConfig) {
-          const tokenPrice = parseFloat(tokenConfig.defaultPriceUsd);
+        const tokenConfig = await storage.getActiveTokenConfig();
+        if (tokenConfig && tokenConfig.defaultPriceUsd) {
+          const tokenPrice = parseFloat(tokenConfig.defaultPriceUsd.toString());
           const tokensToAdd = depositAmount / tokenPrice;
           
-          await storage.updateUserTokenBalance(depositRequest.userId, tokensToAdd.toString());
+          // Get current balance and add new tokens
+          const currentBalance = await storage.getUserBalance(depositRequest.userId);
+          const currentTokens = parseFloat(currentBalance?.balance || '0');
+          const newBalance = (currentTokens + tokensToAdd).toString();
+          const newUsdValue = (parseFloat(newBalance) * tokenPrice).toString();
+          
+          await storage.updateUserBalance(depositRequest.userId, newBalance, newUsdValue);
         }
       }
       
@@ -459,6 +466,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const now = new Date();
+      if (!config.endDate) {
+        return res.status(400).json({ message: 'Presale end date not configured' });
+      }
       const endDate = new Date(config.endDate);
       const timeRemaining = Math.max(0, endDate.getTime() - now.getTime());
       
@@ -495,9 +505,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         total + parseFloat(deposit.amount), 0
       );
 
-      const initialLiquidity = parseFloat(config.initialLiquidity);
+      const initialLiquidity = parseFloat(config.initialLiquidity || '0');
       const totalRaised = initialLiquidity + fromDeposits;
-      const targetAmount = parseFloat(config.targetAmount);
+      const targetAmount = parseFloat(config.targetAmount || '1000000');
       const progressPercentage = (totalRaised / targetAmount) * 100;
 
       res.json({
@@ -543,6 +553,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const now = new Date();
+      if (!config.endDate) {
+        return res.json({ available: true, reason: 'Presale end date not configured' });
+      }
       const endDate = new Date(config.endDate);
       const presaleActive = now < endDate && config.isActive;
 
@@ -559,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/withdraw', requireAuth, async (req, res) => {
     try {
       const config = await storage.getPresaleConfig();
-      if (config) {
+      if (config && config.endDate) {
         const now = new Date();
         const endDate = new Date(config.endDate);
         if (now < endDate && config.isActive) {
@@ -896,7 +909,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           max_tokens: 300,
         });
 
-        const metadata = JSON.parse(metadataResponse.choices[0].message.content);
+        const messageContent = metadataResponse.choices[0]?.message?.content;
+        if (!messageContent) {
+          throw new Error('No metadata response received');
+        }
+        const metadata = JSON.parse(messageContent);
         
         // Step 2: Generate AI image based on metadata and reference
         let imagePrompt = `Create a high-quality, squared (1:1 aspect ratio) NFT artwork for: "${metadata.name}". 
@@ -917,7 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             size: "1024x1024",
             quality: "hd",
           });
-          imageUrl = imageResponse.data[0].url;
+          imageUrl = imageResponse.data?.[0]?.url || null;
         } catch (imageError) {
           console.error("Error generating AI image:", imageError);
           // Fallback to placeholder if image generation fails

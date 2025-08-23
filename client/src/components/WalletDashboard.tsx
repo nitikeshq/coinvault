@@ -146,8 +146,13 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
   };
 
   const calculateTotalReferralEarnings = () => {
+    if (!referralEarnings || !Array.isArray(referralEarnings)) {
+      return '0.00';
+    }
     return referralEarnings.reduce((total, earning) => {
-      return total + parseFloat(earning.earningsAmount || '0');
+      const earningsAmount = earning?.earningsAmount;
+      if (!earningsAmount) return total;
+      return total + parseFloat(earningsAmount.toString());
     }, 0).toFixed(2);
   };
 
@@ -351,20 +356,20 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
               </div>
               <div className="text-center">
                 <p className="text-lg font-semibold text-gray-700" data-testid="text-referral-count">
-                  {referralEarnings.length}
+                  {referralEarnings?.length || 0}
                 </p>
                 <p className="text-sm text-gray-600">Successful Referrals</p>
               </div>
-              {referralEarnings.length > 0 && (
+              {referralEarnings?.length > 0 && (
                 <div className="max-h-24 overflow-y-auto">
                   <div className="text-xs text-gray-500 space-y-1">
                     {referralEarnings.slice(0, 3).map((earning, index) => (
                       <div key={index} className="flex justify-between">
-                        <span>${parseFloat(earning.earningsAmount).toFixed(2)}</span>
-                        <span>{new Date(earning.createdAt).toLocaleDateString()}</span>
+                        <span>${parseFloat(earning?.earningsAmount || '0').toFixed(2)}</span>
+                        <span>{earning?.createdAt ? new Date(earning.createdAt).toLocaleDateString() : 'N/A'}</span>
                       </div>
                     ))}
-                    {referralEarnings.length > 3 && (
+                    {referralEarnings?.length > 3 && (
                       <p className="text-center text-gray-400">+{referralEarnings.length - 3} more...</p>
                     )}
                   </div>

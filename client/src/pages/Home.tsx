@@ -15,7 +15,7 @@ import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 export default function Home() {
   const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements'>('wallet');
   const { user, isAdmin } = useAuth();
-  const { settings: websiteSettings } = useWebsiteSettings();
+  const { settings: websiteSettings } = useWebsiteSettings() as { settings: any };
 
   const { data: socialLinks = [] } = useQuery<any[]>({
     queryKey: ['/api/social-links'],
@@ -23,7 +23,7 @@ export default function Home() {
 
   // Update document title based on website settings
   useEffect(() => {
-    document.title = (websiteSettings?.siteName) || "CryptoWallet Pro";
+    document.title = websiteSettings?.siteName || "CryptoWallet Pro";
   }, [websiteSettings]);
 
   const renderSection = () => {
