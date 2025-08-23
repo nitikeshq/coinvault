@@ -377,11 +377,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getWebsiteSettings(): Promise<WebsiteSettings | undefined> {
-    const [settings] = await db
-      .select()
-      .from(websiteSettings)
-      .orderBy(desc(websiteSettings.createdAt));
-    return settings;
+    try {
+      const [settings] = await db
+        .select()
+        .from(websiteSettings)
+        .orderBy(desc(websiteSettings.createdAt));
+      return settings;
+    } catch (error) {
+      console.error("Error in getWebsiteSettings:", error);
+      // Return a default settings object if the table doesn't exist or has missing columns
+      return {
+        id: 'default',
+        siteName: "CryptoWallet Pro",
+        logoUrl: null,
+        faviconUrl: null,
+        description: null,
+        primaryColor: "#6366f1",
+        secondaryColor: "#8b5cf6",
+        auditReportUrl: null,
+        whitepaperUrl: null,
+        nftCharacterPrompt: null,
+        maxNfts: 1000,
+        seoTitle: null,
+        seoDescription: null,
+        seoKeywords: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as WebsiteSettings;
+    }
   }
 
   async updateWebsiteSettings(settings: InsertWebsiteSettings): Promise<WebsiteSettings> {

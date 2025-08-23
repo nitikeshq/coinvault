@@ -59,15 +59,6 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
   const isPresaleActive = presaleTimer && presaleTimer.timeRemaining > 0;
   const presaleEnded = presaleConfig && new Date() > new Date(presaleConfig.endDate);
 
-  const copyAddress = () => {
-    if (user?.walletAddress) {
-      navigator.clipboard.writeText(user.walletAddress);
-      toast({
-        title: "Copied!",
-        description: "Wallet address copied to clipboard",
-      });
-    }
-  };
 
   const formatBalance = (balance: string) => {
     return parseFloat(balance || "0").toFixed(2);

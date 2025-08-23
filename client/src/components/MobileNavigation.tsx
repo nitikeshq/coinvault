@@ -145,7 +145,7 @@ export default function MobileNavigation({ activeSection, onSectionChange, user,
       {/* Expandable Menu */}
       {showExpandedMenu && (
         <div className="fixed bottom-20 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg md:hidden">
-          <div className="grid grid-cols-2 gap-1 p-2">
+          <div className="grid grid-cols-1 gap-1 p-2">
             <button 
               onClick={() => onSectionChange('news')}
               className={`flex flex-col items-center p-3 rounded-lg transition-colors ${
@@ -155,17 +155,6 @@ export default function MobileNavigation({ activeSection, onSectionChange, user,
             >
               <User className="h-6 w-6 mb-1" />
               <span className="text-xs font-medium">News</span>
-            </button>
-            
-            <button 
-              onClick={() => onSectionChange('deposit')}
-              className={`flex flex-col items-center p-3 rounded-lg transition-colors ${
-                activeSection === 'deposit' ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-              data-testid="mobile-deposit-button"
-            >
-              <Copy className="h-6 w-6 mb-1" />
-              <span className="text-xs font-medium">Deposit</span>
             </button>
           </div>
         </div>

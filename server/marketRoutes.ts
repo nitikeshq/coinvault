@@ -51,6 +51,11 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
     
     // Get the actual NFT collection ID
     const actualNftId = userNft.nftId;
+    
+    if (!actualNftId) {
+      console.error(`NFT ID is null for user NFT ${userNft.id}:`, userNft);
+      return res.status(400).json({ error: "Invalid NFT data. Please contact support." });
+    }
 
     // Deduct listing fee from user's balance
     const newBalance = (balance - requiredFee).toString();

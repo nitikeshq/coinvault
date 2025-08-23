@@ -61,6 +61,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/user/profile', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { name, username, email, phone } = req.body;
+      
+      // Update user profile (excluding wallet address for security)
+      const updatedUser = await storage.updateUser(userId, {
+        name,
+        username,
+        email,
+        phone,
+      });
+      
+      res.json({ ...updatedUser, password: undefined });
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   // Token configuration routes
   app.get('/api/token/config', async (req, res) => {
     try {

@@ -10,12 +10,14 @@ import DappsSection from "@/components/DappsSection";
 import AdvertisementsPage from "@/pages/Advertisements";
 import MarketSection from "@/components/MarketSection";
 import { PresaleCountdown } from "@/components/PresaleCountdown";
+import { UserProfile } from "@/components/UserProfile";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market'>('wallet');
+  const [showProfile, setShowProfile] = useState(false);
   const { user, isAdmin } = useAuth();
   const { settings: websiteSettings } = useWebsiteSettings() as { settings: any };
 
@@ -84,6 +86,11 @@ export default function Home() {
           user={user}
           isAdmin={isAdmin}
         />
+        
+        {/* User Profile Modal */}
+        {showProfile && (
+          <UserProfile onClose={() => setShowProfile(false)} />
+        )}
         
         <div className="pt-20 pb-8 md:pb-8 pb-20">
           {renderSection()}

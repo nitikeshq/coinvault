@@ -435,29 +435,6 @@ export default function DepositSection() {
                       <p className="text-sm text-gray-600 mt-3 font-medium">Scan QR code with your crypto wallet</p>
                     </div>
 
-                    {/* Wallet Address */}
-                    {user?.walletAddress && (
-                      <div className="bg-white rounded-lg p-4 border border-gray-200 mb-6">
-                        <p className="text-sm font-medium text-gray-800 mb-3">Wallet Address (BEP-20 Network)</p>
-                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                          <code className="text-sm font-mono text-gray-800 break-all mr-3" data-testid="text-crypto-address">
-                            {user.walletAddress}
-                          </code>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={copyAddress}
-                            className="p-2 hover:bg-gray-200 text-blue-600 shrink-0"
-                            data-testid="button-copy-crypto-address"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-orange-600 mt-2 font-medium">
-                          ⚠️ Only send BEP-20 tokens to this address. Sending tokens from other networks will result in permanent loss!
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   {/* BSC Verification Form */}

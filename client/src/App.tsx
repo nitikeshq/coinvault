@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { DynamicSEO } from "@/components/DynamicSEO";
 import AuthPage from "@/pages/AuthPage";
 import Home from "@/pages/Home";
 import LandingPage from "@/pages/LandingPage";
@@ -36,6 +37,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <DynamicSEO />
         <Toaster />
         <PWAInstallPrompt />
         <Router />
