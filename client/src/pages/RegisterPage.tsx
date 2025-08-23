@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import SEOHead from "@/components/SEOHead";
 import { Loader2, Wallet, Shield, Zap, TrendingUp, Eye, EyeOff, Users, Gift, CheckCircle, Star, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -134,49 +133,7 @@ export default function RegisterPage() {
   ];
 
   return (
-    <>
-      <SEOHead
-        title={`Join ${websiteSettings?.siteName || 'CryptoWallet Pro'} Presale - Exclusive Early Access Registration`}
-        description={referralCodeFromUrl 
-          ? `You've been invited to join ${websiteSettings?.siteName || 'CryptoWallet Pro'} presale! Register now with referral code ${referralCodeFromUrl} for exclusive benefits and early access.`
-          : `Register now for exclusive early access to ${websiteSettings?.siteName || 'CryptoWallet Pro'} presale. Secure your position in the future of cryptocurrency with special investor benefits, referral rewards, and VIP access to our DApp ecosystem.`
-        }
-        keywords="cryptocurrency registration, presale signup, crypto investment, blockchain wallet, early investor, referral rewards, exclusive access, presale registration"
-        canonical={`${window.location.origin}/register`}
-        ogImage={websiteSettings?.logoUrl}
-        siteName={websiteSettings?.siteName || "CryptoWallet Pro"}
-        logoUrl={websiteSettings?.logoUrl}
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": `Join ${websiteSettings?.siteName || 'CryptoWallet Pro'} Presale`,
-          "description": `Register for exclusive early access to ${websiteSettings?.siteName || 'CryptoWallet Pro'} presale with special investor benefits`,
-          "url": `${window.location.origin}/register`,
-          "isPartOf": {
-            "@type": "WebSite",
-            "name": websiteSettings?.siteName || "CryptoWallet Pro",
-            "url": window.location.origin
-          },
-          "about": {
-            "@type": "Organization",
-            "name": websiteSettings?.siteName || "CryptoWallet Pro",
-            "description": websiteSettings?.description || "Revolutionary cryptocurrency wallet and DApp ecosystem",
-            "url": window.location.origin,
-            "logo": websiteSettings?.logoUrl
-          },
-          "potentialAction": {
-            "@type": "RegisterAction",
-            "target": `${window.location.origin}/register`,
-            "object": {
-              "@type": "Product",
-              "name": `${tokenConfig?.name || 'CHILL'} Token Presale`,
-              "description": "Exclusive early access to cryptocurrency presale"
-            }
-          }
-        }}
-      />
-
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         {/* Header */}
         <header className="border-b border-white/10 bg-black/20 backdrop-blur-lg">
           <div className="container mx-auto px-4 py-4">
@@ -485,6 +442,5 @@ export default function RegisterPage() {
           </div>
         </section>
       </div>
-    </>
   );
 }

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, Eye, Share2, Download, ShoppingCart, Gavel, Plus, ExternalLink, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import Navigation from "@/components/Navigation";
 
 interface MemeListing {
   id: string;
@@ -295,8 +296,13 @@ export default function MemeMarketplace() {
   }, [seoConfig.title, seoConfig.description]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <Navigation 
+        activeSection="dapps" 
+        onSectionChange={() => window.location.href = '/'} 
+      />
+      <div className="pt-20 p-4">
+        <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Meme Marketplace</h1>
           <p className="text-gray-300">Share laughs, trade memes, and spread joy</p>
@@ -606,6 +612,7 @@ export default function MemeMarketplace() {
             )}
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );

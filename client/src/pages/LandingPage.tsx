@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import SEOHead from "@/components/SEOHead";
 import { 
   Wallet, 
   Shield, 
@@ -216,27 +215,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <>
-      <SEOHead
-        title={`${websiteSettings?.siteName || 'CryptoWallet Pro'} - Revolutionary Cryptocurrency Presale`}
-        description={websiteSettings?.description || "Join the future of cryptocurrency with our revolutionary presale. Secure wallet, NFT marketplace, and DApp ecosystem. Limited time offer with exclusive benefits."}
-        keywords="cryptocurrency, presale, ICO, blockchain, wallet, NFT, DApp, investment, crypto, token sale"
-        canonical={window.location.href}
-        ogImage={websiteSettings?.logoUrl}
-        siteName={websiteSettings?.siteName || "CryptoWallet Pro"}
-        logoUrl={websiteSettings?.logoUrl}
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": websiteSettings?.siteName || "CryptoWallet Pro",
-          "description": websiteSettings?.description,
-          "url": window.location.origin,
-          "logo": websiteSettings?.logoUrl,
-          "sameAs": []
-        }}
-      />
-
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         {/* Header */}
         <header className="border-b border-white/10 bg-black/20 backdrop-blur-lg sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
@@ -636,6 +615,5 @@ export default function LandingPage() {
           </div>
         </footer>
       </div>
-    </>
   );
 }
