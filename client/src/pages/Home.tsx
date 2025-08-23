@@ -22,7 +22,7 @@ export default function Home() {
 
   // Update document title based on website settings
   useEffect(() => {
-    document.title = (websiteSettings && websiteSettings.siteName) || "CryptoWallet Pro";
+    document.title = (websiteSettings?.siteName) || "CryptoWallet Pro";
   }, [websiteSettings]);
 
   const renderSection = () => {
@@ -30,7 +30,7 @@ export default function Home() {
       case 'wallet':
         return (
           <div className="container mx-auto px-4 space-y-6">
-            <WalletDashboard onSectionChange={setActiveSection} />
+            <WalletDashboard onSectionChange={(section: any) => setActiveSection(section)} />
             <PresaleCountdown />
           </div>
         );
@@ -45,14 +45,14 @@ export default function Home() {
       case 'admin':
         return isAdmin ? <AdminPanel /> : (
           <div className="container mx-auto px-4 space-y-6">
-            <WalletDashboard onSectionChange={setActiveSection} />
+            <WalletDashboard onSectionChange={(section: any) => setActiveSection(section)} />
             <PresaleCountdown />
           </div>
         );
       default:
         return (
           <div className="container mx-auto px-4 space-y-6">
-            <WalletDashboard onSectionChange={setActiveSection} />
+            <WalletDashboard onSectionChange={(section: any) => setActiveSection(section)} />
             <PresaleCountdown />
           </div>
         );

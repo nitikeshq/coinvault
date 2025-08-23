@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
+import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 interface WalletDashboardProps {
@@ -76,6 +77,25 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     if (onSectionChange) {
       onSectionChange('deposit');
     }
+  };
+
+  // Sharing functions
+  const shareOnTelegram = (text: string, url?: string) => {
+    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url || window.location.href)}&text=${encodeURIComponent(text)}`;
+    window.open(telegramUrl, '_blank');
+  };
+
+  const shareOnTwitter = (text: string, url?: string) => {
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url || window.location.href)}`;
+    window.open(twitterUrl, '_blank');
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: "Content copied to clipboard",
+    });
   };
 
   return (
@@ -197,6 +217,12 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
         </div>
       </div>
 
+      {/* User NFTs Section */}
+      <UserNFTsSection shareOnTelegram={shareOnTelegram} shareOnTwitter={shareOnTwitter} copyToClipboard={copyToClipboard} />
+
+      {/* User Memes Section */}
+      <UserMemesSection shareOnTelegram={shareOnTelegram} shareOnTwitter={shareOnTwitter} copyToClipboard={copyToClipboard} />
+
       {/* Recent Transactions */}
       <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
         <h3 className="text-lg font-semibold mb-4 text-gray-800">Recent Transactions</h3>
@@ -241,5 +267,181 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
         </div>
       </div>
     </section>
+  );
+}
+
+// User NFTs Section Component
+interface UserNFTsSectionProps {
+  shareOnTelegram: (text: string, url?: string) => void;
+  shareOnTwitter: (text: string, url?: string) => void;
+  copyToClipboard: (text: string) => void;
+}
+
+function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: UserNFTsSectionProps) {
+  const { data: userNfts = [] } = useQuery<any[]>({
+    queryKey: ['/api/user/nfts'],
+  });
+
+  const handleShareNFT = (nft: any) => {
+    const shareText = `Check out my ${nft.name} NFT! 🎨 #NFT #Crypto`;
+    shareOnTelegram(shareText);
+  };
+
+  const handleCopyNFT = (nft: any) => {
+    const shareText = `${nft.name} - ${nft.description}`;
+    copyToClipboard(shareText);
+  };
+
+  if (userNfts.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-2xl p-6 mb-6 border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <Image className="h-5 w-5 text-purple-600" />
+          My NFT Collection
+        </h3>
+        <Badge variant="secondary">{userNfts.length} NFTs</Badge>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {userNfts.map((nft: any) => (
+          <div key={nft.id} className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200" data-testid={`nft-card-${nft.id}`}>
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h4 className="font-semibold text-gray-800">{nft.name}</h4>
+                <p className="text-sm text-gray-600">Token #{nft.tokenId}</p>
+              </div>
+              <Badge variant="outline" className="text-purple-600">
+                {nft.rarity || 'Common'}
+              </Badge>
+            </div>
+            
+            <p className="text-sm text-gray-700 mb-3 line-clamp-2">{nft.description}</p>
+            
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleShareNFT(nft)}
+                className="flex items-center gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                data-testid={`button-share-nft-${nft.id}`}
+              >
+                <Share2 className="h-3 w-3" />
+                Share
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleCopyNFT(nft)}
+                className="flex items-center gap-1 text-gray-600 border-gray-200 hover:bg-gray-50"
+                data-testid={`button-copy-nft-${nft.id}`}
+              >
+                <Copy className="h-3 w-3" />
+                Copy
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// User Memes Section Component  
+interface UserMemesSectionProps {
+  shareOnTelegram: (text: string, url?: string) => void;
+  shareOnTwitter: (text: string, url?: string) => void;
+  copyToClipboard: (text: string) => void;
+}
+
+function UserMemesSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: UserMemesSectionProps) {
+  const { data: userMemes = [] } = useQuery<any[]>({
+    queryKey: ['/api/user/memes'],
+    refetchInterval: 5000, // Auto-refresh to check for completed generations
+  });
+
+  const completedMemes = userMemes.filter((meme: any) => meme.status === 'completed' && meme.imageUrl);
+
+  const handleShareMeme = (meme: any) => {
+    const shareText = `Check out my AI-generated meme! 😂 "${meme.prompt}" #Meme #AI #Crypto`;
+    if (meme.imageUrl) {
+      shareOnTelegram(shareText, meme.imageUrl);
+    } else {
+      shareOnTelegram(shareText);
+    }
+  };
+
+  const handleCopyMeme = (meme: any) => {
+    const shareText = `AI Meme: "${meme.prompt}" - ${meme.imageUrl || 'Generated meme'}`;
+    copyToClipboard(shareText);
+  };
+
+  if (completedMemes.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-2xl p-6 mb-6 border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-yellow-600" />
+          My Generated Memes
+        </h3>
+        <Badge variant="secondary">{completedMemes.length} Memes</Badge>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {completedMemes.map((meme: any) => (
+          <div key={meme.id} className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200" data-testid={`meme-card-${meme.id}`}>
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-800 mb-2">"{meme.prompt}"</p>
+              {meme.imageUrl && (
+                <div className="relative">
+                  <img 
+                    src={meme.imageUrl} 
+                    alt={meme.prompt}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleShareMeme(meme)}
+                className="flex items-center gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                data-testid={`button-share-meme-${meme.id}`}
+              >
+                <Share2 className="h-3 w-3" />
+                Share
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleCopyMeme(meme)}
+                className="flex items-center gap-1 text-gray-600 border-gray-200 hover:bg-gray-50"
+                data-testid={`button-copy-meme-${meme.id}`}
+              >
+                <Copy className="h-3 w-3" />
+                Copy
+              </Button>
+              {meme.imageUrl && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(meme.imageUrl, '_blank')}
+                  className="flex items-center gap-1 text-purple-600 border-purple-200 hover:bg-purple-50"
+                  data-testid={`button-view-meme-${meme.id}`}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
