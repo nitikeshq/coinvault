@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import { Sparkles } from "lucide-react";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -235,11 +236,12 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="token" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-crypto-dark">
+          <TabsList className="grid w-full grid-cols-5 bg-crypto-dark">
             <TabsTrigger value="token" data-testid="tab-token">Token Config</TabsTrigger>
             <TabsTrigger value="deposits" data-testid="tab-deposits">Deposits</TabsTrigger>
             <TabsTrigger value="news" data-testid="tab-news">News</TabsTrigger>
             <TabsTrigger value="social" data-testid="tab-social">Social Links</TabsTrigger>
+            <TabsTrigger value="dapps" data-testid="tab-dapps">Dapps</TabsTrigger>
           </TabsList>
 
           {/* Token Configuration */}
@@ -557,8 +559,114 @@ export default function Admin() {
               </Card>
             </div>
           </TabsContent>
+
+          {/* Dapps Configuration */}
+          <TabsContent value="dapps">
+            <DappsAdminPanel />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
+  );
+}
+
+// Dapps Admin Panel Component
+function DappsAdminPanel() {
+  const { toast } = useToast();
+
+  // Fetch dapp settings
+  const { data: dappSettings = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/dapps"],
+  });
+
+  const updateDappMutation = useMutation({
+    mutationFn: async ({ appName, isEnabled }: { appName: string; isEnabled: boolean }) => {
+      return apiRequest("PUT", `/api/admin/dapps/${appName}`, { isEnabled });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dapps"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dapps/settings"] });
+      toast({
+        title: "Success",
+        description: "Dapp setting updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleDapp = (appName: string, isEnabled: boolean) => {
+    updateDappMutation.mutate({ appName, isEnabled });
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-crypto-dark border-white/10">
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-white">Loading dapp settings...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-crypto-dark border-white/10">
+      <CardHeader>
+        <CardTitle>Decentralized Apps Management</CardTitle>
+        <p className="text-gray-400 text-sm">
+          Enable or disable various dapps available to users. Disabled apps will be hidden from the navigation.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {dappSettings.map((dapp: any) => (
+          <div key={dapp.appName} className="bg-crypto-gray rounded-lg p-4 border border-white/10">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg text-white mb-1">
+                  {dapp.displayName}
+                </h3>
+                <p className="text-gray-400 text-sm mb-2">
+                  {dapp.description}
+                </p>
+                <div className="text-sm text-gray-300">
+                  <span className="font-medium">Cost:</span> {parseFloat(dapp.cost).toLocaleString()} CHILL tokens
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={dapp.isEnabled}
+                    onChange={(e) => handleToggleDapp(dapp.appName, e.target.checked)}
+                    disabled={updateDappMutation.isPending}
+                    className="sr-only peer"
+                    data-testid={`toggle-${dapp.appName}`}
+                  />
+                  <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <span className={`text-sm font-medium ${
+                  dapp.isEnabled ? 'text-green-400' : 'text-gray-500'
+                }`}>
+                  {dapp.isEnabled ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {dappSettings.length === 0 && (
+          <div className="text-center py-8 text-gray-400">
+            <Sparkles className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <div>No dapps configured</div>
+            <div className="text-sm">Dapp settings will appear here when configured</div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

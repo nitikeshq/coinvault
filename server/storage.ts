@@ -9,6 +9,10 @@ import {
   transactions,
   websiteSettings,
   presaleConfig,
+  dappSettings,
+  nftCollection,
+  userNfts,
+  memeGenerations,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -29,7 +33,7 @@ import {
   type InsertPresaleConfig,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -428,6 +432,101 @@ export class DatabaseStorage implements IStorage {
       .where(eq(presaleConfig.id, config.id))
       .returning();
     return updated;
+  }
+
+  // Dapps methods
+  async getDappSettings(): Promise<any[]> {
+    return await db.select().from(dappSettings).orderBy(dappSettings.appName);
+  }
+
+  async updateDappSetting(appName: string, enabled: boolean): Promise<any> {
+    const [updated] = await db.update(dappSettings)
+      .set({ isEnabled: enabled, updatedAt: new Date() })
+      .where(eq(dappSettings.appName, appName))
+      .returning();
+    return updated;
+  }
+
+  async getDappByName(appName: string): Promise<any> {
+    const [dapp] = await db.select().from(dappSettings)
+      .where(eq(dappSettings.appName, appName));
+    return dapp;
+  }
+
+  // NFT methods
+  async getAvailableNfts(): Promise<any[]> {
+    return await db.select().from(nftCollection)
+      .where(eq(nftCollection.isMinted, false))
+      .orderBy(nftCollection.tokenId)
+      .limit(100);
+  }
+
+  async mintNft(userId: string, nftId: string, transactionHash?: string): Promise<any> {
+    await db.transaction(async (tx) => {
+      // Mark NFT as minted
+      await tx.update(nftCollection)
+        .set({ isMinted: true })
+        .where(eq(nftCollection.id, nftId));
+      
+      // Create user NFT record
+      await tx.insert(userNfts).values({
+        userId,
+        nftId,
+        transactionHash
+      });
+    });
+  }
+
+  async getUserNfts(userId: string): Promise<any[]> {
+    return await db.select({
+      id: userNfts.id,
+      tokenId: nftCollection.tokenId,
+      name: nftCollection.name,
+      description: nftCollection.description,
+      imageUrl: nftCollection.imageUrl,
+      mintedAt: userNfts.mintedAt,
+      transactionHash: userNfts.transactionHash
+    })
+    .from(userNfts)
+    .innerJoin(nftCollection, eq(userNfts.nftId, nftCollection.id))
+    .where(eq(userNfts.userId, userId))
+    .orderBy(userNfts.mintedAt);
+  }
+
+  // Meme generation methods
+  async createMemeGeneration(userId: string, prompt: string): Promise<any> {
+    const [meme] = await db.insert(memeGenerations)
+      .values({
+        userId,
+        prompt,
+        status: 'pending'
+      })
+      .returning();
+    return meme;
+  }
+
+  async updateMemeGeneration(id: string, data: any): Promise<any> {
+    const [updated] = await db.update(memeGenerations)
+      .set(data)
+      .where(eq(memeGenerations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getUserMemes(userId: string): Promise<any[]> {
+    return await db.select().from(memeGenerations)
+      .where(eq(memeGenerations.userId, userId))
+      .orderBy(memeGenerations.generatedAt);
+  }
+
+  async getNftCollectionStats(): Promise<any> {
+    const [stats] = await db.select({
+      totalNfts: sql<number>`count(*)`,
+      mintedNfts: sql<number>`sum(case when is_minted = true then 1 else 0 end)`,
+      availableNfts: sql<number>`sum(case when is_minted = false then 1 else 0 end)`
+    }).from(nftCollection);
+    
+    return stats;
   }
 }
 

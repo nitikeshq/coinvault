@@ -5,13 +5,14 @@ import DepositSection from "@/components/DepositSection";
 import SwapTrading from "@/components/SwapTrading";
 import NewsSection from "@/components/NewsSection";
 import AdminPanel from "@/components/AdminPanel";
+import DappsSection from "@/components/DappsSection";
 import { PresaleCountdown } from "@/components/PresaleCountdown";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps'>('wallet');
   const { user, isAdmin } = useAuth();
   const { settings: websiteSettings } = useWebsiteSettings();
 
@@ -21,8 +22,8 @@ export default function Home() {
 
   // Update document title based on website settings
   useEffect(() => {
-    document.title = websiteSettings?.siteName || "CryptoWallet Pro";
-  }, [websiteSettings?.siteName]);
+    document.title = (websiteSettings && websiteSettings.siteName) || "CryptoWallet Pro";
+  }, [websiteSettings]);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -39,18 +40,20 @@ export default function Home() {
         return <SwapTrading />;
       case 'news':
         return <NewsSection />;
+      case 'dapps':
+        return <DappsSection />;
       case 'admin':
         return isAdmin ? <AdminPanel /> : (
           <div className="container mx-auto px-4 space-y-6">
             <PresaleCountdown />
-            <WalletDashboard onSectionChange={setActiveSection} />
+            <WalletDashboard />
           </div>
         );
       default:
         return (
           <div className="container mx-auto px-4 space-y-6">
             <PresaleCountdown />
-            <WalletDashboard onSectionChange={setActiveSection} />
+            <WalletDashboard />
           </div>
         );
     }

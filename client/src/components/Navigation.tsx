@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, User, LogOut, Settings, Copy } from "lucide-react";
+import { Wallet, User, LogOut, Settings, Copy, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 interface NavigationProps {
-  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin';
-  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin') => void;
+  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps';
+  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps') => void;
   user?: any;
   isAdmin?: boolean;
 }
@@ -14,6 +15,14 @@ interface NavigationProps {
 export default function Navigation({ activeSection, onSectionChange, user, isAdmin }: NavigationProps) {
   const { settings } = useWebsiteSettings();
   const { toast } = useToast();
+  
+  // Fetch enabled dapps to show/hide the Dapps menu
+  const { data: enabledDapps = [] } = useQuery<any[]>({
+    queryKey: ["/api/dapps/settings"],
+    retry: false,
+  });
+
+  const hasDappsEnabled = enabledDapps.length > 0;
   
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -36,10 +45,10 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              {settings.logoUrl ? (
+              {settings?.logoUrl ? (
                 <img 
                   src={settings.logoUrl} 
-                  alt={`${settings.siteName} Logo`} 
+                  alt={`${settings?.siteName || 'CryptoWallet Pro'} Logo`} 
                   className="w-10 h-10 rounded-lg object-cover"
                 />
               ) : (
@@ -47,7 +56,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                   <Wallet className="text-white h-5 w-5" />
                 </div>
               )}
-              <h1 className="text-xl font-bold text-gray-800">{settings.siteName}</h1>
+              <h1 className="text-xl font-bold text-gray-800">{settings?.siteName || "CryptoWallet Pro"}</h1>
             </div>
             
             <div className="flex space-x-6">
@@ -87,6 +96,18 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               >
                 Deposit
               </button>
+              {hasDappsEnabled && (
+                <button 
+                  onClick={() => onSectionChange('dapps')}
+                  className={`hover:text-blue-600 transition-colors font-medium ${
+                    activeSection === 'dapps' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
+                  }`}
+                  data-testid="nav-dapps"
+                >
+                  <Sparkles className="h-4 w-4 mr-1 inline" />
+                  Dapps
+                </button>
+              )}
             </div>
             
             <div className="flex items-center space-x-3">

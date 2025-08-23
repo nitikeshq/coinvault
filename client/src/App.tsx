@@ -22,6 +22,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={!isAuthenticated ? AuthPage : Home} />
+      <Route component={NotFound} />
     </Switch>
   );
 }

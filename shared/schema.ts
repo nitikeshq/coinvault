@@ -235,3 +235,66 @@ export type WebsiteSettings = typeof websiteSettings.$inferSelect;
 export type InsertWebsiteSettings = z.infer<typeof insertWebsiteSettingsSchema>;
 export type PresaleConfig = typeof presaleConfig.$inferSelect;
 export type InsertPresaleConfig = z.infer<typeof insertPresaleConfigSchema>;
+
+// Dapp settings table (admin controlled)
+export const dappSettings = pgTable("dapp_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  appName: varchar("app_name").notNull().unique(), // "nft_mint", "meme_generator"
+  displayName: varchar("display_name").notNull(), // "NFT Mint", "Memes Generator"
+  isEnabled: boolean("is_enabled").default(false),
+  cost: decimal("cost", { precision: 18, scale: 8 }).notNull(), // Cost in CHILLS
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// NFT Collection table
+export const nftCollection = pgTable("nft_collection", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tokenId: integer("token_id").notNull().unique(), // NFT token ID (1-10000)
+  name: varchar("name").notNull(),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  isMinted: boolean("is_minted").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User NFTs table
+export const userNfts = pgTable("user_nfts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  nftId: varchar("nft_id").notNull().references(() => nftCollection.id),
+  transactionHash: varchar("transaction_hash"),
+  mintedAt: timestamp("minted_at").defaultNow(),
+});
+
+// Meme generations table
+export const memeGenerations = pgTable("meme_generations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  prompt: text("prompt").notNull(),
+  imageUrl: varchar("image_url"),
+  status: varchar("status").default("pending"), // pending, completed, failed
+  transactionHash: varchar("transaction_hash"),
+  generatedAt: timestamp("generated_at").defaultNow(),
+});
+
+// Zod schemas for new tables
+export const insertDappSettingsSchema = createInsertSchema(dappSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertNftCollectionSchema = createInsertSchema(nftCollection).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Additional types
+export type DappSettings = typeof dappSettings.$inferSelect;
+export type InsertDappSettings = z.infer<typeof insertDappSettingsSchema>;
+export type NftCollection = typeof nftCollection.$inferSelect;
+export type InsertNftCollection = z.infer<typeof insertNftCollectionSchema>;
+export type UserNfts = typeof userNfts.$inferSelect;
+export type MemeGenerations = typeof memeGenerations.$inferSelect;

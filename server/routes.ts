@@ -490,6 +490,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dapps routes
+  app.get('/api/dapps/settings', async (req, res) => {
+    try {
+      const settings = await storage.getDappSettings();
+      const enabledSettings = settings.filter(s => s.isEnabled);
+      res.json(enabledSettings);
+    } catch (error) {
+      console.error("Error fetching dapp settings:", error);
+      res.status(500).json({ message: "Failed to fetch dapp settings" });
+    }
+  });
+
+  // Admin Dapps routes
+  app.get('/api/admin/dapps', requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getDappSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching dapp settings:", error);
+      res.status(500).json({ message: "Failed to fetch dapp settings" });
+    }
+  });
+
+  app.put('/api/admin/dapps/:appName', requireAdmin, async (req, res) => {
+    try {
+      const { appName } = req.params;
+      const { isEnabled } = req.body;
+      
+      const updated = await storage.updateDappSetting(appName, isEnabled);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating dapp setting:", error);
+      res.status(500).json({ message: "Failed to update dapp setting" });
+    }
+  });
+
+  // NFT routes
+  app.get('/api/nfts/available', requireAuth, async (req, res) => {
+    try {
+      const nfts = await storage.getAvailableNfts();
+      res.json(nfts);
+    } catch (error) {
+      console.error("Error fetching available NFTs:", error);
+      res.status(500).json({ message: "Failed to fetch available NFTs" });
+    }
+  });
+
+  app.get('/api/nfts/stats', requireAuth, async (req, res) => {
+    try {
+      const stats = await storage.getNftCollectionStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching NFT stats:", error);
+      res.status(500).json({ message: "Failed to fetch NFT stats" });
+    }
+  });
+
+  app.get('/api/user/nfts', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const nfts = await storage.getUserNfts(userId);
+      res.json(nfts);
+    } catch (error) {
+      console.error("Error fetching user NFTs:", error);
+      res.status(500).json({ message: "Failed to fetch user NFTs" });
+    }
+  });
+
+  app.post('/api/nfts/mint', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { nftId } = req.body;
+      
+      // Check if NFT mint is enabled
+      const nftMintSettings = await storage.getDappByName('nft_mint');
+      if (!nftMintSettings || !nftMintSettings.isEnabled) {
+        return res.status(403).json({ message: 'NFT minting is currently disabled' });
+      }
+
+      // Check user balance
+      const balance = await storage.getUserBalance(userId);
+      const cost = parseFloat(nftMintSettings.cost);
+      const userBalance = parseFloat(balance?.balance || '0');
+
+      if (userBalance < cost) {
+        return res.status(400).json({ 
+          message: 'Insufficient CHILL balance',
+          required: cost,
+          current: userBalance
+        });
+      }
+
+      // Deduct cost from user balance
+      const newBalance = (userBalance - cost).toString();
+      await storage.updateUserBalance(userId, newBalance, '0');
+
+      // Mint NFT
+      await storage.mintNft(userId, nftId);
+      
+      res.json({ message: 'NFT minted successfully', cost, newBalance });
+    } catch (error) {
+      console.error("Error minting NFT:", error);
+      res.status(500).json({ message: "Failed to mint NFT" });
+    }
+  });
+
+  // Meme generation routes
+  app.get('/api/user/memes', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const memes = await storage.getUserMemes(userId);
+      res.json(memes);
+    } catch (error) {
+      console.error("Error fetching user memes:", error);
+      res.status(500).json({ message: "Failed to fetch user memes" });
+    }
+  });
+
+  app.post('/api/memes/generate', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { prompt } = req.body;
+      
+      if (!prompt || prompt.trim().length === 0) {
+        return res.status(400).json({ message: 'Prompt is required' });
+      }
+
+      // Check if meme generator is enabled
+      const memeSettings = await storage.getDappByName('meme_generator');
+      if (!memeSettings || !memeSettings.isEnabled) {
+        return res.status(403).json({ message: 'Meme generation is currently disabled' });
+      }
+
+      // Check user balance
+      const balance = await storage.getUserBalance(userId);
+      const cost = parseFloat(memeSettings.cost);
+      const userBalance = parseFloat(balance?.balance || '0');
+
+      if (userBalance < cost) {
+        return res.status(400).json({ 
+          message: 'Insufficient CHILL balance',
+          required: cost,
+          current: userBalance
+        });
+      }
+
+      // Deduct cost from user balance
+      const newBalance = (userBalance - cost).toString();
+      await storage.updateUserBalance(userId, newBalance, '0');
+
+      // Create meme generation record
+      const meme = await storage.createMemeGeneration(userId, prompt.trim());
+      
+      // Simulate AI meme generation (in real implementation, use actual AI service)
+      setTimeout(async () => {
+        try {
+          await storage.updateMemeGeneration(meme.id, {
+            status: 'completed',
+            imageUrl: `https://via.placeholder.com/512x512.png?text=${encodeURIComponent(prompt.trim().substring(0, 20))}`
+          });
+        } catch (error) {
+          console.error('Failed to update meme generation:', error);
+        }
+      }, 3000);
+      
+      res.json({ message: 'Meme generation started', cost, newBalance, memeId: meme.id });
+    } catch (error) {
+      console.error("Error generating meme:", error);
+      res.status(500).json({ message: "Failed to generate meme" });
+    }
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 
