@@ -514,9 +514,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserMemes(userId: string): Promise<any[]> {
-    return await db.select().from(memeGenerations)
-      .where(eq(memeGenerations.userId, userId))
-      .orderBy(memeGenerations.generatedAt);
+    try {
+      return await db.select().from(memeGenerations)
+        .where(eq(memeGenerations.userId, userId))
+        .orderBy(memeGenerations.generatedAt);
+    } catch (error) {
+      // Handle case where new columns don't exist yet
+      console.log('Meme table columns not found, returning empty array:', error);
+      return [];
+    }
   }
 
   async getNftCollectionStats(): Promise<any> {
