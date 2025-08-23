@@ -263,6 +263,13 @@ export const requireAuth = (req: any, res: any, next: any) => {
 };
 
 export const requireAdmin = (req: any, res: any, next: any) => {
+  console.log('Admin check:', {
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user,
+    isActive: req.user?.isActive,
+    isAdmin: req.user?.isAdmin
+  });
+  
   if (req.isAuthenticated() && req.user?.isActive && req.user?.isAdmin) {
     return next();
   }
