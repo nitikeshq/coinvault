@@ -41,9 +41,13 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
 
     // Verify user owns the NFT and get the actual NFT collection ID
     const userNfts = await storage.getUserNfts(userId);
+    console.log("Looking for NFT ID:", nftId);
+    console.log("User NFTs:", userNfts.map(n => ({ id: n.id, nftId: n.nftId })));
+    
     let actualNftId: string | null = null;
     
     const userNft = userNfts.find((userNft: any) => {
+      console.log("Checking NFT:", { userNftId: userNft.id, nftId: userNft.nftId, looking_for: nftId });
       // Check if the NFT matches by user_nft ID or actual NFT ID
       if (userNft.id === nftId || userNft.nftId === nftId) {
         actualNftId = userNft.nftId; // Get the actual NFT collection ID
