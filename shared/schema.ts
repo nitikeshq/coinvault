@@ -123,12 +123,13 @@ export const tokenPrices = pgTable("token_prices", {
 export const transactions = pgTable("transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  type: varchar("type").notNull(), // deposit, send, receive
+  type: varchar("type").notNull(), // deposit, send, receive, credit, debit
   amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
   transactionHash: varchar("transaction_hash"),
   fromAddress: varchar("from_address"),
   toAddress: varchar("to_address"),
-  status: varchar("status").notNull().default("pending"), // pending, confirmed, failed
+  description: text("description"), // Added for admin actions and other descriptions
+  status: varchar("status").notNull().default("pending"), // pending, confirmed, failed, completed
   createdAt: timestamp("created_at").defaultNow(),
 });
 
