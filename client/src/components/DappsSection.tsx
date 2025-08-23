@@ -12,6 +12,18 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTokenInfo } from "@/hooks/useTokenInfo";
 import { Sparkles, Image, Coins, Clock, CheckCircle, XCircle } from "lucide-react";
 
+// Rarity color mapping
+const rarityColors = {
+  Common: "bg-gray-500",
+  Rare: "bg-blue-500", 
+  Epic: "bg-purple-500",
+  Legendary: "bg-yellow-500"
+};
+
+const getRarityColor = (rarity: string) => {
+  return rarityColors[rarity as keyof typeof rarityColors] || "bg-gray-500";
+};
+
 export default function DappsSection() {
   const { toast } = useToast();
   const [memePrompt, setMemePrompt] = useState("");
@@ -208,10 +220,17 @@ export default function DappsSection() {
                       <div className="space-y-3">
                         <div className="text-sm font-medium">Next Available NFT:</div>
                         <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="font-medium">
-                            {tokenSymbol} NFT #{availableNfts[0]?.tokenId}
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="font-medium">
+                              {tokenSymbol} NFT #{availableNfts[0]?.tokenId}
+                            </div>
+                            <Badge 
+                              className={`${getRarityColor(availableNfts[0]?.rarity || 'Common')} text-white text-xs`}
+                            >
+                              {availableNfts[0]?.rarity || 'Common'}
+                            </Badge>
                           </div>
-                          <div className="text-sm text-gray-600 mt-1">
+                          <div className="text-sm text-gray-600">
                             {availableNfts[0]?.description}
                           </div>
                         </div>
@@ -253,6 +272,11 @@ export default function DappsSection() {
                             <div>
                               <div className="font-medium">{nft.name}</div>
                               <div className="text-sm text-gray-600">Token #{nft.tokenId}</div>
+                              <Badge 
+                                className={`${getRarityColor(nft.rarity || 'Common')} text-white text-xs mt-1`}
+                              >
+                                {nft.rarity || 'Common'}
+                              </Badge>
                             </div>
                             <Badge variant="secondary">Owned</Badge>
                           </div>

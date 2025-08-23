@@ -494,6 +494,7 @@ export class DatabaseStorage implements IStorage {
       name: nftCollection.name,
       description: nftCollection.description,
       imageUrl: nftCollection.imageUrl,
+      rarity: nftCollection.rarity,
       mintedAt: userNfts.mintedAt,
       transactionHash: userNfts.transactionHash
     })
