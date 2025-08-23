@@ -717,12 +717,12 @@ export class DatabaseStorage implements IStorage {
     const existingInCollection = await db
       .select()
       .from(nftCollection)
-      .where(sql`${nftCollection.attributes}::text LIKE ${traitsStringPattern} OR ${nftCollection.attributes}::text LIKE ${traitsHashPattern}`);
+      .where(sql`${nftCollection.attributes}::text LIKE ${sql.raw(`'${traitsStringPattern.replace(/'/g, "''")}'`)} OR ${nftCollection.attributes}::text LIKE ${sql.raw(`'${traitsHashPattern.replace(/'/g, "''")}'`)}`);
     
     const existingInUserNfts = await db
       .select()
       .from(userNfts)
-      .where(sql`${userNfts.attributes}::text LIKE ${traitsStringPattern} OR ${userNfts.attributes}::text LIKE ${traitsHashPattern}`);
+      .where(sql`${userNfts.attributes}::text LIKE ${sql.raw(`'${traitsStringPattern.replace(/'/g, "''")}'`)} OR ${userNfts.attributes}::text LIKE ${sql.raw(`'${traitsHashPattern.replace(/'/g, "''")}'`)}`);
     
     return [...existingInCollection, ...existingInUserNfts];
   }
