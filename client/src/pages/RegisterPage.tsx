@@ -67,10 +67,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-stretch min-h-[80vh]">
+      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 items-stretch min-h-[85vh]">
         {/* Left Side - Hero Content */}
-        <div className="flex flex-col justify-center space-y-8 text-gray-800">
-          <div className="space-y-6">
+        <div className="flex flex-col justify-center space-y-6 text-gray-800 px-4">
+          <div className="space-y-5">
             {/* Benefits moved to top */}
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-200">
               <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
@@ -171,16 +171,18 @@ export default function RegisterPage() {
         </div>
 
         {/* Right Side - Registration Form */}
-        <div className="flex flex-col justify-center w-full max-w-lg mx-auto">
-          <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                <Wallet className="h-6 w-6 text-white" />
+        <div className="flex flex-col justify-center w-full px-4">
+          <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg h-fit">
+            <CardHeader className="text-center pb-6">
+              <div className="mx-auto w-14 h-14 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mb-2">
+                <Wallet className="h-7 w-7 text-white" />
               </div>
+              <h2 className="text-xl font-semibold text-gray-800">Create Your Account</h2>
+              <p className="text-sm text-gray-600 mt-1">Join the future of crypto wallet management</p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-8 pb-8">
             <Form {...registerForm}>
-              <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+              <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-5">
                 {/* Row 1: Name and Username */}
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
@@ -193,7 +195,7 @@ export default function RegisterPage() {
                           <Input
                             {...field}
                             placeholder="Enter your full name"
-                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-9"
+                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-10"
                             data-testid="input-name"
                           />
                         </FormControl>
@@ -212,7 +214,7 @@ export default function RegisterPage() {
                           <Input
                             {...field}
                             placeholder="Choose a username"
-                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-9"
+                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-10"
                             data-testid="input-username"
                           />
                         </FormControl>
@@ -235,7 +237,7 @@ export default function RegisterPage() {
                             {...field}
                             type="email"
                             placeholder="Enter your email"
-                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-9"
+                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-10"
                             data-testid="input-register-email"
                           />
                         </FormControl>
@@ -255,7 +257,7 @@ export default function RegisterPage() {
                             {...field}
                             type="tel"
                             placeholder="Enter your phone number"
-                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-9"
+                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-10"
                             data-testid="input-phone"
                           />
                         </FormControl>
@@ -279,7 +281,7 @@ export default function RegisterPage() {
                               {...field}
                               type={showPassword ? "text" : "password"}
                               placeholder="Create a password (min 6)"
-                              className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 pr-8 h-9"
+                              className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 pr-8 h-10"
                               data-testid="input-register-password"
                             />
                             <Button
@@ -313,7 +315,7 @@ export default function RegisterPage() {
                           <Input
                             {...field}
                             placeholder="Enter referral code"
-                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-9"
+                            className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 h-10"
                             data-testid="input-referral-code"
                             readOnly={!!referralId}
                           />
@@ -326,7 +328,7 @@ export default function RegisterPage() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white mt-6"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white mt-8 h-12 text-base font-medium"
                   disabled={isRegisterLoading}
                   data-testid="button-register"
                 >
@@ -342,11 +344,11 @@ export default function RegisterPage() {
               </form>
             </Form>
 
-            <div className="mt-4 text-center">
+            <div className="mt-6 text-center">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className="w-full border-gray-300 bg-white text-gray-700 hover:bg-gray-50 h-11"
                 onClick={handleGoogleAuth}
                 data-testid="button-google-register"
               >
@@ -354,7 +356,7 @@ export default function RegisterPage() {
               </Button>
             </div>
 
-            <div className="mt-4 text-center">
+            <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
                 <a href="/" className="text-purple-600 hover:text-purple-700 font-medium">
