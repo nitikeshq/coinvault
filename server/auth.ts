@@ -136,12 +136,9 @@ export function setupAuth(app: Express) {
 
   passport.deserializeUser(async (id: string, done) => {
     try {
-      console.log('Deserializing user with ID:', id);
       const user = await storage.getUser(id);
-      console.log('Deserialized user:', user ? { id: user.id, email: user.email, isAdmin: user.isAdmin } : 'not found');
       done(null, user);
     } catch (error) {
-      console.error('Deserialize error:', error);
       done(error);
     }
   });
@@ -259,11 +256,6 @@ export function setupAuth(app: Express) {
 }
 
 export const requireAuth = (req: any, res: any, next: any) => {
-  console.log('Auth check:', {
-    isAuthenticated: req.isAuthenticated(),
-    user: req.user ? { id: req.user.id, email: req.user.email, isActive: req.user.isActive } : undefined
-  });
-  
   if (req.isAuthenticated() && req.user?.isActive) {
     return next();
   }
@@ -271,13 +263,6 @@ export const requireAuth = (req: any, res: any, next: any) => {
 };
 
 export const requireAdmin = (req: any, res: any, next: any) => {
-  console.log('Admin check:', {
-    isAuthenticated: req.isAuthenticated(),
-    user: req.user,
-    isActive: req.user?.isActive,
-    isAdmin: req.user?.isAdmin
-  });
-  
   if (req.isAuthenticated() && req.user?.isActive && req.user?.isAdmin) {
     return next();
   }
