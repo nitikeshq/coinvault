@@ -808,7 +808,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate rarity based on distribution: 50% Common, 30% Rare, 15% Epic, 5% Legendary
-      function getRandomRarity(): string {
+      const getRandomRarity = (): string => {
         const rand = Math.random() * 100;
         if (rand < 50) return "Common";
         if (rand < 80) return "Rare"; // 30% (50 + 30 = 80)
@@ -1105,7 +1105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  function generateTraitVariations(baseTraits, quantity) {
+  function generateTraitVariations(baseTraits: any, quantity: number) {
     const variations = [];
     const expressionOptions = ['Happy', 'Serious', 'Angry', 'Surprised', 'Bored', 'Excited', 'Confident'];
     const mouthOptions = ['Normal', 'Cigarette', 'Cigar', 'Pipe'];
@@ -1135,10 +1135,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
     try {
+      console.log('Received mint NFT request:', req.body);
       const { traits, rarity, quantity = 1, referenceImageUrl, skipUniquenessCheck = false } = req.body;
       
       if (!traits) {
         return res.status(400).json({ message: "Traits are required" });
+      }
+      
+      // Validate required trait properties
+      if (!traits.expression || !traits.mouth || !traits.eyewear || !traits.beard || !traits.hairStyle || !traits.background) {
+        return res.status(400).json({ message: "All required trait properties must be provided" });
       }
 
       // Generate trait variations for quantity > 1

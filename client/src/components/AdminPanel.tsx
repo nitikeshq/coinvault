@@ -1688,7 +1688,7 @@ function NFTMintingPanel() {
   });
 
   const mintNftMutation = useMutation({
-    mutationFn: async ({ traits, rarity, quantity }: { traits: any; rarity: string; quantity: number }) => {
+    mutationFn: async ({ traits, rarity, quantity, skipUniquenessCheck }: { traits: any; rarity: string; quantity: number; skipUniquenessCheck: boolean }) => {
       return apiRequest("POST", "/api/admin/mint-nft", { 
         traits, 
         rarity, 
@@ -1748,7 +1748,8 @@ function NFTMintingPanel() {
     mintNftMutation.mutate({ 
       traits, 
       rarity: nftRarity,
-      quantity: nftQuantity 
+      quantity: nftQuantity,
+      skipUniquenessCheck 
     });
   };
 
