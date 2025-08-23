@@ -17,6 +17,7 @@ import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PresaleAdmin } from "@/components/PresaleAdmin";
+import { useTokenInfo } from "@/hooks/useTokenInfo";
 
 const tokenConfigSchema = z.object({
   contractAddress: z.string().min(1, "Contract address is required"),
@@ -1170,6 +1171,7 @@ function DappsManagementPanel() {
   const queryClient = useQueryClient();
   const [editingCost, setEditingCost] = useState<string | null>(null);
   const [tempCost, setTempCost] = useState("");
+  const { tokenSymbol } = useTokenInfo();
 
   const { data: dappSettings = [] } = useQuery<any[]>({
     queryKey: ["/api/dapps/settings"],
@@ -1274,7 +1276,7 @@ function DappsManagementPanel() {
                         className="w-24 h-6 text-xs border-gray-300 bg-white"
                         data-testid={`input-cost-${dapp.appName}`}
                       />
-                      <span className="text-xs">CHILL</span>
+                      <span className="text-xs">{tokenSymbol}</span>
                       <Button
                         size="sm"
                         onClick={() => handleSaveCost(dapp.appName)}
@@ -1297,7 +1299,7 @@ function DappsManagementPanel() {
                     </div>
                   ) : (
                     <div className="inline-flex items-center space-x-2 ml-2">
-                      <span>{parseFloat(dapp.cost).toLocaleString()} CHILL tokens</span>
+                      <span>{parseFloat(dapp.cost).toLocaleString()} {tokenSymbol} tokens</span>
                       <Button
                         size="sm"
                         variant="outline"
@@ -1351,6 +1353,7 @@ function UsersManagementPanel() {
   const queryClient = useQueryClient();
   const [tokenAmount, setTokenAmount] = useState("");
   const [tokenReason, setTokenReason] = useState("");
+  const { tokenSymbol } = useTokenInfo();
 
   // Fetch all users
   const { data: users = [], isLoading } = useQuery<any[]>({
@@ -1462,7 +1465,7 @@ function UsersManagementPanel() {
                 <div className="text-center">
                   <div className="text-sm text-gray-500">Token Balance</div>
                   <div className="font-bold text-green-600">
-                    {parseFloat(user.tokenBalance || '0').toLocaleString()} CHILL
+                    {parseFloat(user.tokenBalance || '0').toLocaleString()} {tokenSymbol}
                   </div>
                 </div>
                 
@@ -1515,7 +1518,7 @@ function UsersManagementPanel() {
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">Amount (CHILL)</label>
+              <label className="text-sm font-medium text-gray-700">Amount ({tokenSymbol})</label>
               <Input
                 type="number"
                 placeholder="Enter amount"
@@ -1553,6 +1556,7 @@ function NFTMintingPanel() {
   const [nftTheme, setNftTheme] = useState("");
   const [nftRarity, setNftRarity] = useState("Common");
   const [nftQuantity, setNftQuantity] = useState(1);
+  const { tokenSymbol } = useTokenInfo();
 
   const mintNftMutation = useMutation({
     mutationFn: async ({ theme, rarity, quantity }: { theme: string; rarity: string; quantity: number }) => {
@@ -1656,7 +1660,7 @@ function NFTMintingPanel() {
               <div><span className="text-gray-600">Theme:</span> {nftTheme || "Not set"}</div>
               <div><span className="text-gray-600">Rarity:</span> {nftRarity}</div>
               <div><span className="text-gray-600">Quantity:</span> {nftQuantity}</div>
-              <div><span className="text-gray-600">Collection:</span> CHILL NFTs</div>
+              <div><span className="text-gray-600">Collection:</span> {tokenSymbol} NFTs</div>
             </div>
             <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
               <div className="text-xs text-blue-600 mb-1 font-medium">ℹ️ AI Generation</div>

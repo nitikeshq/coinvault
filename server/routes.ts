@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (userBalance < cost) {
         return res.status(400).json({ 
-          message: 'Insufficient CHILL balance',
+          message: 'Insufficient token balance',
           required: cost,
           current: userBalance
         });
@@ -651,7 +651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (userBalance < cost) {
         return res.status(400).json({ 
-          message: 'Insufficient CHILL balance',
+          message: 'Insufficient token balance',
           required: cost,
           current: userBalance
         });
@@ -799,10 +799,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check user balance
       const userBalance = await storage.getUserBalance(userId);
       const balance = parseFloat(userBalance?.balance || '0');
-      const cost = 100000; // 100k CHILL tokens
+      const cost = 100000; // 100k tokens
       
       if (balance < cost) {
-        return res.status(400).json({ message: "Insufficient balance. Need 100,000 CHILL tokens." });
+        return res.status(400).json({ message: "Insufficient balance. Need 100,000 tokens." });
       }
 
       // Generate meme description with AI

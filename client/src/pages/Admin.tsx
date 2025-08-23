@@ -647,7 +647,7 @@ function DappsAdminPanel() {
                   {dapp.description}
                 </p>
                 <div className="text-sm text-gray-300">
-                  <span className="font-medium">Cost:</span> {parseFloat(dapp.cost).toLocaleString()} CHILL tokens
+                  <span className="font-medium">Cost:</span> {parseFloat(dapp.cost).toLocaleString()} tokens
                 </div>
               </div>
               <div className="flex items-center space-x-3">
@@ -803,7 +803,7 @@ function UsersManagementPanel() {
                   <div className="text-center">
                     <div className="text-sm text-gray-400">Token Balance</div>
                     <div className="font-bold text-yellow-400">
-                      {parseFloat(user.tokenBalance || '0').toLocaleString()} CHILL
+                      {parseFloat(user.tokenBalance || '0').toLocaleString()} tokens
                     </div>
                   </div>
                   
@@ -856,7 +856,7 @@ function UsersManagementPanel() {
           <div className="mt-6 pt-6 border-t border-white/20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="token-amount">Amount (CHILL)</Label>
+                <Label htmlFor="token-amount">Amount (tokens)</Label>
                 <Input
                   id="token-amount"
                   type="number"
@@ -1005,7 +1005,7 @@ function NFTMintingPanel() {
               <div><span className="text-gray-400">Theme:</span> {nftTheme || "Not set"}</div>
               <div><span className="text-gray-400">Rarity:</span> {nftRarity}</div>
               <div><span className="text-gray-400">Quantity:</span> {nftQuantity}</div>
-              <div><span className="text-gray-400">Collection:</span> CHILL NFTs</div>
+              <div><span className="text-gray-400">Collection:</span> NFTs</div>
             </div>
             <div className="mt-4 p-3 bg-blue-900/20 rounded border border-blue-500/30">
               <div className="text-xs text-blue-400 mb-1">ℹ️ AI Generation</div>

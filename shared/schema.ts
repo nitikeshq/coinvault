@@ -243,7 +243,7 @@ export const dappSettings = pgTable("dapp_settings", {
   appName: varchar("app_name").notNull().unique(), // "nft_mint", "meme_generator"
   displayName: varchar("display_name").notNull(), // "NFT Mint", "Memes Generator"
   isEnabled: boolean("is_enabled").default(false),
-  cost: decimal("cost", { precision: 18, scale: 8 }).notNull(), // Cost in CHILLS
+  cost: decimal("cost", { precision: 18, scale: 8 }).notNull(), // Cost in tokens
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

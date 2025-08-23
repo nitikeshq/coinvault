@@ -9,11 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useTokenInfo } from "@/hooks/useTokenInfo";
 import { Sparkles, Image, Coins, Clock, CheckCircle, XCircle } from "lucide-react";
 
 export default function DappsSection() {
   const { toast } = useToast();
   const [memePrompt, setMemePrompt] = useState("");
+  const { tokenSymbol } = useTokenInfo();
 
   // Fetch enabled dapps
   const { data: dappSettings = [] } = useQuery<any[]>({
@@ -134,7 +136,7 @@ export default function DappsSection() {
           Decentralized Apps
         </h1>
         <p className="text-gray-700 text-lg">
-          Use your CHILL tokens to access exclusive features
+          Use your {tokenSymbol} tokens to access exclusive features
         </p>
         
         {/* User Balance */}
@@ -142,7 +144,7 @@ export default function DappsSection() {
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-2">
               <Coins className="h-5 w-5 text-yellow-500" />
-              <span className="font-semibold">Your CHILL Balance:</span>
+              <span className="font-semibold">Your {tokenSymbol} Balance:</span>
             </div>
             <Badge variant="secondary" className="text-lg px-3 py-1">
               {userBalance.toLocaleString()}
@@ -177,7 +179,7 @@ export default function DappsSection() {
                   <CardTitle className="flex items-center space-x-2">
                     <Image className="h-5 w-5" />
                     <span>Mint NFT</span>
-                    <Badge variant="outline">{nftCost?.toLocaleString()} CHILL</Badge>
+                    <Badge variant="outline">{nftCost?.toLocaleString()} {tokenSymbol}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -207,7 +209,7 @@ export default function DappsSection() {
                         <div className="text-sm font-medium">Next Available NFT:</div>
                         <div className="bg-gray-50 p-3 rounded-lg">
                           <div className="font-medium">
-                            CHILL NFT #{availableNfts[0]?.tokenId}
+                            {tokenSymbol} NFT #{availableNfts[0]?.tokenId}
                           </div>
                           <div className="text-sm text-gray-600 mt-1">
                             {availableNfts[0]?.description}
@@ -219,11 +221,11 @@ export default function DappsSection() {
                           className="w-full"
                           data-testid="button-mint-nft"
                         >
-                          {nftMintMutation.isPending ? "Minting..." : `Mint for ${nftCost?.toLocaleString()} CHILL`}
+                          {nftMintMutation.isPending ? "Minting..." : `Mint for ${nftCost?.toLocaleString()} ${tokenSymbol}`}
                         </Button>
                         {userBalance < nftCost && (
                           <div className="text-sm text-red-600 text-center">
-                            Insufficient CHILL balance
+                            Insufficient {tokenSymbol} balance
                           </div>
                         )}
                       </div>
@@ -280,7 +282,7 @@ export default function DappsSection() {
                   <CardTitle className="flex items-center space-x-2">
                     <Sparkles className="h-5 w-5" />
                     <span>Generate Meme</span>
-                    <Badge variant="outline">{memeCost?.toLocaleString()} CHILL</Badge>
+                    <Badge variant="outline">{memeCost?.toLocaleString()} {tokenSymbol}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -306,12 +308,12 @@ export default function DappsSection() {
                       className="w-full"
                       data-testid="button-generate-meme"
                     >
-                      {memeGenerationMutation.isPending ? "Generating..." : `Generate for ${memeCost?.toLocaleString()} CHILL`}
+                      {memeGenerationMutation.isPending ? "Generating..." : `Generate for ${memeCost?.toLocaleString()} ${tokenSymbol}`}
                     </Button>
                     
                     {userBalance < memeCost && (
                       <div className="text-sm text-red-600 text-center">
-                        Insufficient CHILL balance
+                        Insufficient {tokenSymbol} balance
                       </div>
                     )}
                   </div>
