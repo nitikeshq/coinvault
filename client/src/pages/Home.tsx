@@ -35,15 +35,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -inset-10 opacity-20">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-        </div>
-      </div>
-
       <div className="relative z-10">
         <Navigation 
           activeSection={activeSection} 
@@ -52,11 +43,11 @@ export default function Home() {
           isAdmin={isAdmin}
         />
         
-        <div className="pt-20 pb-20 md:pb-8">
+        <div className="pt-20 pb-8">
           {renderSection()}
         </div>
 
-        {/* Enhanced Footer */}
+        {/* Clean Footer */}
         <footer className="bg-white/80 backdrop-blur-md border-t border-gray-200 mt-16">
           <div className="container mx-auto px-4 py-12">
             <div className="grid md:grid-cols-4 gap-8">
@@ -172,35 +163,6 @@ export default function Home() {
           </div>
         </footer>
       </div>
-
-      {/* Custom CSS for animations */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes blob {
-            0% {
-              transform: translate(0px, 0px) scale(1);
-            }
-            33% {
-              transform: translate(30px, -50px) scale(1.1);
-            }
-            66% {
-              transform: translate(-20px, 20px) scale(0.9);
-            }
-            100% {
-              transform: translate(0px, 0px) scale(1);
-            }
-          }
-          .animate-blob {
-            animation: blob 7s infinite;
-          }
-          .animation-delay-2000 {
-            animation-delay: 2s;
-          }
-          .animation-delay-4000 {
-            animation-delay: 4s;
-          }
-        `
-      }} />
     </div>
   );
 }
