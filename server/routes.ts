@@ -1075,28 +1075,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin NFT Minting Route
-  app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
+  // Check NFT traits uniqueness
+  app.post('/api/admin/check-nft-uniqueness', requireAdmin, async (req, res) => {
     try {
-      const { traits, rarity, quantity = 1, referenceImageUrl } = req.body;
+      const { traits } = req.body;
       
       if (!traits) {
         return res.status(400).json({ message: "Traits are required" });
       }
 
+      // Create traits hash for uniqueness check
+      const traitsString = `${traits.expression}-${traits.mouth}-${traits.eyewear}-${traits.beard}-${traits.hairStyle}-${traits.background}`;
+      const traitsHash = require('crypto').createHash('md5').update(traitsString).digest('hex');
+      
+      // Check if traits combination already exists
+      const existingNFTs = await storage.checkTraitsCombinationExists(traitsHash, traitsString);
+      
+      res.json({
+        isUnique: existingNFTs.length === 0,
+        traitsHash,
+        existingNFTs: existingNFTs.length > 0 ? existingNFTs : [],
+        message: existingNFTs.length === 0 ? 
+          'This trait combination is unique!' : 
+          `Found ${existingNFTs.length} NFT(s) with similar traits`
+      });
+    } catch (error) {
+      console.error("Error checking NFT uniqueness:", error);
+      res.status(500).json({ message: "Failed to check uniqueness" });
+    }
+  });
+
+  function generateTraitVariations(baseTraits, quantity) {
+    const variations = [];
+    const expressionOptions = ['Happy', 'Serious', 'Angry', 'Surprised', 'Bored', 'Excited', 'Confident'];
+    const mouthOptions = ['Normal', 'Cigarette', 'Cigar', 'Pipe'];
+    const eyewearOptions = ['Black sunglasses', 'Colored sunglasses', 'No glasses', 'Round glasses', 'Dollar eyes'];
+    const beardOptions = ['Thick curled beard', 'Short beard', 'Goatee'];
+    const hairOptions = ['Messy gray hair', 'Styled gray hair', 'Long gray hair', 'Wavy gray hair'];
+    const backgroundOptions = ['Solid color', 'Gradient', 'Abstract', 'Cosmic', 'Neon city'];
+    
+    variations.push({ ...baseTraits }); // Include original
+    
+    for (let i = 1; i < quantity; i++) {
+      const variation = { ...baseTraits };
+      
+      // Vary traits randomly to ensure uniqueness
+      if (Math.random() < 0.4) variation.expression = expressionOptions[Math.floor(Math.random() * expressionOptions.length)];
+      if (Math.random() < 0.3) variation.mouth = mouthOptions[Math.floor(Math.random() * mouthOptions.length)];
+      if (Math.random() < 0.3) variation.eyewear = eyewearOptions[Math.floor(Math.random() * eyewearOptions.length)];
+      if (Math.random() < 0.2) variation.beard = beardOptions[Math.floor(Math.random() * beardOptions.length)];
+      if (Math.random() < 0.2) variation.hairStyle = hairOptions[Math.floor(Math.random() * hairOptions.length)];
+      if (Math.random() < 0.3) variation.background = backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)];
+      
+      variations.push(variation);
+    }
+    
+    return variations;
+  }
+
+  app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
+    try {
+      const { traits, rarity, quantity = 1, referenceImageUrl, skipUniquenessCheck = false } = req.body;
+      
+      if (!traits) {
+        return res.status(400).json({ message: "Traits are required" });
+      }
+
+      // Generate trait variations for quantity > 1
+      const traitVariations = quantity > 1 ? 
+        generateTraitVariations(traits, quantity) : 
+        [traits];
+
+      // Check uniqueness for all variations unless skipped
+      if (!skipUniquenessCheck) {
+        for (let variation of traitVariations) {
+          const traitsString = `${variation.expression}-${variation.mouth}-${variation.eyewear}-${variation.beard}-${variation.hairStyle}-${variation.background}`;
+          const traitsHash = require('crypto').createHash('md5').update(traitsString).digest('hex');
+          
+          const existingNFTs = await storage.checkTraitsCombinationExists(traitsHash, traitsString);
+          if (existingNFTs.length > 0) {
+            return res.status(400).json({ 
+              message: `Trait combination already exists: ${traitsString}`,
+              existingNFT: existingNFTs[0],
+              suggestion: "Try different traits or use 'Skip Uniqueness Check' option"
+            });
+          }
+        }
+      }
+
       const results = [];
       
       for (let i = 0; i < quantity; i++) {
+        const currentTraits = traitVariations[i] || traits;
         // Step 1: Generate AI metadata based on detailed traits
         const traitDescription = `
         Character Traits:
-        - Expression: ${traits.expression}
-        - Mouth/Extras: ${traits.mouth}
-        - Eyewear: ${traits.eyewear}
-        - Beard/Mustache: ${traits.beard}
-        - Hair Style/Color: ${traits.hairStyle}
-        - Background: ${traits.background}
-        ${traits.accessories ? `- Accessories: ${traits.accessories}` : ''}
-        ${traits.customTheme ? `- Custom Theme: ${traits.customTheme}` : ''}
+        - Expression: ${currentTraits.expression}
+        - Mouth/Extras: ${currentTraits.mouth}
+        - Eyewear: ${currentTraits.eyewear}
+        - Beard/Mustache: ${currentTraits.beard}
+        - Hair Style/Color: ${currentTraits.hairStyle}
+        - Background: ${currentTraits.background}
+        ${currentTraits.accessories ? `- Accessories: ${currentTraits.accessories}` : ''}
+        ${currentTraits.customTheme ? `- Custom Theme: ${currentTraits.customTheme}` : ''}
         `;
 
         const metadataPrompt = `Create detailed metadata for a unique NFT with these specific character traits and rarity: "${rarity || 'Common'}". 
@@ -1108,13 +1189,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "name": "Unique NFT Name incorporating the traits",
           "description": "Engaging description under 200 words that mentions the specific character traits",
           "attributes": [
-            {"trait_type": "Expression", "value": "${traits.expression}"},
-            {"trait_type": "Mouth", "value": "${traits.mouth}"},
-            {"trait_type": "Eyewear", "value": "${traits.eyewear}"},
-            {"trait_type": "Beard", "value": "${traits.beard}"},
-            {"trait_type": "Hair", "value": "${traits.hairStyle}"},
-            {"trait_type": "Background", "value": "${traits.background}"},
-            ${traits.accessories ? `{"trait_type": "Accessories", "value": "${traits.accessories}"},` : ''}
+            {"trait_type": "Expression", "value": "${currentTraits.expression}"},
+            {"trait_type": "Mouth", "value": "${currentTraits.mouth}"},
+            {"trait_type": "Eyewear", "value": "${currentTraits.eyewear}"},
+            {"trait_type": "Beard", "value": "${currentTraits.beard}"},
+            {"trait_type": "Hair", "value": "${currentTraits.hairStyle}"},
+            {"trait_type": "Background", "value": "${currentTraits.background}"},
+            ${currentTraits.accessories ? `{"trait_type": "Accessories", "value": "${currentTraits.accessories}"},` : ''}
             {"trait_type": "Rarity", "value": "${rarity || 'Common'}"}
           ]
         }`;
@@ -1150,9 +1231,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Combine base character prompt with specific traits for image generation
           const detailedImagePrompt = `${characterPrompt}. 
-          Character has: ${traits.expression} expression, ${traits.mouth} mouth, ${traits.eyewear} eyewear, ${traits.beard} beard, ${traits.hairStyle} hair, on ${traits.background} background.
-          ${traits.accessories ? `Additional accessories: ${traits.accessories}.` : ''}
-          ${traits.customTheme ? `Theme style: ${traits.customTheme}.` : ''}
+          Character has: ${currentTraits.expression} expression, ${currentTraits.mouth} mouth, ${currentTraits.eyewear} eyewear, ${currentTraits.beard} beard, ${currentTraits.hairStyle} hair, on ${currentTraits.background} background.
+          ${currentTraits.accessories ? `Additional accessories: ${currentTraits.accessories}.` : ''}
+          ${currentTraits.customTheme ? `Theme style: ${currentTraits.customTheme}.` : ''}
           High quality digital art, detailed, professional NFT artwork.`;
           
           imageUrl = await imageManager.generateAndSaveNFTImage({
@@ -1167,21 +1248,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           imageUrl = `https://via.placeholder.com/512x512/1a1a2e/ffffff?text=${encodeURIComponent(metadata.name)}`;
         }
         
+        // Create traits hash for uniqueness tracking
+        const traitsString = `${currentTraits.expression}-${currentTraits.mouth}-${currentTraits.eyewear}-${currentTraits.beard}-${currentTraits.hairStyle}-${currentTraits.background}`;
+        const traitsHash = require('crypto').createHash('md5').update(traitsString).digest('hex');
+
         // Step 4: Create NFT in database with all generated content
         const nft = await storage.createNFTForCollection({
           name: metadata.name,
-          theme,
           description: metadata.description,
           rarity: rarity || 'Common',
           attributes: JSON.stringify({
             ...metadata.attributes,
-            theme,
             rarity: rarity || 'Common',
             createdBy: 'admin',
-            hasReferenceImage: !!referenceImageUrl
+            hasReferenceImage: !!referenceImageUrl,
+            traitsHash,
+            traitsString
           }),
           imageUrl,
-          referenceImageUrl
+          referenceImageUrl,
+          traitsHash,
+          traitsString
         });
         
         results.push(nft);

@@ -1639,6 +1639,9 @@ function NFTMintingPanel() {
   const [nftTheme, setNftTheme] = useState("");
   const [nftRarity, setNftRarity] = useState("Common");
   const [nftQuantity, setNftQuantity] = useState(1);
+  const [uniquenessResult, setUniquenessResult] = useState(null);
+  const [checkingUniqueness, setCheckingUniqueness] = useState(false);
+  const [skipUniquenessCheck, setSkipUniquenessCheck] = useState(false);
   
   // NFT Trait States based on user specifications
   const [nftExpression, setNftExpression] = useState("Serious");
@@ -1656,9 +1659,42 @@ function NFTMintingPanel() {
     queryKey: ["/api/website/settings"],
   });
 
+  // Check uniqueness mutation
+  const checkUniquenessMutation = useMutation({
+    mutationFn: async (traits: any) => {
+      const response = await apiRequest("POST", "/api/admin/check-nft-uniqueness", { traits });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setUniquenessResult(data);
+      setCheckingUniqueness(false);
+      if (data.isUnique) {
+        toast({ 
+          title: "✅ Traits are Unique!", 
+          description: "This combination hasn't been used before", 
+        });
+      } else {
+        toast({ 
+          title: "⚠️ Traits Already Exist", 
+          description: `Found ${data.existingNFTs.length} similar NFT(s)`, 
+          variant: "destructive" 
+        });
+      }
+    },
+    onError: (error: any) => {
+      setCheckingUniqueness(false);
+      toast({ title: "Failed to check uniqueness", description: error.message, variant: "destructive" });
+    },
+  });
+
   const mintNftMutation = useMutation({
     mutationFn: async ({ traits, rarity, quantity }: { traits: any; rarity: string; quantity: number }) => {
-      return apiRequest("POST", "/api/admin/mint-nft", { traits, rarity, quantity });
+      return apiRequest("POST", "/api/admin/mint-nft", { 
+        traits, 
+        rarity, 
+        quantity,
+        skipUniquenessCheck 
+      });
     },
     onSuccess: (data: any) => {
       toast({
@@ -1668,6 +1704,8 @@ function NFTMintingPanel() {
       setNftTheme("");
       setNftRarity("Common");
       setNftQuantity(1);
+      setUniquenessResult(null);
+      setSkipUniquenessCheck(false);
       // Reset traits to defaults
       setNftExpression("Serious");
       setNftMouth("Normal");
@@ -1950,7 +1988,93 @@ function NFTMintingPanel() {
         </div>
         
         
-        <div className="pt-4 border-t border-gray-200">
+        {/* Uniqueness Check Section */}
+        <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 mt-6">
+          <h4 className="font-medium text-gray-800 mb-3">🔍 Uniqueness Validation</h4>
+          
+          <div className="flex flex-wrap gap-3 items-center mb-3">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const traits = {
+                  expression: nftExpression,
+                  mouth: nftMouth,
+                  eyewear: nftEyewear,
+                  beard: nftBeard,
+                  hairStyle: nftHairStyle,
+                  background: nftBackground,
+                  accessories: nftAccessories,
+                  customTheme: nftTheme
+                };
+                setCheckingUniqueness(true);
+                checkUniquenessMutation.mutate(traits);
+              }}
+              disabled={checkingUniqueness}
+              className="border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+              data-testid="button-check-uniqueness"
+            >
+              {checkingUniqueness ? (
+                <>
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  <Shield className="mr-2 h-3 w-3" />
+                  Check Uniqueness
+                </>
+              )}
+            </Button>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                checked={skipUniquenessCheck}
+                onCheckedChange={setSkipUniquenessCheck}
+                data-testid="switch-skip-uniqueness"
+              />
+              <label className="text-sm text-gray-700">Skip Uniqueness Check</label>
+            </div>
+          </div>
+          
+          {/* Uniqueness Results */}
+          {uniquenessResult && (
+            <div className={`p-3 rounded border mt-3 ${
+              uniquenessResult.isUnique ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-center mb-2">
+                {uniquenessResult.isUnique ? (
+                  <Check className="h-4 w-4 text-green-600 mr-2" />
+                ) : (
+                  <X className="h-4 w-4 text-red-600 mr-2" />
+                )}
+                <span className={`font-medium text-sm ${
+                  uniquenessResult.isUnique ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  {uniquenessResult.message}
+                </span>
+              </div>
+              
+              {!uniquenessResult.isUnique && uniquenessResult.existingNFTs?.length > 0 && (
+                <div className="text-xs text-gray-700 mt-2">
+                  <strong>Similar NFTs found:</strong>
+                  {uniquenessResult.existingNFTs.slice(0, 3).map((nft: any, index: number) => (
+                    <div key={index} className="mt-1 pl-2 border-l border-gray-300">
+                      • {nft.name} (Token #{nft.tokenId})
+                    </div>
+                  ))}
+                  {uniquenessResult.existingNFTs.length > 3 && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      ... and {uniquenessResult.existingNFTs.length - 3} more
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        <div className="pt-4 border-t border-gray-200 mt-6">
           <Button 
             onClick={handleMintNft}
             disabled={mintNftMutation.isPending || !websiteSettings?.nftCharacterPrompt}
@@ -1968,7 +2092,11 @@ function NFTMintingPanel() {
           </Button>
           
           <div className="mt-2 text-xs text-gray-500">
-            NFTs will be stored in database with unique trait combinations. Users can purchase them during presale.
+            {skipUniquenessCheck ? (
+              <span className="text-orange-600">⚠️ Uniqueness check skipped - duplicates may be created</span>
+            ) : (
+              <>NFTs will be stored in database with unique trait combinations. Users can purchase them during presale.</>
+            )}
           </div>
         </div>
       </CardContent>

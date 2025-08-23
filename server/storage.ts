@@ -709,6 +709,21 @@ export class DatabaseStorage implements IStorage {
     return nft;
   }
 
+  async checkTraitsCombinationExists(traitsHash: string, traitsString: string): Promise<any[]> {
+    // Check in both nftCollection and userNfts tables for trait combinations
+    const existingInCollection = await db
+      .select()
+      .from(nftCollection)
+      .where(sql`${nftCollection.attributes}::text LIKE '%"traitsString":"${traitsString}"%' OR ${nftCollection.attributes}::text LIKE '%"traitsHash":"${traitsHash}"%'`);
+    
+    const existingInUserNfts = await db
+      .select()
+      .from(userNfts)
+      .where(sql`${userNfts.attributes}::text LIKE '%"traitsString":"${traitsString}"%' OR ${userNfts.attributes}::text LIKE '%"traitsHash":"${traitsHash}"%'`);
+    
+    return [...existingInCollection, ...existingInUserNfts];
+  }
+
   // Update createMemeGeneration to match the new signature
   async createMemeGeneration(data: any): Promise<any> {
     const [meme] = await db.insert(memeGenerations)
