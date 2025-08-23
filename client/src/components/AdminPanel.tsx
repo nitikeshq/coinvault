@@ -1690,7 +1690,7 @@ function NFTMintingPanel() {
     const rand = Math.random() * 100;
     if (rand < 50) return "Common";
     if (rand < 80) return "Rare"; // 30%
-    if (rand < 95) return "Epic"; // 15% (using Epic instead of Unique)
+    if (rand < 95) return "Unique"; // 15% (changed from Epic to Unique as requested)
     return "Legendary"; // 5%
   };
 
@@ -2304,7 +2304,7 @@ function NFTMintingPanel() {
               
               <div className="mt-4 p-2 bg-gray-50 rounded text-xs">
                 <strong>Rarity Distribution:</strong><br />
-                50% Common, 30% Rare, 15% Epic, 5% Legendary
+                50% Common, 30% Rare, 15% Unique, 5% Legendary
               </div>
             </div>
           </div>
