@@ -82,6 +82,12 @@ export default function MemeMarketplace() {
   const [listingPrice, setListingPrice] = useState("");
   const [listingDescription, setListingDescription] = useState("");
   const [selectedUserMeme, setSelectedUserMeme] = useState<UserMeme | null>(null);
+
+  // Fetch token configuration for symbol
+  const { data: tokenConfig } = useQuery<{tokenSymbol: string}>({ 
+    queryKey: ["/api/token/config"] 
+  });
+  const tokenSymbol = tokenConfig?.tokenSymbol || "ETH";
   const [memeStats, setMemeStats] = useState<Record<string, MemeStats>>({});
 
   // Fetch Meme listings
@@ -307,7 +313,7 @@ export default function MemeMarketplace() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-gray-400 text-sm">Price</p>
-                          <p className="text-white font-bold text-lg">{listing.price} ETH</p>
+                          <p className="text-white font-bold text-lg">{listing.price} {tokenSymbol}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-gray-400 text-sm">Creator</p>
@@ -397,7 +403,7 @@ export default function MemeMarketplace() {
                                 </div>
                                 <div>
                                   <h4 className="font-semibold mb-2">Price</h4>
-                                  <p className="text-2xl font-bold text-purple-400">{selectedMeme.price} ETH</p>
+                                  <p className="text-2xl font-bold text-purple-400">{selectedMeme.price} {tokenSymbol}</p>
                                 </div>
                                 <div>
                                   <h4 className="font-semibold mb-2">Style</h4>
@@ -411,7 +417,7 @@ export default function MemeMarketplace() {
                                     <Input
                                       type="number"
                                       step="0.01"
-                                      placeholder="Enter bid amount (ETH)"
+                                      placeholder={`Enter bid amount (${tokenSymbol})`}
                                       value={bidAmount}
                                       onChange={(e) => setBidAmount(e.target.value)}
                                       className="bg-slate-700 border-slate-600 text-white"
@@ -435,7 +441,7 @@ export default function MemeMarketplace() {
                                       {memeBids.map((bid) => (
                                         <div key={bid.id} className="flex justify-between items-center bg-slate-700 p-2 rounded">
                                           <span className="text-sm">{bid.bidder.name}</span>
-                                          <span className="font-semibold">{bid.amount} ETH</span>
+                                          <span className="font-semibold">{bid.amount} {tokenSymbol}</span>
                                         </div>
                                       ))}
                                     </div>
@@ -515,7 +521,7 @@ export default function MemeMarketplace() {
                                 </div>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Price (ETH)</label>
+                                <label className="block text-sm font-medium mb-2">Price ({tokenSymbol})</label>
                                 <Input
                                   type="number"
                                   step="0.01"

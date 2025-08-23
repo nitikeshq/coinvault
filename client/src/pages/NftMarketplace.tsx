@@ -77,6 +77,12 @@ export default function NftMarketplace() {
   const [listingDescription, setListingDescription] = useState("");
   const [selectedUserNft, setSelectedUserNft] = useState<UserNft | null>(null);
 
+  // Fetch token configuration for symbol
+  const { data: tokenConfig } = useQuery<{tokenSymbol: string}>({ 
+    queryKey: ["/api/token/config"] 
+  });
+  const tokenSymbol = tokenConfig?.tokenSymbol || "ETH";
+
   // Fetch NFT listings
   const { data: nftListings = [], isLoading: loadingListings } = useQuery<NftListing[]>({
     queryKey: ["/api/marketplace/nfts"],
@@ -217,7 +223,7 @@ export default function NftMarketplace() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-gray-400 text-sm">Price</p>
-                          <p className="text-white font-bold text-lg">{listing.price} ETH</p>
+                          <p className="text-white font-bold text-lg">{listing.price} {tokenSymbol}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-gray-400 text-sm">Owner</p>
@@ -260,7 +266,7 @@ export default function NftMarketplace() {
                                 </div>
                                 <div>
                                   <h4 className="font-semibold mb-2">Price</h4>
-                                  <p className="text-2xl font-bold text-purple-400">{selectedNft.price} ETH</p>
+                                  <p className="text-2xl font-bold text-purple-400">{selectedNft.price} {tokenSymbol}</p>
                                 </div>
                                 <div>
                                   <h4 className="font-semibold mb-2">Rarity</h4>
@@ -274,7 +280,7 @@ export default function NftMarketplace() {
                                     <Input
                                       type="number"
                                       step="0.01"
-                                      placeholder="Enter bid amount (ETH)"
+                                      placeholder={`Enter bid amount (${tokenSymbol})`}
                                       value={bidAmount}
                                       onChange={(e) => setBidAmount(e.target.value)}
                                       className="bg-slate-700 border-slate-600 text-white"
@@ -298,7 +304,7 @@ export default function NftMarketplace() {
                                       {nftBids.map((bid) => (
                                         <div key={bid.id} className="flex justify-between items-center bg-slate-700 p-2 rounded">
                                           <span className="text-sm">{bid.bidder.name}</span>
-                                          <span className="font-semibold">{bid.amount} ETH</span>
+                                          <span className="font-semibold">{bid.amount} {tokenSymbol}</span>
                                         </div>
                                       ))}
                                     </div>
@@ -378,7 +384,7 @@ export default function NftMarketplace() {
                                 </div>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Price (ETH)</label>
+                                <label className="block text-sm font-medium mb-2">Price ({tokenSymbol})</label>
                                 <Input
                                   type="number"
                                   step="0.01"

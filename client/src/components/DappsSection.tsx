@@ -10,7 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTokenInfo } from "@/hooks/useTokenInfo";
-import { Sparkles, Image, Coins, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Sparkles, Image, Coins, Clock, CheckCircle, XCircle, ShoppingCart, Palette } from "lucide-react";
+import { Link, useLocation } from "wouter";
 
 // Rarity color mapping
 const rarityColors = {
@@ -28,6 +29,7 @@ export default function DappsSection() {
   const { toast } = useToast();
   const [memePrompt, setMemePrompt] = useState("");
   const { tokenSymbol } = useTokenInfo();
+  const [location] = useLocation();
 
   // Fetch enabled dapps
   const { data: dappSettings = [] } = useQuery<any[]>({
@@ -164,6 +166,69 @@ export default function DappsSection() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Marketplace Links */}
+      {(isNftMintEnabled || isMemeGeneratorEnabled) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
+          {isNftMintEnabled && (
+            <Link href="/marketplace/nfts">
+              <a className={`block p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-lg ${
+                location === '/marketplace/nfts' 
+                  ? 'border-purple-500 bg-purple-50' 
+                  : 'border-gray-200 hover:border-purple-300 bg-white'
+              }`}
+              data-testid="dapp-nft-marketplace">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <ShoppingCart className={`h-8 w-8 ${
+                      location === '/marketplace/nfts' ? 'text-purple-600' : 'text-gray-600'
+                    }`} />
+                  </div>
+                  <div>
+                    <h3 className={`font-semibold ${
+                      location === '/marketplace/nfts' ? 'text-purple-900' : 'text-gray-900'
+                    }`}>
+                      NFT Marketplace
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Buy, sell, and trade NFTs with {tokenSymbol}
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </Link>
+          )}
+          
+          {isMemeGeneratorEnabled && (
+            <Link href="/marketplace/memes">
+              <a className={`block p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-lg ${
+                location === '/marketplace/memes' 
+                  ? 'border-purple-500 bg-purple-50' 
+                  : 'border-gray-200 hover:border-purple-300 bg-white'
+              }`}
+              data-testid="dapp-meme-marketplace">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <Palette className={`h-8 w-8 ${
+                      location === '/marketplace/memes' ? 'text-purple-600' : 'text-gray-600'
+                    }`} />
+                  </div>
+                  <div>
+                    <h3 className={`font-semibold ${
+                      location === '/marketplace/memes' ? 'text-purple-900' : 'text-gray-900'
+                    }`}>
+                      Meme Marketplace
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Share laughs and trade memes with {tokenSymbol}
+                    </p>
+                  </div>
+                </div>
+              </a>
+            </Link>
+          )}
+        </div>
+      )}
 
       <Tabs defaultValue={isNftMintEnabled ? "nft-mint" : "meme-generator"} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
