@@ -271,7 +271,6 @@ export default function DappsSection() {
                           <div className="flex justify-between items-start">
                             <div>
                               <div className="font-medium">{nft.name}</div>
-                              <div className="text-sm text-gray-600">Token #{nft.tokenId}</div>
                               <Badge 
                                 className={`${getRarityColor(nft.rarity || 'Common')} text-white text-xs mt-1`}
                               >

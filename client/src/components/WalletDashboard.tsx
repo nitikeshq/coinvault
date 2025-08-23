@@ -507,7 +507,6 @@ function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: U
             <div className="flex justify-between items-start mb-2">
               <div>
                 <h4 className="font-semibold text-gray-800">{nft.name}</h4>
-                <p className="text-sm text-gray-600">Token #{nft.tokenId}</p>
               </div>
               <Badge className={`${getRarityColor(nft.rarity)} text-white text-xs`}>
                 {nft.rarity || 'Common'}
