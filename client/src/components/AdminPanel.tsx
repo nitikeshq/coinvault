@@ -57,7 +57,7 @@ export default function AdminPanel() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Function to fetch token information from BSC
+  // Function to fetch token information from backend API
   const fetchTokenInfo = async (contractAddress: string) => {
     if (!contractAddress || contractAddress.length !== 42 || !contractAddress.startsWith('0x')) {
       return;
@@ -65,97 +65,22 @@ export default function AdminPanel() {
 
     setIsLoadingTokenInfo(true);
     try {
-      // BSC RPC endpoint
-      const rpcUrl = 'https://bsc-dataseed1.binance.org/';
-      
-      // ERC-20 function selectors
-      const nameSelector = '0x06fdde03'; // name()
-      const symbolSelector = '0x95d89b41'; // symbol()
-      const decimalsSelector = '0x313ce567'; // decimals()
-
-      // Make RPC calls to get token info
-      const [nameResponse, symbolResponse, decimalsResponse] = await Promise.all([
-        fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'eth_call',
-            params: [{
-              to: contractAddress,
-              data: nameSelector
-            }, 'latest'],
-            id: 1
-          })
-        }),
-        fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'eth_call',
-            params: [{
-              to: contractAddress,
-              data: symbolSelector
-            }, 'latest'],
-            id: 2
-          })
-        }),
-        fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'eth_call',
-            params: [{
-              to: contractAddress,
-              data: decimalsSelector
-            }, 'latest'],
-            id: 3
-          })
-        })
-      ]);
-
-      const [nameData, symbolData, decimalsData] = await Promise.all([
-        nameResponse.json(),
-        symbolResponse.json(),
-        decimalsResponse.json()
-      ]);
-
-      if (nameData.result && symbolData.result && decimalsData.result) {
-        // Decode hex strings
-        const decodeName = (hex: string) => {
-          if (hex === '0x') return '';
-          const hex2 = hex.slice(2);
-          const length = parseInt(hex2.slice(64, 128), 16);
-          const nameHex = hex2.slice(128, 128 + length * 2);
-          return nameHex ? Buffer.from(nameHex, 'hex').toString('utf8') : '';
-        };
-
-        const decodeSymbol = (hex: string) => {
-          if (hex === '0x') return '';
-          const hex2 = hex.slice(2);
-          const length = parseInt(hex2.slice(64, 128), 16);
-          const symbolHex = hex2.slice(128, 128 + length * 2);
-          return symbolHex ? Buffer.from(symbolHex, 'hex').toString('utf8') : '';
-        };
-
-        const tokenName = decodeName(nameData.result);
-        const tokenSymbol = decodeSymbol(symbolData.result);
-        const decimals = parseInt(decimalsData.result, 16);
-
-        // Update form with fetched data
-        tokenForm.setValue('tokenName', tokenName);
-        tokenForm.setValue('tokenSymbol', tokenSymbol);
-        tokenForm.setValue('decimals', decimals);
-
-        toast({
-          title: "Token info fetched successfully",
-          description: `Found: ${tokenName} (${tokenSymbol}) with ${decimals} decimals`,
-        });
-      } else {
-        throw new Error('Invalid token contract or token does not exist');
+      const response = await fetch(`/api/token/info/${contractAddress}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      const tokenInfo = await response.json();
+      
+      // Update form with fetched data
+      tokenForm.setValue('tokenName', tokenInfo.name);
+      tokenForm.setValue('tokenSymbol', tokenInfo.symbol);
+      tokenForm.setValue('decimals', tokenInfo.decimals);
+
+      toast({
+        title: "Token info fetched successfully",
+        description: `Found: ${tokenInfo.name} (${tokenInfo.symbol}) with ${tokenInfo.decimals} decimals`,
+      });
     } catch (error) {
       console.error('Error fetching token info:', error);
       toast({
