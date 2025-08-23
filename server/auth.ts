@@ -161,10 +161,8 @@ export function setupAuth(app: Express) {
   // Auth routes
   app.post('/api/register', registerValidation, async (req: any, res: any) => {
     try {
-      console.log('Registration request body:', req.body);
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log('Registration validation errors:', errors.array());
         return res.status(400).json({ message: errors.array()[0].msg });
       }
 
@@ -220,10 +218,8 @@ export function setupAuth(app: Express) {
   });
 
   app.post('/api/login', loginValidation, (req: any, res: any, next: any) => {
-    console.log('Login request body:', req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('Validation errors:', errors.array());
       return res.status(400).json({ message: errors.array()[0].msg });
     }
 

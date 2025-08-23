@@ -29,6 +29,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
 
+  // Presale API endpoints
+  app.get('/api/presale/config', (req, res) => {
+    res.json({
+      targetAmount: "1000000",
+      tokenPrice: "0.001", 
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      minInvestment: "0.01",
+      maxInvestment: "10000"
+    });
+  });
+
+  app.get('/api/presale/progress', (req, res) => {
+    res.json({
+      totalRaised: "250000",
+      targetAmount: "1000000", 
+      percentage: 25,
+      investorCount: 150
+    });
+  });
+
   // Admin NFT minting endpoint
   app.post("/api/admin/mint-nft", requireAdmin, async (req: any, res) => {
     try {
