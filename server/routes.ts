@@ -7,6 +7,9 @@ import { insertDepositRequestSchema, insertNewsArticleSchema, insertSocialLinkSc
 import multer from "multer";
 import path from "path";
 import { blockchainService } from "./blockchainService";
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Configure multer for file uploads
 const upload = multer({
@@ -664,6 +667,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
+
+  // Admin User Management Routes
+  app.get('/api/admin/users', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsersForAdmin();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post('/api/admin/users/:userId/tokens/send', requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { amount, reason } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      await storage.adjustUserTokenBalance(userId, amount, `Admin sent tokens: ${reason || 'No reason provided'}`);
+      res.json({ message: "Tokens sent successfully" });
+    } catch (error) {
+      console.error("Error sending tokens:", error);
+      res.status(500).json({ message: "Failed to send tokens" });
+    }
+  });
+
+  app.post('/api/admin/users/:userId/tokens/deduct', requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { amount, reason } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      const userBalance = await storage.getUserBalance(userId);
+      if (!userBalance) {
+        return res.status(404).json({ message: "User balance not found" });
+      }
+
+      const currentBalance = parseFloat(userBalance.balance || '0');
+      if (currentBalance < amount) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
+      await storage.adjustUserTokenBalance(userId, -amount, `Admin deducted tokens: ${reason || 'No reason provided'}`);
+      res.json({ message: "Tokens deducted successfully" });
+    } catch (error) {
+      console.error("Error deducting tokens:", error);
+      res.status(500).json({ message: "Failed to deduct tokens" });
+    }
+  });
+
+  // Admin NFT Minting Route
+  app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
+    try {
+      const { theme, rarity, quantity = 1 } = req.body;
+      
+      if (!theme) {
+        return res.status(400).json({ message: "Theme is required" });
+      }
+
+      const results = [];
+      
+      for (let i = 0; i < quantity; i++) {
+        // Generate AI description
+        const prompt = `Create a unique and creative NFT description for a digital collectible with the theme: "${theme}". The rarity is "${rarity || 'Common'}". Make it engaging, mysterious, and include artistic elements. Keep it under 200 words.`;
+        
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 200,
+        });
+
+        const description = response.choices[0].message.content;
+        
+        // Create NFT in database
+        const nft = await storage.createNFTForCollection({
+          theme,
+          description,
+          rarity: rarity || 'Common',
+          attributes: JSON.stringify({ theme, rarity: rarity || 'Common', createdBy: 'admin' }),
+        });
+        
+        results.push(nft);
+      }
+
+      res.json({ message: `Successfully minted ${quantity} NFT(s)`, nfts: results });
+    } catch (error) {
+      console.error("Error minting NFT:", error);
+      res.status(500).json({ message: "Failed to mint NFT" });
+    }
+  });
+
+  // Meme Generation Route
+  app.post('/api/dapps/meme-generator/generate', requireAuth, async (req, res) => {
+    try {
+      const { prompt, style = 'funny' } = req.body;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Meme prompt is required" });
+      }
+
+      // Check user balance
+      const userBalance = await storage.getUserBalance(userId);
+      const balance = parseFloat(userBalance?.balance || '0');
+      const cost = 100000; // 100k CHILL tokens
+      
+      if (balance < cost) {
+        return res.status(400).json({ message: "Insufficient balance. Need 100,000 CHILL tokens." });
+      }
+
+      // Generate meme description with AI
+      const memePrompt = `Create a ${style} meme concept based on: "${prompt}". Describe the visual elements, text, and style. Make it engaging and shareable. Keep it under 150 words.`;
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: memePrompt }],
+        max_tokens: 150,
+      });
+
+      const generatedDescription = response.choices[0].message.content;
+
+      // Deduct tokens
+      await storage.adjustUserTokenBalance(userId, -cost, 'Meme generation');
+      
+      // Save meme generation
+      const meme = await storage.createMemeGeneration({
+        userId,
+        prompt,
+        style,
+        generatedDescription,
+        cost: cost.toString(),
+      });
+
+      res.json({ 
+        message: "Meme generated successfully!", 
+        meme: {
+          ...meme,
+          description: generatedDescription
+        }
+      });
+    } catch (error) {
+      console.error("Error generating meme:", error);
+      res.status(500).json({ message: "Failed to generate meme" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

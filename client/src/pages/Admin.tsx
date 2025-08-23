@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Users, Send, Minus, Image, Coins } from "lucide-react";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -236,12 +237,14 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="token" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-crypto-dark">
+          <TabsList className="grid w-full grid-cols-7 bg-crypto-dark">
             <TabsTrigger value="token" data-testid="tab-token">Token Config</TabsTrigger>
             <TabsTrigger value="deposits" data-testid="tab-deposits">Deposits</TabsTrigger>
             <TabsTrigger value="news" data-testid="tab-news">News</TabsTrigger>
             <TabsTrigger value="social" data-testid="tab-social">Social Links</TabsTrigger>
             <TabsTrigger value="dapps" data-testid="tab-dapps">Dapps</TabsTrigger>
+            <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
+            <TabsTrigger value="nft-mint" data-testid="tab-nft-mint">NFT Mint</TabsTrigger>
           </TabsList>
 
           {/* Token Configuration */}
@@ -564,6 +567,16 @@ export default function Admin() {
           <TabsContent value="dapps">
             <DappsAdminPanel />
           </TabsContent>
+
+          {/* Users Management */}
+          <TabsContent value="users">
+            <UsersManagementPanel />
+          </TabsContent>
+
+          {/* NFT Admin Minting */}
+          <TabsContent value="nft-mint">
+            <NFTMintingPanel />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
@@ -666,6 +679,357 @@ function DappsAdminPanel() {
             <div className="text-sm">Dapp settings will appear here when configured</div>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Users Management Panel Component
+function UsersManagementPanel() {
+  const { toast } = useToast();
+  const [tokenAmount, setTokenAmount] = useState("");
+  const [tokenReason, setTokenReason] = useState("");
+
+  // Fetch all users
+  const { data: users = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+  });
+
+  const sendTokensMutation = useMutation({
+    mutationFn: async ({ userId, amount, reason }: { userId: string; amount: number; reason: string }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/tokens/send`, { amount, reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "Tokens sent successfully",
+      });
+      setTokenAmount("");
+      setTokenReason("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deductTokensMutation = useMutation({
+    mutationFn: async ({ userId, amount, reason }: { userId: string; amount: number; reason: string }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/tokens/deduct`, { amount, reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "Tokens deducted successfully",
+      });
+      setTokenAmount("");
+      setTokenReason("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendTokens = (userId: string) => {
+    const amount = parseFloat(tokenAmount);
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    sendTokensMutation.mutate({ userId, amount, reason: tokenReason });
+  };
+
+  const handleDeductTokens = (userId: string) => {
+    const amount = parseFloat(tokenAmount);
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    deductTokensMutation.mutate({ userId, amount, reason: tokenReason });
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-crypto-dark border-white/10">
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-white">Loading users...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-crypto-dark border-white/10">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Users className="h-5 w-5" />
+            <span>User Management</span>
+          </CardTitle>
+          <p className="text-gray-400 text-sm">
+            Manage user accounts and token balances. Users can add their BEP-20 withdrawal address in their profile.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {users.map((user: any) => (
+              <div key={user.id} className="bg-crypto-gray rounded-lg p-4 border border-white/10">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                  <div>
+                    <div className="font-medium text-white">{user.name || user.email}</div>
+                    <div className="text-sm text-gray-400">{user.email}</div>
+                    {user.isAdmin && (
+                      <Badge variant="secondary" className="mt-1">Admin</Badge>
+                    )}
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="text-sm text-gray-400">Token Balance</div>
+                    <div className="font-bold text-yellow-400">
+                      {parseFloat(user.tokenBalance || '0').toLocaleString()} CHILL
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="text-sm text-gray-400">Withdrawal Address</div>
+                    <div className="text-sm text-white">
+                      {user.withdrawalAddress ? (
+                        <span className="break-all">{user.withdrawalAddress}</span>
+                      ) : (
+                        <span className="text-gray-500">Not set</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleSendTokens(user.id)}
+                      disabled={sendTokensMutation.isPending || !tokenAmount}
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid={`button-send-${user.id}`}
+                    >
+                      <Send className="h-3 w-3 mr-1" />
+                      Send
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeductTokens(user.id)}
+                      disabled={deductTokensMutation.isPending || !tokenAmount}
+                      data-testid={`button-deduct-${user.id}`}
+                    >
+                      <Minus className="h-3 w-3 mr-1" />
+                      Deduct
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {users.length === 0 && (
+              <div className="text-center py-8 text-gray-400">
+                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <div>No users found</div>
+              </div>
+            )}
+          </div>
+          
+          {/* Token Management Form */}
+          <div className="mt-6 pt-6 border-t border-white/20">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="token-amount">Amount (CHILL)</Label>
+                <Input
+                  id="token-amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={tokenAmount}
+                  onChange={(e) => setTokenAmount(e.target.value)}
+                  className="bg-crypto-gray border-white/20"
+                  data-testid="input-token-amount"
+                />
+              </div>
+              <div>
+                <Label htmlFor="token-reason">Reason</Label>
+                <Input
+                  id="token-reason"
+                  placeholder="Optional reason"
+                  value={tokenReason}
+                  onChange={(e) => setTokenReason(e.target.value)}
+                  className="bg-crypto-gray border-white/20"
+                  data-testid="input-token-reason"
+                />
+              </div>
+              <div className="flex items-end">
+                <div className="text-sm text-gray-400">
+                  Fill in amount and reason, then click Send or Deduct for any user above
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// NFT Minting Panel Component  
+function NFTMintingPanel() {
+  const { toast } = useToast();
+  const [nftTheme, setNftTheme] = useState("");
+  const [nftRarity, setNftRarity] = useState("Common");
+  const [nftQuantity, setNftQuantity] = useState(1);
+
+  const mintNftMutation = useMutation({
+    mutationFn: async ({ theme, rarity, quantity }: { theme: string; rarity: string; quantity: number }) => {
+      return apiRequest("POST", "/api/admin/mint-nft", { theme, rarity, quantity });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: `Successfully minted ${nftQuantity} NFT(s) with AI-generated descriptions`,
+      });
+      setNftTheme("");
+      setNftRarity("Common");
+      setNftQuantity(1);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMintNft = () => {
+    if (!nftTheme.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a theme for the NFT",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    mintNftMutation.mutate({ 
+      theme: nftTheme.trim(), 
+      rarity: nftRarity,
+      quantity: nftQuantity 
+    });
+  };
+
+  return (
+    <Card className="bg-crypto-dark border-white/10">
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Image className="h-5 w-5" />
+          <span>Admin NFT Minting</span>
+        </CardTitle>
+        <p className="text-gray-400 text-sm">
+          Mint NFTs with AI-generated descriptions. These will be stored in the database and can be moved to blockchain post-presale.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="nft-theme">NFT Theme</Label>
+              <Input
+                id="nft-theme"
+                placeholder="e.g., Mystical Dragons, Cyber Punks, Abstract Art..."
+                value={nftTheme}
+                onChange={(e) => setNftTheme(e.target.value)}
+                className="bg-crypto-gray border-white/20"
+                data-testid="input-nft-theme"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                AI will generate unique descriptions based on this theme
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="nft-rarity">Rarity</Label>
+              <Select value={nftRarity} onValueChange={setNftRarity}>
+                <SelectTrigger className="bg-crypto-gray border-white/20" data-testid="select-nft-rarity">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Common">Common</SelectItem>
+                  <SelectItem value="Rare">Rare</SelectItem>
+                  <SelectItem value="Epic">Epic</SelectItem>
+                  <SelectItem value="Legendary">Legendary</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="nft-quantity">Quantity</Label>
+              <Input
+                id="nft-quantity"
+                type="number"
+                min="1"
+                max="100"
+                value={nftQuantity}
+                onChange={(e) => setNftQuantity(parseInt(e.target.value) || 1)}
+                className="bg-crypto-gray border-white/20"
+                data-testid="input-nft-quantity"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Generate multiple NFTs with the same theme (max 100)
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-crypto-gray rounded-lg p-4 border border-white/10">
+            <h4 className="font-medium text-white mb-2">Preview</h4>
+            <div className="space-y-2 text-sm">
+              <div><span className="text-gray-400">Theme:</span> {nftTheme || "Not set"}</div>
+              <div><span className="text-gray-400">Rarity:</span> {nftRarity}</div>
+              <div><span className="text-gray-400">Quantity:</span> {nftQuantity}</div>
+              <div><span className="text-gray-400">Collection:</span> CHILL NFTs</div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-900/20 rounded border border-blue-500/30">
+              <div className="text-xs text-blue-400 mb-1">ℹ️ AI Generation</div>
+              <div className="text-xs text-gray-300">
+                Each NFT will get a unique AI-generated description based on the theme and rarity.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t border-white/20">
+          <Button 
+            onClick={handleMintNft}
+            disabled={mintNftMutation.isPending || !nftTheme.trim()}
+            className="bg-crypto-blue hover:bg-blue-600"
+            data-testid="button-mint-nft"
+          >
+            {mintNftMutation.isPending ? "Minting..." : `Mint ${nftQuantity} NFT${nftQuantity > 1 ? 's' : ''} with AI`}
+          </Button>
+          
+          <div className="mt-2 text-xs text-gray-400">
+            NFTs will be stored in database for the presale. After presale ends, they can be deployed to blockchain.
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

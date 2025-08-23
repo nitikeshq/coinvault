@@ -493,17 +493,7 @@ export class DatabaseStorage implements IStorage {
     .orderBy(userNfts.mintedAt);
   }
 
-  // Meme generation methods
-  async createMemeGeneration(userId: string, prompt: string): Promise<any> {
-    const [meme] = await db.insert(memeGenerations)
-      .values({
-        userId,
-        prompt,
-        status: 'pending'
-      })
-      .returning();
-    return meme;
-  }
+  // Meme generation methods (original method removed for new signature)
 
   async updateMemeGeneration(id: string, data: any): Promise<any> {
     const [updated] = await db.update(memeGenerations)
@@ -527,6 +517,104 @@ export class DatabaseStorage implements IStorage {
     }).from(nftCollection);
     
     return stats;
+  }
+
+  // Admin user management methods
+  async getAllUsersForAdmin(): Promise<any[]> {
+    const result = await db.select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      tokenBalance: userBalances.balance,
+      withdrawalAddress: users.withdrawalAddress,
+      createdAt: users.createdAt,
+      isAdmin: users.isAdmin
+    }).from(users)
+    .leftJoin(userBalances, eq(users.id, userBalances.userId))
+    .orderBy(users.createdAt);
+    
+    return result.map(user => ({
+      ...user,
+      tokenBalance: user.tokenBalance || '0'
+    }));
+  }
+
+  async adjustUserTokenBalance(userId: string, amount: number, reason: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Get current balance or create if doesn't exist
+      const [currentBalance] = await tx.select()
+        .from(userBalances)
+        .where(eq(userBalances.userId, userId));
+
+      const currentAmount = parseFloat(currentBalance?.balance || '0');
+      const newAmount = (currentAmount + amount).toString();
+
+      if (currentBalance) {
+        // Update existing balance
+        await tx.update(userBalances)
+          .set({ 
+            balance: newAmount, 
+            updatedAt: new Date() 
+          })
+          .where(eq(userBalances.userId, userId));
+      } else {
+        // Create new balance record
+        await tx.insert(userBalances)
+          .values({
+            userId,
+            balance: newAmount,
+            usdValue: '0'
+          });
+      }
+
+      // Log the transaction
+      await tx.insert(transactions)
+        .values({
+          userId,
+          type: amount > 0 ? 'credit' : 'debit',
+          amount: Math.abs(amount).toString(),
+          description: reason,
+          status: 'completed'
+        });
+    });
+  }
+
+  async createNFTForCollection(nftData: any): Promise<any> {
+    // Get the next token ID
+    const [maxToken] = await db.select({
+      maxId: sql<number>`max(token_id)`
+    }).from(nftCollection);
+    
+    const nextTokenId = (maxToken.maxId || 0) + 1;
+    
+    const [nft] = await db.insert(nftCollection)
+      .values({
+        tokenId: nextTokenId,
+        name: `CHILL NFT #${nextTokenId}`,
+        description: nftData.description,
+        imageUrl: `https://via.placeholder.com/512x512.png?text=NFT+${nextTokenId}`,
+        attributes: nftData.attributes,
+        rarity: nftData.rarity || 'Common',
+        isMinted: false
+      })
+      .returning();
+      
+    return nft;
+  }
+
+  // Update createMemeGeneration to match the new signature
+  async createMemeGeneration(data: any): Promise<any> {
+    const [meme] = await db.insert(memeGenerations)
+      .values({
+        userId: data.userId,
+        prompt: data.prompt,
+        style: data.style || 'funny',
+        generatedDescription: data.generatedDescription,
+        cost: data.cost,
+        status: 'completed'
+      })
+      .returning();
+    return meme;
   }
 }
 

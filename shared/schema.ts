@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   walletAddress: varchar("wallet_address").unique(),
   walletPrivateKey: varchar("wallet_private_key"), // Encrypted in production
+  withdrawalAddress: varchar("withdrawal_address"), // BEP-20 address for withdrawals
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
