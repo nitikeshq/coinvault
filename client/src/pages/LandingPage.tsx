@@ -54,7 +54,7 @@ export default function LandingPage() {
               {settings?.logoUrl ? (
                 <img 
                   src={settings.logoUrl} 
-                  alt={`${settings?.siteName || 'CryptoWallet Pro'} Logo`} 
+                  alt={`${settings?.siteName || 'Crypto Wallet'} Logo`} 
                   className="w-10 h-10 rounded-lg object-cover"
                 />
               ) : (
@@ -62,7 +62,7 @@ export default function LandingPage() {
                   <Wallet className="text-white h-5 w-5" />
                 </div>
               )}
-              <h1 className="text-xl font-bold text-white">{settings?.siteName || "CryptoWallet Pro"}</h1>
+              <h1 className="text-xl font-bold text-white">{settings?.siteName || "Crypto Wallet"}</h1>
             </div>
             <Button 
               variant="outline" 
@@ -278,7 +278,7 @@ export default function LandingPage() {
       <footer className="py-8 bg-black/30 border-t border-white/20">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400">
-            © {new Date().getFullYear()} {settings?.siteName || "CryptoWallet Pro"}. 
+            © {new Date().getFullYear()} {settings?.siteName || "Crypto Wallet"}. 
             Powered by the future of decentralized finance.
           </p>
         </div>

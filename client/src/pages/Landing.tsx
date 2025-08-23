@@ -8,7 +8,7 @@ export default function Landing() {
     queryKey: ['/api/website/settings'],
   });
 
-  const siteName = websiteSettings?.siteName || "CryptoWallet Pro";
+  const siteName = websiteSettings?.siteName || "Crypto Wallet";
 
   const handleLogin = () => {
     window.location.href = "/api/login";
@@ -152,7 +152,7 @@ export default function Landing() {
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-3xl font-bold mb-4">Ready to Start Your Crypto Journey?</h3>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join thousands of users who trust CryptoWallet Pro for their digital asset management.
+            Join thousands of users who trust our platform for their digital asset management.
           </p>
           <Button 
             size="lg" 

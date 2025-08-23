@@ -126,7 +126,7 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     const referralCode = referralData?.referralCode;
     if (!referralCode) return;
     
-    const shareText = `Join me on ${tokenConfig?.tokenName || 'Crypto Wallet'} using my referral code: ${referralCode}`;
+    const shareText = `Join me on ${settings?.siteName || 'Crypto Wallet'} using my referral code: ${referralCode}`;
     const currentUrl = window.location.origin;
     
     if (platform === 'telegram') {

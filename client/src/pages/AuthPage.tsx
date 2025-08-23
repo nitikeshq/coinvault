@@ -73,7 +73,7 @@ export default function AuthPage() {
         <div className="hidden lg:flex flex-col space-y-8 text-gray-800">
           <div className="space-y-4">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {settings?.siteName || "CryptoWallet Pro"}
+              {settings?.siteName || "Crypto Wallet"}
             </h1>
             <p className="text-xl text-gray-600">
               Your secure gateway to the future of cryptocurrency management

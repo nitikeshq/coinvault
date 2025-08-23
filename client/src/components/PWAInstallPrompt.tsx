@@ -84,7 +84,7 @@ export function PWAInstallPrompt() {
             <Download className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-sm mb-1">Install {settings?.siteName || "CryptoWallet Pro"}</h3>
+            <h3 className="font-semibold text-sm mb-1">Install {settings?.siteName || "Crypto Wallet"}</h3>
             <p className="text-xs text-muted-foreground mb-3">
               Add to your home screen for quick access to your crypto wallet, NFTs, and marketplace.
             </p>
