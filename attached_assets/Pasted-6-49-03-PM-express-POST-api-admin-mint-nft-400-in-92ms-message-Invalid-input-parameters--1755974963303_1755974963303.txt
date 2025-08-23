@@ -1,0 +1,43 @@
+6:49:03 PM [express] POST /api/admin/mint-nft 400 in 92ms :: {"message":"Invalid input parameters"}
+Error checking NFT uniqueness: ReferenceError: require is not defined
+    at <anonymous> (/home/runner/workspace/server/routes.ts:1089:26)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at requireAdmin (/home/runner/workspace/server/auth.ts:280:12)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:646:15
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:265:14)
+    at Function.handle (/home/runner/workspace/node_modules/express/lib/router/index.js:175:3)
+    at router (/home/runner/workspace/node_modules/express/lib/router/index.js:47:12)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at strategy.pass (/home/runner/workspace/node_modules/passport/lib/middleware/authenticate.js:355:9)
+    at /home/runner/workspace/node_modules/passport/lib/strategies/session.js:120:12
+    at pass (/home/runner/workspace/node_modules/passport/lib/authenticator.js:352:31)
+    at deserialized (/home/runner/workspace/node_modules/passport/lib/authenticator.js:364:7)
+    at <anonymous> (/home/runner/workspace/server/auth.ts:140:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+6:49:05 PM [express] POST /api/admin/check-nft-uniqueness 500 in 118ms :: {"message":"Failed to chec…
+6:49:09 PM [express] GET /api/presale/timer 200 in 125ms :: {"timeRemaining":3843579379,"days":44,"h…
+6:49:10 PM [express] GET /api/presale/timer 200 in 132ms :: {"timeRemaining":3843577970,"days":44,"h…
+6:49:10 PM [express] GET /api/me 304 in 133ms :: {"id":"dcdd3c71-636f-4b33-8ae9-c960f43a887d","name"…
+6:49:12 PM [express] GET /api/presale/timer 200 in 124ms :: {"timeRemaining":3843576568,"days":44,"h…
+6:49:13 PM [express] GET /api/user/memes 304 in 123ms :: []
+6:49:13 PM [express] GET /api/presale/timer 200 in 128ms :: {"timeRemaining":3843575156,"days":44,"h…
+6:49:14 PM [express] GET /api/presale/timer 200 in 130ms :: {"timeRemaining":3843573740,"days":44,"h…
+6:49:16 PM [express] GET /api/presale/timer 200 in 130ms :: {"timeRemaining":3843572256,"days":44,"h…
+6:49:17 PM [express] GET /api/user/token/balance 304 in 236ms :: {"balance":"33.00000000","usdValue"…
+6:49:17 PM [express] GET /api/presale/progress 304 in 162ms :: {"totalRaised":"5000","targetAmount":…
+6:49:17 PM [express] GET /api/presale/timer 200 in 126ms :: {"timeRemaining":3843570851,"days":44,"h…
+6:49:18 PM [express] GET /api/user/memes 304 in 131ms :: []
+6:49:19 PM [express] GET /api/presale/timer 200 in 161ms :: {"timeRemaining":3843569403,"days":44,"h…
+6:49:20 PM [express] GET /api/presale/timer 200 in 125ms :: {"timeRemaining":3843567998,"days":44,"h…

@@ -10,6 +10,7 @@ import { blockchainService } from "./blockchainService";
 import OpenAI from "openai";
 import { ImageManager } from "./imageManager";
 import marketRoutes from "./marketRoutes";
+import { createHash } from "crypto";
 
 const openai = process.env.OPENAI_API_KEY 
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -1086,7 +1087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create traits hash for uniqueness check
       const traitsString = `${traits.expression}-${traits.mouth}-${traits.eyewear}-${traits.beard}-${traits.hairStyle}-${traits.background}`;
-      const traitsHash = require('crypto').createHash('md5').update(traitsString).digest('hex');
+      const traitsHash = createHash('md5').update(traitsString).digest('hex');
       
       // Check if traits combination already exists
       const existingNFTs = await storage.checkTraitsCombinationExists(traitsHash, traitsString);
@@ -1143,8 +1144,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validate required trait properties
-      if (!traits.expression || !traits.mouth || !traits.eyewear || !traits.beard || !traits.hairStyle || !traits.background) {
-        return res.status(400).json({ message: "All required trait properties must be provided" });
+      const requiredTraits = ['expression', 'mouth', 'eyewear', 'beard', 'hairStyle', 'background'];
+      const missingTraits = requiredTraits.filter(trait => !traits[trait]);
+      
+      if (missingTraits.length > 0) {
+        console.log('Missing traits:', missingTraits);
+        console.log('Received traits:', traits);
+        return res.status(400).json({ 
+          message: `Missing required traits: ${missingTraits.join(', ')}`,
+          receivedTraits: Object.keys(traits)
+        });
       }
 
       // Generate trait variations for quantity > 1
@@ -1156,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!skipUniquenessCheck) {
         for (let variation of traitVariations) {
           const traitsString = `${variation.expression}-${variation.mouth}-${variation.eyewear}-${variation.beard}-${variation.hairStyle}-${variation.background}`;
-          const traitsHash = require('crypto').createHash('md5').update(traitsString).digest('hex');
+          const traitsHash = createHash('md5').update(traitsString).digest('hex');
           
           const existingNFTs = await storage.checkTraitsCombinationExists(traitsHash, traitsString);
           if (existingNFTs.length > 0) {
@@ -1256,7 +1265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Create traits hash for uniqueness tracking
         const traitsString = `${currentTraits.expression}-${currentTraits.mouth}-${currentTraits.eyewear}-${currentTraits.beard}-${currentTraits.hairStyle}-${currentTraits.background}`;
-        const traitsHash = require('crypto').createHash('md5').update(traitsString).digest('hex');
+        const traitsHash = createHash('md5').update(traitsString).digest('hex');
 
         // Step 4: Create NFT in database with all generated content
         const nft = await storage.createNFTForCollection({
