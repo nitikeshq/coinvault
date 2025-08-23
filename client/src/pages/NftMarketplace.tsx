@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, Share2, ShoppingCart, Gavel, Plus, Edit, Trash2 } from "lucide-react";
+import { Heart, Eye, Share2, ShoppingCart, Gavel, Plus, Edit, Trash2, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface NftListing {
@@ -69,7 +69,7 @@ interface UserNft {
 }
 
 export default function NftMarketplace() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [selectedNft, setSelectedNft] = useState<NftListing | null>(null);
   const [bidAmount, setBidAmount] = useState("");
@@ -143,6 +143,15 @@ export default function NftMarketplace() {
   });
 
   const handlePlaceBid = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to place bids on NFTs.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!selectedNft || !bidAmount) return;
     
     createBidMutation.mutate({
@@ -153,6 +162,15 @@ export default function NftMarketplace() {
   };
 
   const handleListNft = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to list your NFTs for sale.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!selectedUserNft || !listingPrice) return;
     
     createListingMutation.mutate({
@@ -171,6 +189,31 @@ export default function NftMarketplace() {
       default: return 'bg-gray-500';
     }
   };
+
+  // SEO Configuration
+  const seoConfig = {
+    title: `NFT Marketplace - Trade Digital Collectibles with ${tokenSymbol} | CryptoWallet Pro`,
+    description: `Discover, buy, and sell unique NFTs on our exclusive marketplace. Trade digital collectibles securely with ${tokenSymbol} tokens. ${nftListings.length} NFTs available now.`,
+    keywords: ["nft marketplace", "digital collectibles", `${tokenSymbol} nft`, "crypto art", "blockchain collectibles", "nft trading", "digital assets"],
+    image: selectedNft?.nft.imageUrl ? (selectedNft.nft.imageUrl.startsWith('http') ? selectedNft.nft.imageUrl : `${window.location.origin}${selectedNft.nft.imageUrl}`) : undefined,
+    type: 'website' as const
+  };
+
+  // Update SEO when selected NFT changes
+  useEffect(() => {
+    if (selectedNft) {
+      document.title = `${selectedNft.nft.name} - ${selectedNft.price} ${tokenSymbol} | NFT Marketplace`;
+    }
+  }, [selectedNft, tokenSymbol]);
+
+  // Update document title for SEO
+  useEffect(() => {
+    document.title = seoConfig.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', seoConfig.description);
+    }
+  }, [seoConfig.title, seoConfig.description]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
@@ -274,27 +317,40 @@ export default function NftMarketplace() {
                                     {selectedNft.nft.rarity}
                                   </Badge>
                                 </div>
-                                {user && user.id !== selectedNft.ownerId && (
+                                {(!user || user.id !== selectedNft.ownerId) && (
                                   <div className="space-y-3">
                                     <h4 className="font-semibold">Place a Bid</h4>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder={`Enter bid amount (${tokenSymbol})`}
-                                      value={bidAmount}
-                                      onChange={(e) => setBidAmount(e.target.value)}
-                                      className="bg-slate-700 border-slate-600 text-white"
-                                      data-testid="bid-amount-input"
-                                    />
-                                    <Button
-                                      onClick={handlePlaceBid}
-                                      disabled={!bidAmount || createBidMutation.isPending}
-                                      className="w-full bg-purple-600 hover:bg-purple-700"
-                                      data-testid="place-bid-button"
-                                    >
-                                      <Gavel className="w-4 h-4 mr-2" />
-                                      {createBidMutation.isPending ? "Placing Bid..." : "Place Bid"}
-                                    </Button>
+                                    {isAuthenticated ? (
+                                      <>
+                                        <Input
+                                          type="number"
+                                          step="0.01"
+                                          placeholder={`Enter bid amount (${tokenSymbol})`}
+                                          value={bidAmount}
+                                          onChange={(e) => setBidAmount(e.target.value)}
+                                          className="bg-slate-700 border-slate-600 text-white"
+                                          data-testid="bid-amount-input"
+                                        />
+                                        <Button
+                                          onClick={handlePlaceBid}
+                                          disabled={!bidAmount || createBidMutation.isPending}
+                                          className="w-full bg-purple-600 hover:bg-purple-700"
+                                          data-testid="place-bid-button"
+                                        >
+                                          <Gavel className="w-4 h-4 mr-2" />
+                                          {createBidMutation.isPending ? "Placing Bid..." : "Place Bid"}
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <Button
+                                        onClick={() => window.location.href = '/api/login'}
+                                        className="w-full bg-blue-600 hover:bg-blue-700"
+                                        data-testid="login-to-bid-button"
+                                      >
+                                        <LogIn className="w-4 h-4 mr-2" />
+                                        Login to Place Bid
+                                      </Button>
+                                    )}
                                   </div>
                                 )}
                                 {nftBids.length > 0 && (
@@ -428,5 +484,6 @@ export default function NftMarketplace() {
         </Tabs>
       </div>
     </div>
+    </>
   );
 }

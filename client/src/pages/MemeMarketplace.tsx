@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, Share2, Download, ShoppingCart, Gavel, Plus, ExternalLink } from "lucide-react";
+import { Heart, Eye, Share2, Download, ShoppingCart, Gavel, Plus, ExternalLink, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface MemeListing {
@@ -75,7 +75,7 @@ interface UserMeme {
 }
 
 export default function MemeMarketplace() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [selectedMeme, setSelectedMeme] = useState<MemeListing | null>(null);
   const [bidAmount, setBidAmount] = useState("");
@@ -200,6 +200,15 @@ export default function MemeMarketplace() {
   };
 
   const handlePlaceBid = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to place bids on memes.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!selectedMeme || !bidAmount) return;
     
     createBidMutation.mutate({
@@ -210,6 +219,15 @@ export default function MemeMarketplace() {
   };
 
   const handleListMeme = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to list your memes for sale.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!selectedUserMeme || !listingPrice) return;
     
     createListingMutation.mutate({
@@ -250,6 +268,31 @@ export default function MemeMarketplace() {
       default: return 'bg-blue-500';
     }
   };
+
+  // SEO Configuration
+  const seoConfig = {
+    title: `Meme Marketplace - Trade Viral Content with ${tokenSymbol} | CryptoWallet Pro`,
+    description: `Discover, buy, and sell viral memes on our exclusive marketplace. Trade digital humor and viral content with ${tokenSymbol} tokens. ${memeListings.length} memes available now.`,
+    keywords: ["meme marketplace", "viral content", `${tokenSymbol} meme`, "digital humor", "meme trading", "viral marketing", "crypto memes"],
+    image: selectedMeme?.meme.imageUrl ? (selectedMeme.meme.imageUrl.startsWith('http') ? selectedMeme.meme.imageUrl : `${window.location.origin}${selectedMeme.meme.imageUrl}`) : undefined,
+    type: 'website' as const
+  };
+
+  // Update SEO when selected meme changes
+  useEffect(() => {
+    if (selectedMeme) {
+      document.title = `${selectedMeme.meme.prompt} - ${selectedMeme.price} ${tokenSymbol} | Meme Marketplace`;
+    }
+  }, [selectedMeme, tokenSymbol]);
+
+  // Update document title for SEO
+  useEffect(() => {
+    document.title = seoConfig.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', seoConfig.description);
+    }
+  }, [seoConfig.title, seoConfig.description]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
