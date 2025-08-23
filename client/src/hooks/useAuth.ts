@@ -36,27 +36,11 @@ function useAuthLogic(): AuthContextType {
 
   const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: ["/api/me"],
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/me", {
-          credentials: "include",
-        });
-        if (response.status === 401) {
-          return null;
-        }
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      } catch (error) {
-        console.log("Auth check failed:", error);
-        return null;
-      }
-    },
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: true, // Enable refetch on focus to maintain session
-    staleTime: 5 * 60 * 1000, // 5 minutes - shorter to check session more often
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnMount: true, // Always refetch on mount
+    staleTime: 30 * 1000, // 30 seconds - very short for better session checking
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({
