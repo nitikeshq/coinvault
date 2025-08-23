@@ -129,7 +129,7 @@ export class DatabaseStorage implements IStorage {
 
   async generateWalletAddress(userId: string): Promise<string> {
     // Generate a real BEP-20 wallet address using Web3
-    const Web3 = require('web3');
+    const { Web3 } = await import('web3');
     const web3 = new Web3();
     
     // Generate a new account with real private key

@@ -8,7 +8,7 @@ export function useAuth() {
   const { toast } = useToast();
 
   const { data: user, isLoading, error } = useQuery<User | null>({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/me"],
     queryFn: async () => {
       try {
         const response = await fetch("/api/me", {
@@ -40,7 +40,7 @@ export function useAuth() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.setQueryData(["/api/me"], data.user);
       toast({
         title: "Welcome!",
         description: "Successfully logged in to your wallet.",
@@ -61,7 +61,7 @@ export function useAuth() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.setQueryData(["/api/me"], data.user);
       toast({
         title: "Welcome to CryptoWallet Pro!",
         description: "Your account has been created successfully.",

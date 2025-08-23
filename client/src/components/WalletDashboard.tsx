@@ -33,7 +33,7 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
   });
 
   const { data: user } = useQuery<any>({
-    queryKey: ['/api/auth/user'],
+    queryKey: ['/api/me'],
   });
 
   const { data: presaleTimer } = useQuery<any>({

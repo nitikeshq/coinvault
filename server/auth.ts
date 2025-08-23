@@ -252,13 +252,6 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get('/api/user', (req: any, res: any) => {
-    if (req.isAuthenticated() && req.user) {
-      res.json({ ...req.user, password: undefined });
-    } else {
-      res.status(401).json({ message: 'Not authenticated' });
-    }
-  });
 }
 
 export const requireAuth = (req: any, res: any, next: any) => {

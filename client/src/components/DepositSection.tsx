@@ -28,7 +28,7 @@ export default function DepositSection() {
   });
 
   const { data: user } = useQuery<any>({
-    queryKey: ['/api/auth/user'],
+    queryKey: ['/api/me'],
   });
 
   const { data: deposits = [] } = useQuery<any[]>({
