@@ -65,9 +65,9 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-stretch min-h-[80vh]">
         {/* Left Side - Hero Content */}
-        <div className="space-y-8 text-gray-800">
+        <div className="flex flex-col justify-center space-y-8 text-gray-800">
           <div className="space-y-6">
             <div className="text-center lg:text-left">
               <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
@@ -176,7 +176,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Right Side - Registration Form */}
-        <div className="w-full max-w-md mx-auto">
+        <div className="flex flex-col justify-center w-full max-w-md mx-auto">
           <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg">
             <CardHeader className="text-center pb-2">
               <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
