@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, ExternalLink } from "lucide-react";
+import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, ExternalLink, ArrowRightLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,7 +42,12 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     refetchInterval: 2000,
   });
 
+  const { data: presaleConfig } = useQuery<any>({
+    queryKey: ['/api/presale/config'],
+  });
+
   const isPresaleActive = presaleTimer && presaleTimer.timeRemaining > 0;
+  const presaleEnded = presaleConfig && new Date() > new Date(presaleConfig.endDate);
 
   const copyAddress = () => {
     if (user?.walletAddress) {
@@ -76,6 +81,14 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
   const handleDepositClick = () => {
     if (onSectionChange) {
       onSectionChange('deposit');
+    }
+  };
+
+  const handleSwapClick = () => {
+    // Open PancakeSwap with your token/USDT pair when presale ends
+    if (tokenConfig?.contractAddress) {
+      const pancakeSwapUrl = `https://pancakeswap.finance/swap?outputCurrency=${tokenConfig.contractAddress}&inputCurrency=0x55d398326f99059fF775485246999027B3197955`; // USDT
+      window.open(pancakeSwapUrl, '_blank');
     }
   };
 
@@ -146,7 +159,7 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
         )}
         
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className={`grid gap-3 ${presaleEnded ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <Button 
             onClick={handleDepositClick}
             className="bg-green-500 hover:bg-green-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-white" 
@@ -168,6 +181,18 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
             <ArrowUp className="h-4 w-4" />
             <span>Withdrawal</span>
           </Button>
+          
+          {presaleEnded && (
+            <Button 
+              onClick={handleSwapClick}
+              className="bg-blue-500 hover:bg-blue-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-white"
+              data-testid="button-swap"
+              title="Swap tokens on PancakeSwap"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              <span>Swap</span>
+            </Button>
+          )}
         </div>
         
         {isPresaleActive && (

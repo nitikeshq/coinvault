@@ -91,7 +91,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isPresaleActive) {
         // During presale: Read from database
         const balance = await storage.getUserBalance(userId);
-        const tokenPrice = await storage.getTokenPrice();
+        const tokenConfig = await storage.getActiveTokenConfig();
+        const tokenPrice = tokenConfig ? await storage.getLatestTokenPrice(tokenConfig.id) : null;
         
         if (balance && tokenPrice) {
           const usdValue = (parseFloat(balance.balance) * parseFloat(tokenPrice.priceUsd)).toString();

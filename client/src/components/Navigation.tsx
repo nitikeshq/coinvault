@@ -97,15 +97,6 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                 Wallet
               </button>
               <button 
-                onClick={() => onSectionChange('swap')}
-                className={`hover:text-blue-600 transition-colors font-medium ${
-                  activeSection === 'swap' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
-                }`}
-                data-testid="nav-swap"
-              >
-                Swap
-              </button>
-              <button 
                 onClick={() => onSectionChange('news')}
                 className={`hover:text-blue-600 transition-colors font-medium ${
                   activeSection === 'news' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
