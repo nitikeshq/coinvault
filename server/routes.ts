@@ -765,6 +765,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/nfts/generate', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { theme, style } = req.body;
+      
+      if (!theme || theme.trim().length === 0) {
+        return res.status(400).json({ message: 'Theme is required' });
+      }
+
+      // Check if NFT generation is enabled
+      const nftMintSettings = await storage.getDappByName('nft_mint');
+      if (!nftMintSettings || !nftMintSettings.isEnabled) {
+        return res.status(403).json({ message: 'NFT generation is currently disabled' });
+      }
+
+      // Check user balance
+      const balance = await storage.getUserBalance(userId);
+      const cost = parseFloat(nftMintSettings.cost);
+      const userBalance = parseFloat(balance?.balance || '0');
+
+      if (userBalance < cost) {
+        return res.status(400).json({ 
+          message: 'Insufficient token balance',
+          required: cost,
+          current: userBalance
+        });
+      }
+
+      // Deduct cost from user balance
+      const newBalance = (userBalance - cost).toString();
+      await storage.updateUserBalance(userId, newBalance, '0');
+
+      // Get NFT character prompt from admin settings
+      const websiteSettings = await storage.getWebsiteSettings();
+      const characterPrompt = websiteSettings?.nftCharacterPrompt;
+      
+      if (!characterPrompt) {
+        return res.status(400).json({ 
+          message: "NFT generation not yet configured. Please wait for admin setup."
+        });
+      }
+
+      // Generate AI metadata first
+      const metadataPrompt = `Create detailed metadata for a unique NFT with theme: "${theme.trim()}" ${style ? `and style: "${style}"` : ''}. 
+      Include: name, description, and 3-5 special attributes (like power, element, style, background, etc.).
+      Make it creative and engaging. Respond in JSON format:
+      {
+        "name": "Unique NFT Name",
+        "description": "Engaging description under 200 words",
+        "attributes": [
+          {"trait_type": "Power", "value": "Fire Magic"},
+          {"trait_type": "Background", "value": "Mystic Forest"},
+          {"trait_type": "Rarity", "value": "Unique"}
+        ]
+      }`;
+      
+      if (!openai) {
+        throw new Error('OpenAI API key not configured');
+      }
+      
+      const metadataResponse = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: metadataPrompt }],
+        response_format: { type: "json_object" },
+        max_tokens: 300,
+      });
+
+      const messageContent = metadataResponse.choices[0]?.message?.content;
+      if (!messageContent) {
+        throw new Error('No metadata response received');
+      }
+      const metadata = JSON.parse(messageContent);
+
+      // Generate AI image using the character prompt + user theme
+      const imageManager = new ImageManager();
+      let imageUrl = null;
+      try {
+        imageUrl = await imageManager.generateAndSaveNFTImage({
+          name: metadata.name,
+          description: metadata.description,
+          rarity: 'Unique',
+          attributes: metadata.attributes
+        }, `${characterPrompt}, ${theme.trim()}${style ? `, ${style} style` : ''}`);
+      } catch (imageError) {
+        console.error('Failed to generate NFT image:', imageError);
+        // Continue without image for now
+      }
+
+      // Create NFT for user
+      const nft = await storage.createUserNFT({
+        userId,
+        name: metadata.name,
+        description: metadata.description,
+        imageUrl: imageUrl || undefined,
+        rarity: 'Unique',
+        attributes: metadata.attributes,
+        isUserGenerated: true
+      });
+
+      res.json({ 
+        message: 'NFT generated successfully!', 
+        cost, 
+        newBalance, 
+        nft: {
+          id: nft.id,
+          name: metadata.name,
+          description: metadata.description,
+          imageUrl: imageUrl,
+          rarity: 'Unique'
+        }
+      });
+    } catch (error) {
+      console.error("Error generating NFT:", error);
+      res.status(500).json({ message: "Failed to generate NFT" });
+    }
+  });
+
   app.post('/api/nfts/buy', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -856,12 +973,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'processing'
       });
       
-      // Simulate AI meme generation (in real implementation, use actual AI service)
+      // Generate real AI meme image
       setTimeout(async () => {
         try {
+          const imageManager = new ImageManager();
+          let imageUrl = null;
+          
+          try {
+            // Generate meme image with AI
+            imageUrl = await imageManager.generateAndSaveMemeImage(prompt.trim(), 'funny');
+          } catch (imageError) {
+            console.error('Failed to generate meme image:', imageError);
+            // Fallback to placeholder if AI generation fails
+            imageUrl = `https://via.placeholder.com/512x512.png?text=${encodeURIComponent(prompt.trim().substring(0, 20))}`;
+          }
+
           await storage.updateMemeGeneration(meme.id, {
             status: 'completed',
-            imageUrl: `https://via.placeholder.com/512x512.png?text=${encodeURIComponent(prompt.trim().substring(0, 20))}`
+            imageUrl: imageUrl
           });
         } catch (error) {
           console.error('Failed to update meme generation:', error);

@@ -134,7 +134,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .insert(users)
       .values(userData as any)
-      .returning();
+      .returning() as User[];
     
     // Generate wallet address for new user
     if (user.id) {
@@ -516,12 +516,54 @@ export class DatabaseStorage implements IStorage {
       imageUrl: nftCollection.imageUrl,
       rarity: nftCollection.rarity,
       mintedAt: userNfts.mintedAt,
-      transactionHash: userNfts.transactionHash
+      transactionHash: userNfts.transactionHash,
+      isUserGenerated: nftCollection.isUserGenerated
     })
     .from(userNfts)
     .innerJoin(nftCollection, eq(userNfts.nftId, nftCollection.id))
     .where(eq(userNfts.userId, userId))
     .orderBy(userNfts.mintedAt);
+  }
+
+  async createUserNFT(data: {
+    userId: string;
+    name: string;
+    description: string;
+    imageUrl?: string;
+    rarity: string;
+    attributes: any[];
+    isUserGenerated: boolean;
+  }): Promise<any> {
+    return await db.transaction(async (tx) => {
+      // Get next token ID
+      const [lastNft] = await tx.select({ tokenId: nftCollection.tokenId })
+        .from(nftCollection)
+        .orderBy(sql`${nftCollection.tokenId} DESC`)
+        .limit(1);
+      
+      const nextTokenId = (lastNft?.tokenId || 0) + 1;
+
+      // Create the NFT in collection
+      const [createdNft] = await tx.insert(nftCollection).values({
+        tokenId: nextTokenId,
+        name: data.name,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        rarity: data.rarity,
+        attributes: data.attributes,
+        isMinted: true, // User-generated NFTs are immediately "minted"
+        isUserGenerated: data.isUserGenerated
+      }).returning();
+
+      // Link NFT to user
+      await tx.insert(userNfts).values({
+        userId: data.userId,
+        nftId: createdNft.id,
+        transactionHash: `user-generated-${Date.now()}` // Placeholder transaction hash
+      });
+
+      return createdNft;
+    });
   }
 
   // Meme generation methods (original method removed for new signature)

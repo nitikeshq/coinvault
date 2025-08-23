@@ -27,6 +27,8 @@ const getRarityColor = (rarity: string) => {
 export default function DappsSection() {
   const { toast } = useToast();
   const [memePrompt, setMemePrompt] = useState("");
+  const [nftTheme, setNftTheme] = useState("");
+  const [nftStyle, setNftStyle] = useState("");
   const { tokenSymbol } = useTokenInfo();
 
   // Fetch enabled dapps
@@ -105,6 +107,29 @@ export default function DappsSection() {
     },
   });
 
+  const nftGenerationMutation = useMutation({
+    mutationFn: async ({ theme, style }: { theme: string; style: string }) => {
+      return apiRequest("POST", "/api/nfts/generate", { theme, style });
+    },
+    onSuccess: () => {
+      toast({
+        title: "NFT Generation Started!",
+        description: "Your unique NFT is being created...",
+      });
+      setNftTheme("");
+      setNftStyle("");
+      queryClient.invalidateQueries({ queryKey: ["/api/user/nfts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/balance"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to generate NFT",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleBuyNft = (nftId: string) => {
     nftBuyMutation.mutate(nftId);
   };
@@ -112,6 +137,11 @@ export default function DappsSection() {
   const handleGenerateMeme = () => {
     if (!memePrompt.trim()) return;
     memeGenerationMutation.mutate(memePrompt.trim());
+  };
+
+  const handleGenerateNft = () => {
+    if (!nftTheme.trim()) return;
+    nftGenerationMutation.mutate({ theme: nftTheme.trim(), style: nftStyle });
   };
 
   const isNftMintEnabled = dappSettings.some(d => d.appName === 'nft_mint' && d.isEnabled);
@@ -166,11 +196,17 @@ export default function DappsSection() {
       </div>
 
       <Tabs defaultValue={isNftMintEnabled ? "nft-mint" : "meme-generator"} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           {isNftMintEnabled && (
             <TabsTrigger value="nft-mint" data-testid="tab-nft-mint">
               <Image className="h-4 w-4 mr-2" />
               NFT Store
+            </TabsTrigger>
+          )}
+          {isNftMintEnabled && (
+            <TabsTrigger value="nft-generator" data-testid="tab-nft-generator">
+              <Sparkles className="h-4 w-4 mr-2" />
+              NFT Generator
             </TabsTrigger>
           )}
           {isMemeGeneratorEnabled && (
@@ -287,6 +323,120 @@ export default function DappsSection() {
                       <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <div>No NFTs owned yet</div>
                       <div className="text-sm">Buy your first NFT to get started!</div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
+
+        {/* NFT Generator Tab */}
+        {isNftMintEnabled && (
+          <TabsContent value="nft-generator" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* NFT Generation Interface */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Sparkles className="h-5 w-5" />
+                    <span>Generate NFT</span>
+                    <Badge variant="outline">{nftCost?.toLocaleString()} {tokenSymbol}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-gray-600">
+                    Create your own unique NFT with AI-powered artwork and metadata generation.
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="nft-theme">NFT Theme</Label>
+                      <Input
+                        id="nft-theme"
+                        placeholder="e.g., Cyberpunk warrior, Magic crystal, Space explorer..."
+                        value={nftTheme}
+                        onChange={(e) => setNftTheme(e.target.value)}
+                        data-testid="input-nft-theme"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="nft-style">Style (Optional)</Label>
+                      <select
+                        id="nft-style"
+                        value={nftStyle}
+                        onChange={(e) => setNftStyle(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        data-testid="select-nft-style"
+                      >
+                        <option value="">Choose style...</option>
+                        <option value="anime">Anime</option>
+                        <option value="realistic">Realistic</option>
+                        <option value="cartoon">Cartoon</option>
+                        <option value="abstract">Abstract</option>
+                        <option value="pixel-art">Pixel Art</option>
+                        <option value="fantasy">Fantasy</option>
+                      </select>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleGenerateNft}
+                      disabled={nftGenerationMutation.isPending || userBalance < nftCost || !nftTheme.trim()}
+                      className="w-full"
+                      data-testid="button-generate-nft"
+                    >
+                      {nftGenerationMutation.isPending ? "Generating..." : `Generate NFT for ${nftCost?.toLocaleString()} ${tokenSymbol}`}
+                    </Button>
+                    
+                    {userBalance < nftCost && (
+                      <div className="text-sm text-red-600 text-center">
+                        Insufficient {tokenSymbol} balance
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Generated NFTs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Generated NFTs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {userNfts.length > 0 ? (
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {userNfts.filter((nft: any) => nft.isUserGenerated).map((nft: any) => (
+                        <div key={nft.id} className="bg-gray-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium">{nft.name}</div>
+                              <div className="text-sm text-gray-600 mt-1">{nft.description}</div>
+                              <Badge 
+                                className={`${getRarityColor(nft.rarity || 'Common')} text-white text-xs mt-2`}
+                              >
+                                {nft.rarity || 'Common'}
+                              </Badge>
+                            </div>
+                            <Badge variant="secondary">Generated</Badge>
+                          </div>
+                          {nft.imageUrl && (
+                            <div className="mt-2">
+                              <img 
+                                src={nft.imageUrl} 
+                                alt={nft.name}
+                                className="w-full h-32 object-cover rounded-lg"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-600">
+                      <Sparkles className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <div>No generated NFTs yet</div>
+                      <div className="text-sm">Create your first unique NFT!</div>
                     </div>
                   )}
                 </CardContent>
