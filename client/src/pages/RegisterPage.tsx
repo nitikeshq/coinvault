@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Loader2, Wallet, Eye, EyeOff, Sparkles, Image, TrendingUp, Shield, Zap, Gift } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import heroImage from "@assets/generated_images/Crypto_wallet_NFT_registration_hero_be3ab4ca.png";
 
 const registerSchema = z.object({
@@ -26,6 +27,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { register, isRegisterLoading } = useAuth();
+  const { settings: websiteSettings } = useWebsiteSettings();
   const search = useSearch();
   
   // Extract referral code from URL parameters
@@ -69,26 +71,44 @@ export default function RegisterPage() {
         {/* Left Side - Hero Content */}
         <div className="flex flex-col justify-center space-y-8 text-gray-800">
           <div className="space-y-6">
-            <div className="text-center lg:text-left">
-              <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                Join CryptoWallet Pro
-              </h1>
-              <p className="text-xl text-gray-600 mb-6">
-                The ultimate platform for NFTs, memes, and BEP-20 token management
-              </p>
-              {referralId && (
-                <div className="inline-block bg-green-50 text-green-700 rounded-lg px-4 py-2 border border-green-200 mb-6">
-                  🎉 Welcome! You're using referral code: <strong>{referralId}</strong>
-                  <div className="text-sm mt-1">Get bonus tokens after registration!</div>
+            {/* Benefits moved to top */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-200">
+              <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                <Gift className="h-5 w-5 mr-2 text-purple-600" />
+                Why Join {websiteSettings?.siteName || 'Our Platform'}?
+              </h3>
+              <div className="space-y-2 text-sm text-gray-700">
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-4 w-4 text-green-600" />
+                  <span>Bank-grade security with military encryption</span>
                 </div>
-              )}
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4 text-yellow-600" />
+                  <span>Lightning-fast transactions on BSC network</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                  <span>AI-powered content creation tools</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  <span>Passive income through referral system</span>
+                </div>
+              </div>
             </div>
+
+            {referralId && (
+              <div className="inline-block bg-green-50 text-green-700 rounded-lg px-4 py-2 border border-green-200">
+                🎉 Welcome! You're using referral code: <strong>{referralId}</strong>
+                <div className="text-sm mt-1">Get bonus tokens after registration!</div>
+              </div>
+            )}
 
             {/* Hero Image */}
             <div className="relative">
               <img 
                 src={heroImage} 
-                alt="CryptoWallet Pro - NFTs and Memes" 
+                alt={`${websiteSettings?.siteName || 'Platform'} - NFTs and Memes`} 
                 className="w-full max-w-md mx-auto lg:mx-0 rounded-2xl shadow-lg"
               />
               <div className="absolute -top-4 -right-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
@@ -147,36 +167,11 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Benefits */}
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-200">
-              <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
-                <Gift className="h-5 w-5 mr-2 text-purple-600" />
-                Why Join CryptoWallet Pro?
-              </h3>
-              <div className="space-y-2 text-sm text-gray-700">
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-4 w-4 text-green-600" />
-                  <span>Bank-grade security with military encryption</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-4 w-4 text-yellow-600" />
-                  <span>Lightning-fast transactions on BSC network</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="h-4 w-4 text-purple-600" />
-                  <span>AI-powered content creation tools</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
-                  <span>Passive income through referral system</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Right Side - Registration Form */}
-        <div className="flex flex-col justify-center w-full max-w-md mx-auto">
+        <div className="flex flex-col justify-center w-full max-w-lg mx-auto">
           <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg">
             <CardHeader className="text-center pb-4">
               <div className="mx-auto w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
