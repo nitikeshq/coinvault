@@ -39,20 +39,20 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
       });
     }
 
-    // Verify user owns the NFT
+    // Verify user owns the NFT and get the actual NFT collection ID
     const userNfts = await storage.getUserNfts(userId);
-    console.log("User NFTs structure:", JSON.stringify(userNfts[0], null, 2));
+    let actualNftId = null;
     
-    const ownsNFT = userNfts.some(userNft => {
-      // Handle different possible NFT structures
-      const nftId1 = userNft?.nft?.id;
-      const nftId2 = userNft?.id;
-      const nftId3 = userNft?.nftId;
-      
-      return nftId1 === nftId || nftId2 === nftId || nftId3 === nftId;
+    const userNft = userNfts.find(userNft => {
+      // Check if the NFT matches by user_nft ID or actual NFT ID
+      if (userNft.id === nftId || userNft.nftId === nftId) {
+        actualNftId = userNft.nftId; // Get the actual NFT collection ID
+        return true;
+      }
+      return false;
     });
     
-    if (!ownsNFT) {
+    if (!userNft) {
       return res.status(403).json({ error: "You don't own this NFT" });
     }
 
@@ -61,8 +61,8 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
     const usdValue = (parseFloat(newBalance) * 1.0).toFixed(8); // Assuming 1:1 USD rate
     await storage.updateUserBalance(userId, newBalance, usdValue);
 
-    // Create listing with auction timer
-    const listing = await storage.listNFTForSale(userId, nftId, minPrice, auctionEndDate);
+    // Create listing with auction timer using the actual NFT collection ID
+    const listing = await storage.listNFTForSale(userId, actualNftId, minPrice, auctionEndDate);
     
     res.status(201).json({
       success: true,
