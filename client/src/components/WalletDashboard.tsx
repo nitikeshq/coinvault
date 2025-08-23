@@ -336,6 +336,53 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
                     Twitter
                   </Button>
                 </div>
+                
+                {/* Referral Landing Page URL */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-700 font-medium mb-2">📋 Referral Landing Page URL:</p>
+                  <div className="flex items-center space-x-2">
+                    <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono text-blue-800 flex-1 truncate" data-testid="text-referral-url">
+                      {referralData?.referralCode ? `${window.location.origin}/register?ref=${referralData.referralCode}` : 'Loading...'}
+                    </code>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        if (referralData?.referralCode) {
+                          const referralUrl = `${window.location.origin}/register?ref=${referralData.referralCode}`;
+                          navigator.clipboard.writeText(referralUrl);
+                          toast({
+                            title: "Copied!",
+                            description: "Referral landing page URL copied to clipboard",
+                          });
+                        }
+                      }}
+                      disabled={!referralData?.referralCode}
+                      className="p-2 hover:bg-blue-100"
+                      data-testid="button-copy-referral-url"
+                    >
+                      <Copy className="h-4 w-4 text-blue-600" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        if (referralData?.referralCode) {
+                          const referralUrl = `${window.location.origin}/register?ref=${referralData.referralCode}`;
+                          window.open(referralUrl, '_blank');
+                        }
+                      }}
+                      disabled={!referralData?.referralCode}
+                      className="p-2 hover:bg-green-100"
+                      data-testid="button-open-landing"
+                    >
+                      <ExternalLink className="h-4 w-4 text-green-600" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    💡 Share this link for direct registration with your referral code
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="text-center py-4">

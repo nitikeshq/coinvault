@@ -1,15 +1,22 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Heart, ThumbsDown, TrendingUp, Trophy, Zap, Clock, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function MarketSection() {
   const [activeMarket, setActiveMarket] = useState<'nfts' | 'memes'>('nfts');
+  const [listingPrice, setListingPrice] = useState('');
+  const [selectedNFT, setSelectedNFT] = useState<any>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // NFT Data Queries
   const { data: nftListings = [] } = useQuery<any[]>({
@@ -151,20 +158,25 @@ export default function MarketSection() {
                         {nft?.rarity || 'Common'}
                       </Badge>
                       <div className="space-y-2">
-                        <Button 
-                          size="sm" 
-                          className="w-full"
-                          data-testid={`button-list-${nft?.id || userNft.id}`}
-                          onClick={() => {
-                            toast({
-                              title: "List NFT",
-                              description: "NFT listing feature will allow you to set a price and list for sale",
-                            });
-                          }}
-                        >
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          List for Sale
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              className="w-full"
+                              data-testid={`button-list-${nft?.id || userNft.id}`}
+                              onClick={() => setSelectedNFT(userNft)}
+                            >
+                              <TrendingUp className="h-4 w-4 mr-2" />
+                              List for Sale
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>List NFT for Sale</DialogTitle>
+                            </DialogHeader>
+                            <ListNFTDialog nft={userNft} onClose={() => setSelectedNFT(null)} />
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </CardContent>
                   </Card>
@@ -209,34 +221,7 @@ export default function MarketSection() {
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex space-x-4">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      data-testid={`button-like-${meme.id}`}
-                      onClick={() => {
-                        toast({
-                          title: "Like Meme",
-                          description: "Meme like system will track community favorites",
-                        });
-                      }}
-                    >
-                      <Heart className="h-4 w-4 mr-1" />
-                      0
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      data-testid={`button-dislike-${meme.id}`}
-                      onClick={() => {
-                        toast({
-                          title: "Dislike Meme",
-                          description: "Meme dislike system will track community feedback",
-                        });
-                      }}
-                    >
-                      <ThumbsDown className="h-4 w-4 mr-1" />
-                      0
-                    </Button>
+                    <MemeVoteButtons meme={meme} />
                   </div>
                   <Badge variant="secondary">
                     <Clock className="h-3 w-3 mr-1" />
@@ -281,6 +266,154 @@ export default function MarketSection() {
       </Card>
     </div>
   );
+
+  // NFT Listing Mutation
+  const listNFTMutation = useMutation({
+    mutationFn: async ({ nftId, minPrice }: { nftId: string, minPrice: string }) => {
+      return apiRequest(`/api/marketplace/nft/list`, {
+        method: 'POST',
+        body: JSON.stringify({ nftId, minPrice: parseFloat(minPrice) }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/listings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/nfts'] });
+      toast({
+        title: "Success!",
+        description: "NFT listed for sale successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to list NFT for sale",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Meme Like Mutation
+  const likeMutation = useMutation({
+    mutationFn: async (memeId: string) => {
+      return apiRequest(`/api/marketplace/meme/${memeId}/like`, {
+        method: 'POST',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/memes'] });
+      toast({
+        title: "Liked!",
+        description: "You liked this meme",
+      });
+    },
+  });
+
+  // Meme Dislike Mutation
+  const dislikeMutation = useMutation({
+    mutationFn: async (memeId: string) => {
+      return apiRequest(`/api/marketplace/meme/${memeId}/dislike`, {
+        method: 'POST',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/memes'] });
+      toast({
+        title: "Disliked!",
+        description: "You disliked this meme",
+      });
+    },
+  });
+
+  // List NFT Dialog Component
+  const ListNFTDialog = ({ nft, onClose }: { nft: any, onClose: () => void }) => {
+    const [price, setPrice] = useState('');
+
+    const handleSubmit = () => {
+      if (!price || parseFloat(price) <= 0) {
+        toast({
+          title: "Invalid Price",
+          description: "Please enter a valid price",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      listNFTMutation.mutate({ 
+        nftId: nft.nftId || nft.id, 
+        minPrice: price 
+      });
+      onClose();
+      setPrice('');
+    };
+
+    const nftData = nft.nft || nft;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+            {nftData?.imageUrl ? (
+              <img src={nftData.imageUrl} alt={nftData.name} className="w-full h-full object-cover rounded-lg" />
+            ) : (
+              <Star className="h-8 w-8 text-purple-400" />
+            )}
+          </div>
+          <div>
+            <h3 className="font-semibold">{nftData?.name || `NFT #${nftData?.tokenId}`}</h3>
+            <Badge variant="outline">{nftData?.rarity || 'Common'}</Badge>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="price">Minimum Price ($)</Label>
+          <Input
+            id="price"
+            type="number"
+            step="0.01"
+            min="0.01"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="Enter minimum price"
+          />
+        </div>
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button 
+            onClick={handleSubmit}
+            disabled={listNFTMutation.isPending}
+          >
+            {listNFTMutation.isPending ? 'Listing...' : 'List NFT'}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Meme Vote Buttons Component
+  const MemeVoteButtons = ({ meme }: { meme: any }) => {
+    return (
+      <>
+        <Button 
+          size="sm" 
+          variant="outline"
+          data-testid={`button-like-${meme.id}`}
+          onClick={() => likeMutation.mutate(meme.id)}
+          disabled={likeMutation.isPending}
+        >
+          <Heart className="h-4 w-4 mr-1" />
+          {meme.likeCount || 0}
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline"
+          data-testid={`button-dislike-${meme.id}`}
+          onClick={() => dislikeMutation.mutate(meme.id)}
+          disabled={dislikeMutation.isPending}
+        >
+          <ThumbsDown className="h-4 w-4 mr-1" />
+          {meme.dislikeCount || 0}
+        </Button>
+      </>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 space-y-6">
