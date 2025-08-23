@@ -50,6 +50,8 @@ const websiteSettingsSchema = z.object({
   description: z.string().optional().or(z.literal("")),
   primaryColor: z.string().min(1, "Primary color is required"),
   secondaryColor: z.string().min(1, "Secondary color is required"),
+  nftCharacterPrompt: z.string().optional().or(z.literal("")),
+  maxNfts: z.number().min(1, "Must be at least 1").max(10000, "Cannot exceed 10,000"),
 });
 
 export default function AdminPanel() {
@@ -524,6 +526,59 @@ export default function AdminPanel() {
                               data-testid="input-secondary-color"
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="border-t pt-6 mt-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">NFT Collection Settings</h3>
+                    
+                    <FormField
+                      control={websiteForm.control}
+                      name="nftCharacterPrompt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">NFT Character Prompt</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              placeholder="e.g., Mystical dragons with glowing eyes and magical auras..."
+                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              data-testid="textarea-nft-character"
+                            />
+                          </FormControl>
+                          <div className="text-xs text-gray-500 mt-1">
+                            This prompt will be used as the base character theme for all AI-generated NFTs
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={websiteForm.control}
+                      name="maxNfts"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Maximum NFT Collection Size</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="1"
+                              max="10000"
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              placeholder="1000"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              data-testid="input-max-nfts"
+                            />
+                          </FormControl>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Total number of NFTs that can be minted in this collection
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -1586,6 +1641,11 @@ function NFTMintingPanel() {
   const [nftQuantity, setNftQuantity] = useState(1);
   const { tokenSymbol } = useTokenInfo();
 
+  // Fetch website settings to show current NFT character and limits
+  const { data: websiteSettings } = useQuery<any>({
+    queryKey: ["/api/website/settings"],
+  });
+
   const mintNftMutation = useMutation({
     mutationFn: async ({ theme, rarity, quantity }: { theme: string; rarity: string; quantity: number }) => {
       return apiRequest("POST", "/api/admin/mint-nft", { theme, rarity, quantity });
@@ -1609,6 +1669,15 @@ function NFTMintingPanel() {
   });
 
   const handleMintNft = () => {
+    if (!websiteSettings?.nftCharacterPrompt) {
+      toast({
+        title: "Error",
+        description: "Please set the NFT character prompt in Website Settings first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!nftTheme.trim()) {
       toast({
         title: "Error",
@@ -1683,17 +1752,46 @@ function NFTMintingPanel() {
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <h4 className="font-medium text-gray-800 mb-2">Preview</h4>
-            <div className="space-y-2 text-sm">
-              <div><span className="text-gray-600">Theme:</span> {nftTheme || "Not set"}</div>
+            <h4 className="font-medium text-gray-800 mb-2">NFT Collection Status</h4>
+            
+            {/* Current Settings Display */}
+            <div className="space-y-3 mb-4">
+              <div className="bg-white rounded-lg p-3 border">
+                <div className="text-xs text-gray-600 mb-1">Character Prompt</div>
+                <div className="text-sm font-medium text-gray-800">
+                  {websiteSettings?.nftCharacterPrompt || (
+                    <span className="text-red-600">⚠️ Not configured - Set in Website Settings first</span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white rounded-lg p-3 border">
+                  <div className="text-xs text-gray-600 mb-1">Collection Limit</div>
+                  <div className="text-lg font-bold text-blue-600">
+                    {websiteSettings?.maxNfts?.toLocaleString() || "Not set"}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-3 border">
+                  <div className="text-xs text-gray-600 mb-1">Next Theme</div>
+                  <div className="text-sm font-medium text-gray-800">
+                    {nftTheme || "Enter theme"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="space-y-2 text-sm border-t pt-3">
               <div><span className="text-gray-600">Rarity:</span> {nftRarity}</div>
               <div><span className="text-gray-600">Quantity:</span> {nftQuantity}</div>
               <div><span className="text-gray-600">Collection:</span> {tokenSymbol} NFTs</div>
             </div>
+            
             <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
-              <div className="text-xs text-blue-600 mb-1 font-medium">ℹ️ AI Generation</div>
+              <div className="text-xs text-blue-600 mb-1 font-medium">🎨 AI Generation Process</div>
               <div className="text-xs text-gray-700">
-                Each NFT will get a unique AI-generated description based on the theme and rarity.
+                Each NFT combines your character prompt + theme + rarity for unique AI descriptions and images.
               </div>
             </div>
           </div>
@@ -1702,7 +1800,7 @@ function NFTMintingPanel() {
         <div className="pt-4 border-t border-gray-200">
           <Button 
             onClick={handleMintNft}
-            disabled={mintNftMutation.isPending || !nftTheme.trim()}
+            disabled={mintNftMutation.isPending || !nftTheme.trim() || !websiteSettings?.nftCharacterPrompt}
             className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white"
             data-testid="button-mint-nft"
           >
