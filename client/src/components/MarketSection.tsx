@@ -351,22 +351,61 @@ export default function MarketSection() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <Trophy className="h-12 w-12 mx-auto text-yellow-500 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Coming Soon!</h3>
-            <p className="text-gray-600 mb-4">
-              Most liked and most disliked meme creators will receive special bonuses
-              after the presale ends.
-            </p>
-            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-4 rounded-lg">
-              <p className="text-sm font-medium text-yellow-800">
-                🎁 Surprise Box Awaits Top Meme Creators!
+          {memeLeaderboard.length === 0 ? (
+            <div className="text-center py-8">
+              <Trophy className="h-12 w-12 mx-auto text-yellow-500 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Competition Yet!</h3>
+              <p className="text-gray-600 mb-4">
+                Most liked and most disliked meme creators will receive special bonuses
+                after the presale ends.
               </p>
-              <p className="text-xs text-yellow-700 mt-1">
-                Generate amazing memes and get community votes for exclusive rewards
-              </p>
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-4 rounded-lg">
+                <p className="text-sm font-medium text-yellow-800">
+                  🎁 Surprise Box Awaits Top Meme Creators!
+                </p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Generate amazing memes and get community votes for exclusive rewards
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              {memeLeaderboard.slice(0, 10).map((entry: any, index: number) => (
+                <div key={entry.meme.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-sm">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{entry.user.name}</p>
+                      <p className="text-sm text-gray-600 truncate max-w-xs">"{entry.meme.prompt}"</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm">
+                    <div className="flex items-center space-x-1 text-green-600">
+                      <Heart className="h-4 w-4" />
+                      <span>{entry.likes}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-red-600">
+                      <ThumbsDown className="h-4 w-4" />
+                      <span>{entry.dislikes}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 font-semibold">
+                      <span className="text-gray-600">Score:</span>
+                      <span className={entry.score >= 0 ? "text-green-600" : "text-red-600"}>
+                        {entry.score}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-4 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg">
+                <p className="text-sm font-medium text-yellow-800">
+                  🎁 Top meme creators will receive special rewards after presale!
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -382,6 +421,8 @@ export default function MarketSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/listings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/platform-listings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/user-generated-listings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/nfts'] });
       toast({
         title: "Success!",
@@ -406,6 +447,7 @@ export default function MarketSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/memes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/leaderboard'] });
       toast({
         title: "Liked!",
         description: "You liked this meme",
@@ -422,6 +464,7 @@ export default function MarketSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/memes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/leaderboard'] });
       toast({
         title: "Disliked!",
         description: "You disliked this meme",
