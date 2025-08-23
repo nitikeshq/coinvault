@@ -466,9 +466,9 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
                 </div>
                 <div className="text-right">
                   <p className={`font-semibold ${
-                    tx.type === 'deposit' ? 'text-green-600' : 'text-red-600'
+                    tx.type === 'deposit' || tx.type === 'credit' ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {tx.type === 'deposit' ? '+' : '-'}{formatBalance(tx.amount)} {tokenConfig?.tokenSymbol || 'TOKEN'}
+                    {tx.type === 'deposit' || tx.type === 'credit' ? '+' : '-'}{formatBalance(tx.amount)} {tokenConfig?.tokenSymbol || 'TOKEN'}
                   </p>
                   <p className="text-xs text-gray-500 capitalize">{tx.status}</p>
                 </div>

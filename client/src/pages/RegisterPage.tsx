@@ -71,6 +71,12 @@ export default function RegisterPage() {
         {/* Left Side - Hero Content */}
         <div className="flex flex-col justify-center space-y-6 text-gray-800 px-4">
           <div className="space-y-5">
+            {/* Welcome message at the top */}
+            <div className="inline-block bg-green-50 text-green-700 rounded-lg px-4 py-2 border border-green-200">
+              🎉 Welcome! You're using referral code: <strong>KKA780E0</strong>
+              <div className="text-sm mt-1">Get bonus tokens after registration!</div>
+            </div>
+
             {/* Benefits moved to top */}
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-200">
               <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
@@ -94,25 +100,6 @@ export default function RegisterPage() {
                   <TrendingUp className="h-4 w-4 text-blue-600" />
                   <span>Passive income through referral system</span>
                 </div>
-              </div>
-            </div>
-
-            {referralId && (
-              <div className="inline-block bg-green-50 text-green-700 rounded-lg px-4 py-2 border border-green-200">
-                🎉 Welcome! You're using referral code: <strong>{referralId}</strong>
-                <div className="text-sm mt-1">Get bonus tokens after registration!</div>
-              </div>
-            )}
-
-            {/* Hero Image */}
-            <div className="relative">
-              <img 
-                src={heroImage} 
-                alt={`${websiteSettings?.siteName || 'Platform'} - NFTs and Memes`} 
-                className="w-full max-w-md mx-auto lg:mx-0 rounded-2xl shadow-lg"
-              />
-              <div className="absolute -top-4 -right-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                AI-Powered Platform
               </div>
             </div>
 
