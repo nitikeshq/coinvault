@@ -289,6 +289,9 @@ export const memeGenerations = pgTable("meme_generations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   prompt: text("prompt").notNull(),
+  style: varchar("style").default("funny"),
+  generatedDescription: text("generated_description"),
+  cost: varchar("cost"),
   imageUrl: varchar("image_url"),
   status: varchar("status").default("pending"), // pending, completed, failed
   transactionHash: varchar("transaction_hash"),
