@@ -147,6 +147,7 @@ export const websiteSettings = pgTable("website_settings", {
   secondaryColor: varchar("secondary_color").default("#8b5cf6"),
   auditReportUrl: varchar("audit_report_url"),
   whitepaperUrl: varchar("whitepaper_url"),
+  nftCharacterPrompt: text("nft_character_prompt"), // Admin-set character for NFT generation
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -293,7 +294,7 @@ export const memeGenerations = pgTable("meme_generations", {
   generatedDescription: text("generated_description"),
   cost: varchar("cost"),
   imageUrl: varchar("image_url"),
-  status: varchar("status").default("pending"), // pending, completed, failed
+  status: varchar("status").default("completed"), // pending, completed, failed
   transactionHash: varchar("transaction_hash"),
   generatedAt: timestamp("generated_at").defaultNow(),
 });

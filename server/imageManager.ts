@@ -1,72 +1,34 @@
-import { ObjectStorageService } from "./objectStorage";
 import OpenAI from "openai";
+import fs from "fs";
+import path from "path";
 
 const openai = process.env.OPENAI_API_KEY 
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
 export class ImageManager {
-  private objectStorageService: ObjectStorageService;
-
   constructor() {
-    this.objectStorageService = new ObjectStorageService();
+    // Ensure upload directories exist
+    this.ensureDirectoryExists('uploads/memes');
+    this.ensureDirectoryExists('uploads/nfts');
   }
 
-  async generateAndSaveNFTImage(metadata: any, theme: string, rarity: string, referenceImageUrl?: string): Promise<string> {
-    try {
-      if (!openai) {
-        console.warn("OpenAI API key not configured, using placeholder image");
-        return `https://via.placeholder.com/512x512/1a1a2e/ffffff?text=${encodeURIComponent(metadata.name)}`;
-      }
-
-      // Generate AI image based on metadata
-      let imagePrompt = `Create a high-quality, squared (1:1 aspect ratio) NFT artwork for: "${metadata.name}". 
-      Theme: ${theme}, Rarity: ${rarity}. 
-      Description: ${metadata.description}. 
-      Style: Digital art, vibrant colors, detailed, professional NFT quality.`;
-      
-      if (referenceImageUrl) {
-        imagePrompt += ` Use this reference image style and elements as inspiration.`;
-      }
-
-      const imageResponse = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: imagePrompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "hd",
-      });
-
-      const generatedImageUrl = imageResponse.data?.[0]?.url;
-      if (!generatedImageUrl) {
-        throw new Error('No image generated');
-      }
-
-      // Download and save image to object storage
-      const imageBuffer = await this.downloadImage(generatedImageUrl);
-      const fileName = `nft_${Date.now()}_${Math.random().toString(36).substring(2, 15)}.png`;
-      
-      // Save to nft folder in object storage
-      const savedImageUrl = await this.saveImageToStorage(imageBuffer, `nfts/${fileName}`);
-      
-      return savedImageUrl;
-    } catch (error) {
-      console.error("Error generating NFT image:", error);
-      // Return placeholder if generation fails
-      return `https://via.placeholder.com/512x512/1a1a2e/ffffff?text=${encodeURIComponent(metadata.name)}`;
+  private ensureDirectoryExists(dirPath: string) {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
     }
   }
 
   async generateAndSaveMemeImage(prompt: string, style: string): Promise<string> {
     try {
       if (!openai) {
-        console.warn("OpenAI API key not configured, using placeholder image");
-        return `https://via.placeholder.com/512x512/ff6b6b/ffffff?text=${encodeURIComponent('Meme Failed')}`;
+        console.warn("OpenAI API key not configured");
+        throw new Error("AI image generation not available");
       }
 
       const imagePrompt = `Create a funny meme image based on: "${prompt}". 
-      Style: ${style}, humorous, engaging, meme format, high quality.
-      Make it suitable for sharing and social media.`;
+      Style: ${style}, humorous, engaging, meme format, high quality, suitable for sharing on social media.
+      Make it visually appealing with clear text and imagery.`;
 
       const imageResponse = await openai.images.generate({
         model: "dall-e-3",
@@ -81,18 +43,65 @@ export class ImageManager {
         throw new Error('No meme image generated');
       }
 
-      // Download and save image to object storage
+      // Download and save image locally
       const imageBuffer = await this.downloadImage(generatedImageUrl);
       const fileName = `meme_${Date.now()}_${Math.random().toString(36).substring(2, 15)}.png`;
+      const filePath = path.join('uploads/memes', fileName);
       
-      // Save to memes folder in object storage
-      const savedImageUrl = await this.saveImageToStorage(imageBuffer, `memes/${fileName}`);
+      fs.writeFileSync(filePath, imageBuffer);
       
-      return savedImageUrl;
+      return `/uploads/memes/${fileName}`;
     } catch (error) {
       console.error("Error generating meme image:", error);
-      // Return placeholder if generation fails
-      return `https://via.placeholder.com/512x512/ff6b6b/ffffff?text=${encodeURIComponent('Meme Failed')}`;
+      throw error;
+    }
+  }
+
+  async generateAndSaveNFTImage(metadata: any, characterPrompt: string): Promise<string> {
+    try {
+      if (!openai) {
+        console.warn("OpenAI API key not configured");
+        throw new Error("AI image generation not available");
+      }
+
+      if (!characterPrompt) {
+        throw new Error("Admin must set NFT character first");
+      }
+
+      // Generate AI image based on character and metadata
+      const imagePrompt = `Create a high-quality, unique NFT artwork based on the character: "${characterPrompt}". 
+      Name: ${metadata.name}
+      Description: ${metadata.description}
+      Rarity: ${metadata.rarity}
+      Attributes: ${JSON.stringify(metadata.attributes)}
+      
+      Style: Digital art, vibrant colors, detailed, professional NFT quality, 1:1 aspect ratio.
+      Make this NFT unique and visually distinct from others while maintaining the core character theme.`;
+
+      const imageResponse = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: imagePrompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "hd",
+      });
+
+      const generatedImageUrl = imageResponse.data?.[0]?.url;
+      if (!generatedImageUrl) {
+        throw new Error('No NFT image generated');
+      }
+
+      // Download and save image locally
+      const imageBuffer = await this.downloadImage(generatedImageUrl);
+      const fileName = `nft_${Date.now()}_${Math.random().toString(36).substring(2, 15)}.png`;
+      const filePath = path.join('uploads/nfts', fileName);
+      
+      fs.writeFileSync(filePath, imageBuffer);
+      
+      return `/uploads/nfts/${fileName}`;
+    } catch (error) {
+      console.error("Error generating NFT image:", error);
+      throw error;
     }
   }
 
@@ -105,37 +114,8 @@ export class ImageManager {
     return Buffer.from(arrayBuffer);
   }
 
-  private async saveImageToStorage(imageBuffer: Buffer, filePath: string): Promise<string> {
-    try {
-      // Get upload URL from object storage
-      const uploadUrl = await this.objectStorageService.getObjectEntityUploadURL();
-      
-      // Upload the image buffer directly
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: imageBuffer,
-        headers: {
-          'Content-Type': 'image/png',
-        },
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Failed to upload image: ${uploadResponse.statusText}`);
-      }
-
-      // Return the object path for accessing the image
-      const objectPath = this.objectStorageService.normalizeObjectEntityPath(uploadUrl);
-      
-      return objectPath;
-    } catch (error) {
-      console.error("Error saving image to storage:", error);
-      throw error;
-    }
-  }
-
   // Generate image URL for public access
-  getImageUrl(objectPath: string): string {
-    // Return the full URL for accessing the image
-    return `/objects${objectPath}`;
+  getImageUrl(imagePath: string): string {
+    return imagePath;
   }
 }

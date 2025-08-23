@@ -8,7 +8,7 @@ import multer from "multer";
 import path from "path";
 import { blockchainService } from "./blockchainService";
 import OpenAI from "openai";
-import { ObjectStorageService } from "./objectStorage";
+import { ImageManager } from "./imageManager";
 import marketRoutes from "./marketRoutes";
 
 const openai = process.env.OPENAI_API_KEY 
@@ -35,16 +35,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount marketplace routes (separate from existing APIs)
   app.use(marketRoutes);
 
-  // Object Storage Routes
+  // Upload Routes - Now using local storage
   app.post('/api/objects/upload', requireAuth, async (req, res) => {
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL" });
-    }
+    res.json({ message: "Local storage upload - images saved to /uploads folder" });
   });
 
   // User routes
@@ -410,6 +403,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating website settings:", error);
       res.status(500).json({ message: "Failed to update website settings" });
+    }
+  });
+
+  // Admin route to set NFT character
+  app.post('/api/admin/nft-character', requireAdmin, async (req, res) => {
+    try {
+      const { characterPrompt } = req.body;
+      
+      if (!characterPrompt || characterPrompt.trim().length === 0) {
+        return res.status(400).json({ message: "Character prompt is required" });
+      }
+      
+      await storage.updateWebsiteSettings({ nftCharacterPrompt: characterPrompt.trim() });
+      
+      res.json({ message: "NFT character set successfully", characterPrompt: characterPrompt.trim() });
+    } catch (error) {
+      console.error("Error setting NFT character:", error);
+      res.status(500).json({ message: "Failed to set NFT character" });
+    }
+  });
+
+  // Admin route to get current NFT character
+  app.get('/api/admin/nft-character', requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getWebsiteSettings();
+      res.json({ characterPrompt: settings?.nftCharacterPrompt || null });
+    } catch (error) {
+      console.error("Error fetching NFT character:", error);
+      res.status(500).json({ message: "Failed to fetch NFT character" });
     }
   });
 
@@ -925,33 +947,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         const metadata = JSON.parse(messageContent);
         
-        // Step 2: Generate AI image based on metadata and reference
-        let imagePrompt = `Create a high-quality, squared (1:1 aspect ratio) NFT artwork for: "${metadata.name}". 
-        Theme: ${theme}, Rarity: ${rarity || 'Common'}. 
-        Description: ${metadata.description}. 
-        Style: Digital art, vibrant colors, detailed, professional NFT quality.`;
+        // Step 2: Get NFT character setting from admin
+        const websiteSettings = await storage.getWebsiteSettings();
+        const characterPrompt = websiteSettings?.nftCharacterPrompt;
         
-        if (referenceImageUrl) {
-          imagePrompt += ` Use this reference image style and elements as inspiration.`;
+        if (!characterPrompt) {
+          throw new Error("Admin must set NFT character first before generating NFTs");
         }
         
+        // Step 3: Generate AI image using the character prompt
+        const imageManager = new ImageManager();
         let imageUrl = null;
         try {
-          const imageResponse = await openai!.images.generate({
-            model: "dall-e-3",
-            prompt: imagePrompt,
-            n: 1,
-            size: "1024x1024",
-            quality: "hd",
-          });
-          imageUrl = imageResponse.data?.[0]?.url || null;
+          imageUrl = await imageManager.generateAndSaveNFTImage({
+            name: metadata.name,
+            description: metadata.description,
+            rarity: rarity || 'Common',
+            attributes: metadata.attributes
+          }, characterPrompt);
         } catch (imageError) {
           console.error("Error generating AI image:", imageError);
           // Fallback to placeholder if image generation fails
           imageUrl = `https://via.placeholder.com/512x512/1a1a2e/ffffff?text=${encodeURIComponent(metadata.name)}`;
         }
         
-        // Step 3: Create NFT in database with all generated content
+        // Step 4: Create NFT in database with all generated content
         const nft = await storage.createNFTForCollection({
           name: metadata.name,
           theme,
@@ -1016,23 +1036,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const generatedDescription = response.choices[0].message.content;
 
+      // Generate and save actual meme image
+      const imageManager = new ImageManager();
+      const imageUrl = await imageManager.generateAndSaveMemeImage(prompt, style);
+
       // Deduct tokens
       await storage.adjustUserTokenBalance(userId, -cost, 'Meme generation');
       
-      // Save meme generation
+      // Save meme generation with image URL
       const meme = await storage.createMemeGeneration({
         userId,
         prompt,
         style,
         generatedDescription,
         cost: cost.toString(),
+        imageUrl,
       });
 
       res.json({ 
         message: "Meme generated successfully!", 
         meme: {
           ...meme,
-          description: generatedDescription
+          description: generatedDescription,
+          imageUrl
         }
       });
     } catch (error) {
