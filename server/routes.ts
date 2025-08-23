@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireAdmin } from "./auth";
-import { insertDepositRequestSchema, insertNewsArticleSchema, insertSocialLinkSchema, insertTokenConfigSchema } from "@shared/schema";
+import { insertDepositRequestSchema, insertNewsArticleSchema, insertSocialLinkSchema, insertTokenConfigSchema, insertWebsiteSettingsSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import Web3 from "web3";
@@ -326,6 +326,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting social link:", error);
       res.status(500).json({ message: "Failed to delete social link" });
+    }
+  });
+
+  // Website settings routes
+  app.get('/api/website/settings', async (req, res) => {
+    try {
+      const settings = await storage.getWebsiteSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching website settings:", error);
+      res.status(500).json({ message: "Failed to fetch website settings" });
+    }
+  });
+
+  app.put('/api/admin/website/settings', requireAdmin, async (req, res) => {
+    try {
+      const validatedData = insertWebsiteSettingsSchema.parse(req.body);
+      const settings = await storage.updateWebsiteSettings(validatedData);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating website settings:", error);
+      res.status(500).json({ message: "Failed to update website settings" });
     }
   });
 

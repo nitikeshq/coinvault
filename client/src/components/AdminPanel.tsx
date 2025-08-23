@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,15 @@ const socialLinkSchema = z.object({
   platform: z.string().min(1, "Platform is required"),
   url: z.string().url("Must be a valid URL"),
   isActive: z.boolean(),
+});
+
+const websiteSettingsSchema = z.object({
+  siteName: z.string().min(1, "Site name is required"),
+  logoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  faviconUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
+  primaryColor: z.string().min(1, "Primary color is required"),
+  secondaryColor: z.string().min(1, "Secondary color is required"),
 });
 
 export default function AdminPanel() {
@@ -163,6 +172,7 @@ export default function AdminPanel() {
   const { data: allNews = [] } = useQuery({ queryKey: ["/api/admin/news"] });
   const { data: deposits = [] } = useQuery({ queryKey: ["/api/admin/deposits"] });
   const { data: socialLinks = [] } = useQuery({ queryKey: ["/api/admin/social-links"] });
+  const { data: websiteSettings } = useQuery({ queryKey: ["/api/website/settings"] });
 
   // Forms
   const tokenForm = useForm({
@@ -196,6 +206,25 @@ export default function AdminPanel() {
       isActive: true,
     },
   });
+
+  const websiteForm = useForm({
+    resolver: zodResolver(websiteSettingsSchema),
+    defaultValues: {
+      siteName: "CryptoWallet Pro",
+      logoUrl: "",
+      faviconUrl: "",
+      description: "",
+      primaryColor: "#6366f1",
+      secondaryColor: "#8b5cf6",
+    },
+  });
+
+  // Update form values when websiteSettings data is loaded
+  useEffect(() => {
+    if (websiteSettings) {
+      websiteForm.reset(websiteSettings);
+    }
+  }, [websiteSettings, websiteForm]);
 
   // Mutations
   const updateTokenConfigMutation = useMutation({
@@ -302,6 +331,20 @@ export default function AdminPanel() {
     },
   });
 
+  const updateWebsiteSettingsMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", "/api/admin/website/settings", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/website/settings"] });
+      toast({ title: "Website settings updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update website settings", description: error.message, variant: "destructive" });
+    },
+  });
+
   const onTokenSubmit = (data: any) => {
     updateTokenConfigMutation.mutate(data);
   };
@@ -316,6 +359,10 @@ export default function AdminPanel() {
 
   const onSocialSubmit = (data: any) => {
     createSocialLinkMutation.mutate(data);
+  };
+
+  const onWebsiteSettingsSubmit = (data: any) => {
+    updateWebsiteSettingsMutation.mutate(data);
   };
 
   const handleEditNews = (article: any) => {
@@ -344,10 +391,14 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-6 bg-white border border-gray-200">
           <TabsTrigger value="overview" className="flex items-center space-x-2">
             <TrendingUp className="h-4 w-4" />
             <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="website" className="flex items-center space-x-2">
+            <Settings className="h-4 w-4" />
+            <span>Website</span>
           </TabsTrigger>
           <TabsTrigger value="token" className="flex items-center space-x-2">
             <Settings className="h-4 w-4" />
@@ -399,6 +450,156 @@ export default function AdminPanel() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="website" className="space-y-6">
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-gray-800">Website Settings</CardTitle>
+              <CardDescription className="text-gray-600">
+                Manage your website branding and appearance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...websiteForm}>
+                <form onSubmit={websiteForm.handleSubmit(onWebsiteSettingsSubmit)} className="space-y-4">
+                  <FormField
+                    control={websiteForm.control}
+                    name="siteName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Website Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="CryptoWallet Pro"
+                            className="bg-gray-50 border-gray-300 text-gray-900"
+                            data-testid="input-site-name"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={websiteForm.control}
+                      name="logoUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Logo URL</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://example.com/logo.png"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              data-testid="input-logo-url"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={websiteForm.control}
+                      name="faviconUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Favicon URL</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="https://example.com/favicon.ico"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              data-testid="input-favicon-url"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={websiteForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Website Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Professional cryptocurrency wallet platform..."
+                            className="bg-gray-50 border-gray-300 text-gray-900"
+                            data-testid="textarea-description"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={websiteForm.control}
+                      name="primaryColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Primary Color</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="color"
+                              className="bg-gray-50 border-gray-300 text-gray-900 h-12"
+                              data-testid="input-primary-color"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={websiteForm.control}
+                      name="secondaryColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700">Secondary Color</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="color"
+                              className="bg-gray-50 border-gray-300 text-gray-900 h-12"
+                              data-testid="input-secondary-color"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white"
+                    disabled={updateWebsiteSettingsMutation.isPending}
+                    data-testid="button-save-website-settings"
+                  >
+                    {updateWebsiteSettingsMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Save Website Settings"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="token" className="space-y-6">

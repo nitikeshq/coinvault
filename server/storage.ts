@@ -7,6 +7,7 @@ import {
   socialLinks,
   tokenPrices,
   transactions,
+  websiteSettings,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -21,6 +22,8 @@ import {
   type InsertSocialLink,
   type TokenPrice,
   type Transaction,
+  type WebsiteSettings,
+  type InsertWebsiteSettings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -71,6 +74,10 @@ export interface IStorage {
   // Transactions
   getUserTransactions(userId: string): Promise<Transaction[]>;
   createTransaction(transaction: Omit<Transaction, 'id' | 'createdAt'>): Promise<Transaction>;
+  
+  // Website settings
+  getWebsiteSettings(): Promise<WebsiteSettings | undefined>;
+  updateWebsiteSettings(settings: InsertWebsiteSettings): Promise<WebsiteSettings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -326,6 +333,36 @@ export class DatabaseStorage implements IStorage {
       .values(transaction)
       .returning();
     return newTransaction;
+  }
+
+  async getWebsiteSettings(): Promise<WebsiteSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(websiteSettings)
+      .orderBy(desc(websiteSettings.createdAt));
+    return settings;
+  }
+
+  async updateWebsiteSettings(settings: InsertWebsiteSettings): Promise<WebsiteSettings> {
+    // Check if settings exist
+    const existing = await this.getWebsiteSettings();
+    
+    if (existing) {
+      // Update existing settings
+      const [updated] = await db
+        .update(websiteSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(websiteSettings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new settings
+      const [newSettings] = await db
+        .insert(websiteSettings)
+        .values(settings)
+        .returning();
+      return newSettings;
+    }
   }
 }
 

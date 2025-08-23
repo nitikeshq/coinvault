@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Wallet, User, LogOut, Settings } from "lucide-react";
 import { Link } from "wouter";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 interface NavigationProps {
   activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin';
@@ -10,6 +11,8 @@ interface NavigationProps {
 }
 
 export default function Navigation({ activeSection, onSectionChange, user, isAdmin }: NavigationProps) {
+  const { settings } = useWebsiteSettings();
+  
   const handleLogout = () => {
     window.location.href = "/api/logout";
   };
@@ -21,10 +24,18 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Wallet className="text-white h-5 w-5" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-800">CryptoWallet Pro</h1>
+              {settings.logoUrl ? (
+                <img 
+                  src={settings.logoUrl} 
+                  alt={`${settings.siteName} Logo`} 
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Wallet className="text-white h-5 w-5" />
+                </div>
+              )}
+              <h1 className="text-xl font-bold text-gray-800">{settings.siteName}</h1>
             </div>
             
             <div className="flex space-x-6">

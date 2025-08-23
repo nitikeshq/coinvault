@@ -127,6 +127,19 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Website settings (admin managed)
+export const websiteSettings = pgTable("website_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  siteName: varchar("site_name").notNull().default("CryptoWallet Pro"),
+  logoUrl: varchar("logo_url"),
+  faviconUrl: varchar("favicon_url"),
+  description: text("description"),
+  primaryColor: varchar("primary_color").default("#6366f1"),
+  secondaryColor: varchar("secondary_color").default("#8b5cf6"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -177,6 +190,12 @@ export const insertSocialLinkSchema = createInsertSchema(socialLinks).omit({
   updatedAt: true,
 });
 
+export const insertWebsiteSettingsSchema = createInsertSchema(websiteSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
@@ -193,3 +212,5 @@ export type SocialLink = typeof socialLinks.$inferSelect;
 export type InsertSocialLink = z.infer<typeof insertSocialLinkSchema>;
 export type TokenPrice = typeof tokenPrices.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
+export type WebsiteSettings = typeof websiteSettings.$inferSelect;
+export type InsertWebsiteSettings = z.infer<typeof insertWebsiteSettingsSchema>;

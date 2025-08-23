@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import WalletDashboard from "@/components/WalletDashboard";
 import DepositSection from "@/components/DepositSection";
@@ -7,14 +7,21 @@ import NewsSection from "@/components/NewsSection";
 import AdminPanel from "@/components/AdminPanel";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin'>('wallet');
   const { user, isAdmin } = useAuth();
+  const { settings: websiteSettings } = useWebsiteSettings();
 
   const { data: socialLinks = [] } = useQuery<any[]>({
     queryKey: ['/api/social-links'],
   });
+
+  // Update document title based on website settings
+  useEffect(() => {
+    document.title = websiteSettings.siteName || "CryptoWallet Pro";
+  }, [websiteSettings.siteName]);
 
   const renderSection = () => {
     switch (activeSection) {
