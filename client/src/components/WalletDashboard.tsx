@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Copy, ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function WalletDashboard() {
+interface WalletDashboardProps {
+  onSectionChange?: (section: string) => void;
+}
+
+export default function WalletDashboard({ onSectionChange }: WalletDashboardProps) {
   const { toast } = useToast();
 
   const { data: tokenConfig } = useQuery<any>({
@@ -32,6 +36,13 @@ export default function WalletDashboard() {
     queryKey: ['/api/auth/user'],
   });
 
+  const { data: presaleTimer } = useQuery<any>({
+    queryKey: ['/api/presale/timer'],
+    refetchInterval: 2000,
+  });
+
+  const isPresaleActive = presaleTimer && presaleTimer.timeRemaining > 0;
+
   const copyAddress = () => {
     if (user?.walletAddress) {
       navigator.clipboard.writeText(user.walletAddress);
@@ -48,6 +59,12 @@ export default function WalletDashboard() {
 
   const formatPrice = (price: string) => {
     return parseFloat(price || "0").toFixed(2);
+  };
+
+  const handleDepositClick = () => {
+    if (onSectionChange) {
+      onSectionChange('deposit');
+    }
   };
 
   return (
@@ -99,15 +116,36 @@ export default function WalletDashboard() {
         
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <Button className="bg-green-500 hover:bg-green-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-white" data-testid="button-deposit">
+          <Button 
+            onClick={handleDepositClick}
+            className="bg-green-500 hover:bg-green-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-white" 
+            data-testid="button-deposit"
+          >
             <ArrowDown className="h-4 w-4" />
             <span>Deposit</span>
           </Button>
-          <Button className="bg-yellow-500 hover:bg-yellow-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-black" data-testid="button-send">
+          <Button 
+            disabled={isPresaleActive}
+            className={`py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors ${
+              isPresaleActive 
+                ? 'bg-gray-400 cursor-not-allowed text-gray-600' 
+                : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+            }`}
+            data-testid="button-withdrawal"
+            title={isPresaleActive ? "Withdrawals will be enabled after presale ends" : "Send tokens to another wallet"}
+          >
             <ArrowUp className="h-4 w-4" />
-            <span>Send</span>
+            <span>Withdrawal</span>
           </Button>
         </div>
+        
+        {isPresaleActive && (
+          <div className="bg-orange-100 border border-orange-200 rounded-lg p-3 mt-4">
+            <p className="text-sm text-orange-800 text-center">
+              🔒 Withdrawals are disabled during presale period
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Token Info Card */}

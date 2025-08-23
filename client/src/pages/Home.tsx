@@ -43,14 +43,14 @@ export default function Home() {
         return isAdmin ? <AdminPanel /> : (
           <div className="container mx-auto px-4 space-y-6">
             <PresaleCountdown />
-            <WalletDashboard />
+            <WalletDashboard onSectionChange={setActiveSection} />
           </div>
         );
       default:
         return (
           <div className="container mx-auto px-4 space-y-6">
             <PresaleCountdown />
-            <WalletDashboard />
+            <WalletDashboard onSectionChange={setActiveSection} />
           </div>
         );
     }

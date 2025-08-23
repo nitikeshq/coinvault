@@ -372,13 +372,12 @@ export default function DepositSection() {
                     {/* Crypto QR Code */}
                     <div className="text-center mb-6">
                       <div className="bg-white p-6 rounded-xl inline-block border border-gray-200 shadow-sm">
-                        <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300" data-testid="crypto-qr-code">
-                          <div className="text-center">
-                            <div className="text-5xl mb-3">📱</div>
-                            <p className="text-gray-600 text-sm font-medium">Wallet QR</p>
-                            <p className="text-gray-500 text-xs">Scan to send</p>
-                          </div>
-                        </div>
+                        <img 
+                          src="/attached_assets/generated_images/BSC_wallet_QR_code_7c2c48ea.png" 
+                          alt="BSC Wallet QR Code" 
+                          className="w-48 h-48 object-contain"
+                          data-testid="crypto-qr-code"
+                        />
                       </div>
                       <p className="text-sm text-gray-600 mt-3 font-medium">Scan QR code with your crypto wallet</p>
                     </div>
