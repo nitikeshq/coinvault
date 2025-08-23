@@ -63,68 +63,98 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
-        <div className="hidden lg:flex flex-col space-y-8 text-white">
+        <div className="hidden lg:flex flex-col space-y-8 text-gray-800">
           <div className="space-y-4">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               CryptoWallet Pro
             </h1>
-            <p className="text-xl text-gray-300">
+            <p className="text-xl text-gray-600">
               Your secure gateway to the future of cryptocurrency management
             </p>
           </div>
 
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-500/20 rounded-xl">
-                <Wallet className="h-6 w-6 text-blue-400" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-gray-200">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
+                  <Shield className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-gray-800">Bank-Grade Security</h3>
               </div>
-              <div>
-                <h3 className="font-semibold">Secure Wallet Management</h3>
-                <p className="text-gray-400">Store and manage your BEP-20 tokens with bank-grade security</p>
-              </div>
+              <p className="text-sm text-gray-600">
+                Military-grade encryption protects your digital assets with advanced security protocols.
+              </p>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-500/20 rounded-xl">
-                <Zap className="h-6 w-6 text-green-400" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-gray-200">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-gradient-to-r from-green-500 to-green-600 rounded-lg">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-gray-800">Lightning Fast</h3>
               </div>
-              <div>
-                <h3 className="font-semibold">Lightning Fast Transactions</h3>
-                <p className="text-gray-400">Experience instant deposits and lightning-fast swaps</p>
-              </div>
+              <p className="text-sm text-gray-600">
+                Experience instant transactions and real-time balance updates across all devices.
+              </p>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-purple-500/20 rounded-xl">
-                <TrendingUp className="h-6 w-6 text-purple-400" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-gray-200">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg">
+                  <Wallet className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-gray-800">Multi-Token Support</h3>
               </div>
-              <div>
-                <h3 className="font-semibold">Real-time Trading</h3>
-                <p className="text-gray-400">Trade directly with PancakeSwap integration and live price feeds</p>
-              </div>
+              <p className="text-sm text-gray-600">
+                Manage multiple BEP-20 tokens in one unified, intuitive interface.
+              </p>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-orange-500/20 rounded-xl">
-                <Shield className="h-6 w-6 text-orange-400" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-gray-200">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-gray-800">Live Analytics</h3>
               </div>
+              <p className="text-sm text-gray-600">
+                Track portfolio performance with real-time charts and market insights.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-6 border border-gray-200">
+            <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold">Advanced Security</h3>
-                <p className="text-gray-400">Multi-layer protection with cold storage technology</p>
+                <h3 className="font-semibold text-gray-800 mb-1">Trusted by 50,000+ Users</h3>
+                <p className="text-sm text-gray-600">Join our growing community of crypto enthusiasts</p>
+              </div>
+              <div className="flex -space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full border-2 border-white"></div>
+                <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-green-600 rounded-full border-2 border-white"></div>
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full border-2 border-white"></div>
+                <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full border-2 border-white flex items-center justify-center">
+                  <span className="text-xs font-bold text-white">+</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Auth Forms */}
+        {/* Auth Card */}
         <div className="w-full max-w-md mx-auto">
-          <Card className="border-slate-700 bg-slate-800/90 backdrop-blur-sm">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-white">Welcome to CryptoWallet Pro</CardTitle>
-              <CardDescription className="text-gray-400">
+          <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg">
+            <CardHeader className="text-center pb-2">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
+                <Wallet className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-gray-800">
+                {activeTab === "login" ? "Welcome Back" : "Create Account"}
+              </CardTitle>
+              <CardDescription className="text-gray-600">
                 {activeTab === "login" 
                   ? "Sign in to access your secure wallet" 
                   : "Create your account to get started"
@@ -133,11 +163,11 @@ export default function AuthPage() {
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-gray-200">
-                  <TabsTrigger value="login" className="text-black data-[state=active]:text-white data-[state=active]:bg-blue-600">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100 border border-gray-200">
+                  <TabsTrigger value="login" className="text-gray-700 data-[state=active]:text-white data-[state=active]:bg-blue-600">
                     Sign In
                   </TabsTrigger>
-                  <TabsTrigger value="register" className="text-black data-[state=active]:text-white data-[state=active]:bg-purple-600">
+                  <TabsTrigger value="register" className="text-gray-700 data-[state=active]:text-white data-[state=active]:bg-purple-600">
                     Register
                   </TabsTrigger>
                 </TabsList>
@@ -150,13 +180,13 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-black">Email</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="email"
                                 placeholder="Enter your email"
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                                 data-testid="input-email"
                               />
                             </FormControl>
@@ -170,14 +200,14 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-black">Password</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Input
                                   {...field}
                                   type={showPassword ? "text" : "password"}
                                   placeholder="Enter your password"
-                                  className="bg-slate-700 border-slate-600 text-white pr-10"
+                                  className="bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 pr-10"
                                   data-testid="input-password"
                                 />
                                 <Button
@@ -189,9 +219,9 @@ export default function AuthPage() {
                                   data-testid="button-toggle-password"
                                 >
                                   {showPassword ? (
-                                    <EyeOff className="h-4 w-4 text-gray-400" />
+                                    <EyeOff className="h-4 w-4 text-gray-600" />
                                   ) : (
-                                    <Eye className="h-4 w-4 text-gray-400" />
+                                    <Eye className="h-4 w-4 text-gray-600" />
                                   )}
                                 </Button>
                               </div>
@@ -203,7 +233,7 @@ export default function AuthPage() {
 
                       <Button 
                         type="submit" 
-                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         disabled={isLoginLoading}
                         data-testid="button-login"
                       >
@@ -223,7 +253,7 @@ export default function AuthPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full border-gray-300 bg-white text-black hover:bg-gray-100"
+                      className="w-full border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                       onClick={handleGoogleAuth}
                       data-testid="button-google-login"
                     >
@@ -231,11 +261,11 @@ export default function AuthPage() {
                     </Button>
                   </div>
 
-                  <div className="text-center text-sm">
-                    <p className="text-black">
+                  <div className="text-center text-sm space-y-1">
+                    <p className="text-gray-600">
                       Demo accounts: admin@cryptowallet.com / user@example.com
                     </p>
-                    <p className="text-black">Password: password123</p>
+                    <p className="text-gray-600">Password: password123</p>
                   </div>
                 </TabsContent>
 
@@ -247,12 +277,12 @@ export default function AuthPage() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-black">Full Name</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Full Name</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 placeholder="Enter your full name"
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500"
                                 data-testid="input-name"
                               />
                             </FormControl>
@@ -266,12 +296,12 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-black">Username</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Username</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 placeholder="Choose a username"
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500"
                                 data-testid="input-username"
                               />
                             </FormControl>
@@ -285,13 +315,13 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-black">Email</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="email"
                                 placeholder="Enter your email"
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500"
                                 data-testid="input-register-email"
                               />
                             </FormControl>
@@ -305,14 +335,14 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-black">Password</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Input
                                   {...field}
                                   type={showPassword ? "text" : "password"}
                                   placeholder="Create a password (min 6 characters)"
-                                  className="bg-slate-700 border-slate-600 text-white pr-10"
+                                  className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500 pr-10"
                                   data-testid="input-register-password"
                                 />
                                 <Button
@@ -324,9 +354,9 @@ export default function AuthPage() {
                                   data-testid="button-toggle-register-password"
                                 >
                                   {showPassword ? (
-                                    <EyeOff className="h-4 w-4 text-gray-400" />
+                                    <EyeOff className="h-4 w-4 text-gray-600" />
                                   ) : (
-                                    <Eye className="h-4 w-4 text-gray-400" />
+                                    <Eye className="h-4 w-4 text-gray-600" />
                                   )}
                                 </Button>
                               </div>
@@ -341,13 +371,13 @@ export default function AuthPage() {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-black">Phone (Optional)</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Phone (Optional)</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="tel"
                                 placeholder="Enter your phone number"
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-gray-50 border-gray-300 text-gray-900 focus:border-purple-500 focus:ring-purple-500"
                                 data-testid="input-phone"
                               />
                             </FormControl>
@@ -358,7 +388,7 @@ export default function AuthPage() {
 
                       <Button 
                         type="submit" 
-                        className="w-full bg-purple-600 hover:bg-purple-700"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                         disabled={isRegisterLoading}
                         data-testid="button-register"
                       >
@@ -378,7 +408,7 @@ export default function AuthPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full border-gray-300 bg-white text-black hover:bg-gray-100"
+                      className="w-full border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                       onClick={handleGoogleAuth}
                       data-testid="button-google-register"
                     >
