@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Copy, Upload, AlertTriangle } from "lucide-react";
+import { Copy, Upload, AlertTriangle, Wallet, CreditCard } from "lucide-react";
+import upiQrImage from "../assets/upi_qr.png";
 
 export default function DepositSection() {
   const { toast } = useToast();
@@ -108,7 +109,7 @@ export default function DepositSection() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold mb-2 text-gray-800">Deposit Tokens</h2>
-          <p className="text-gray-600">Send tokens to your wallet address or submit a manual deposit request</p>
+          <p className="text-gray-600">Send tokens to your wallet address or make a UPI payment for instant deposit</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -121,47 +122,110 @@ export default function DepositSection() {
               <Tabs defaultValue="direct" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-gray-100">
                   <TabsTrigger value="direct" className="text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-direct">Direct Transfer</TabsTrigger>
-                  <TabsTrigger value="manual" className="text-gray-700 data-[state=active]:bg-purple-600 data-[state=active]:text-white" data-testid="tab-manual">Manual Deposit</TabsTrigger>
+                  <TabsTrigger value="verify" className="text-gray-700 data-[state=active]:bg-purple-600 data-[state=active]:text-white" data-testid="tab-verify">Verify Transaction</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="direct" className="space-y-6 mt-6">
-                  {/* QR Code Section */}
-                  <div className="text-center">
-                    <div className="bg-white p-4 rounded-xl inline-block mb-4 border border-gray-200">
-                      <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center" data-testid="qr-code-placeholder">
-                        <div className="text-center">
-                          <div className="text-6xl mb-2">📱</div>
-                          <p className="text-gray-600 text-sm">QR Code</p>
-                          <p className="text-gray-500 text-xs">Scan to send</p>
+                  {/* Payment Method Selection */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Crypto Transfer */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                          <Wallet className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">Crypto Transfer</h3>
+                          <p className="text-sm text-gray-600">Send BEP-20 tokens directly</p>
+                        </div>
+                      </div>
+                      
+                      {/* Crypto QR Code */}
+                      <div className="text-center mb-4">
+                        <div className="bg-white p-4 rounded-xl inline-block border border-gray-200">
+                          <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300" data-testid="crypto-qr-code">
+                            <div className="text-center">
+                              <div className="text-4xl mb-2">📱</div>
+                              <p className="text-gray-600 text-xs">Wallet QR</p>
+                              <p className="text-gray-500 text-xs">Scan to send</p>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Scan QR code with your crypto wallet</p>
+                      </div>
+
+                      {/* Wallet Address */}
+                      {user?.walletAddress && (
+                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                          <p className="text-xs text-gray-500 mb-2">Wallet Address (BEP-20)</p>
+                          <div className="flex items-center justify-between">
+                            <code className="text-xs font-mono text-gray-800 break-all mr-2" data-testid="text-crypto-address">
+                              {user.walletAddress}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={copyAddress}
+                              className="p-1 hover:bg-gray-200 text-blue-600"
+                              data-testid="button-copy-crypto-address"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* UPI Transfer */}
+                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                          <CreditCard className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">UPI Payment</h3>
+                          <p className="text-sm text-gray-600">Pay via PhonePe, GPay, Paytm</p>
+                        </div>
+                      </div>
+                      
+                      {/* UPI QR Code */}
+                      <div className="text-center mb-4">
+                        <div className="bg-white p-4 rounded-xl inline-block border border-gray-200">
+                          <img 
+                            src={upiQrImage} 
+                            alt="UPI QR Code" 
+                            className="w-40 h-40 object-contain"
+                            data-testid="upi-qr-code"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Scan with any UPI app</p>
+                      </div>
+
+                      {/* UPI Instructions */}
+                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                        <p className="text-xs text-gray-500 mb-2">Quick Payment</p>
+                        <div className="space-y-1">
+                          <p className="text-xs text-gray-700">• Open any UPI app</p>
+                          <p className="text-xs text-gray-700">• Scan QR code above</p>
+                          <p className="text-xs text-gray-700">• Enter amount and pay</p>
+                          <p className="text-xs text-gray-700">• Screenshot & verify below</p>
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500">Scan QR code or copy address below</p>
                   </div>
-
-                  {/* Wallet Address */}
-                  {user?.walletAddress && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <p className="text-xs text-gray-500 mb-2">Wallet Address (BEP-20)</p>
-                      <div className="flex items-center justify-between">
-                        <code className="text-sm font-mono text-gray-800 break-all mr-2" data-testid="text-deposit-address">
-                          {user.walletAddress}
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={copyAddress}
-                          className="p-2 hover:bg-gray-200 text-blue-600"
-                          data-testid="button-copy-deposit-address"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </TabsContent>
 
-                <TabsContent value="manual" className="space-y-4 mt-6">
+                <TabsContent value="verify" className="space-y-4 mt-6">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start space-x-2">
+                      <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-yellow-800 mb-1">Transaction Verification</p>
+                        <p className="text-gray-700 text-xs">Upload your payment screenshot for quick verification and instant token credit.</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                       <Label htmlFor="amount" className="text-gray-700">Deposit Amount</Label>
@@ -171,17 +235,18 @@ export default function DepositSection() {
                         step="0.00000001"
                         value={depositForm.amount}
                         onChange={(e) => setDepositForm(prev => ({ ...prev, amount: e.target.value }))}
-                        placeholder="Enter amount"
+                        placeholder="Enter amount paid"
                         className="bg-gray-50 border-gray-300 text-gray-900"
                         data-testid="input-deposit-amount"
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="screenshot" className="text-gray-700">Transaction Screenshot</Label>
+                      <Label htmlFor="screenshot" className="text-gray-700">Payment Screenshot *</Label>
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-600 mb-2">Drop screenshot here or click to browse</p>
+                        <p className="text-gray-600 mb-2">Upload your payment confirmation screenshot</p>
+                        <p className="text-xs text-gray-500 mb-3">Supports: JPG, PNG, WebP (Max 5MB)</p>
                         <input
                           type="file"
                           accept="image/*"
@@ -194,26 +259,26 @@ export default function DepositSection() {
                           type="button"
                           variant="outline"
                           onClick={() => document.getElementById('screenshot-upload')?.click()}
-                          className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                          className="border-purple-500 text-purple-600 hover:bg-purple-50"
                           data-testid="button-choose-file"
                         >
-                          Choose File
+                          Choose Screenshot
                         </Button>
                         {depositForm.screenshot && (
                           <p className="text-sm text-green-600 mt-2">
-                            File selected: {depositForm.screenshot.name}
+                            ✓ File selected: {depositForm.screenshot.name}
                           </p>
                         )}
                       </div>
                     </div>
                     
                     <div>
-                      <Label htmlFor="transactionHash" className="text-gray-700">Transaction Hash/UTR (Optional)</Label>
+                      <Label htmlFor="transactionHash" className="text-gray-700">Transaction ID/UTR (Optional)</Label>
                       <Input
                         id="transactionHash"
                         value={depositForm.transactionHash}
                         onChange={(e) => setDepositForm(prev => ({ ...prev, transactionHash: e.target.value }))}
-                        placeholder="Enter transaction hash"
+                        placeholder="Enter transaction reference number"
                         className="bg-gray-50 border-gray-300 text-gray-900"
                         data-testid="input-transaction-hash"
                       />
@@ -225,23 +290,24 @@ export default function DepositSection() {
                       disabled={depositMutation.isPending}
                       data-testid="button-submit-deposit"
                     >
-                      {depositMutation.isPending ? "Submitting..." : "Submit Deposit Request"}
+                      {depositMutation.isPending ? "Verifying..." : "Submit for Verification"}
                     </Button>
                   </form>
                 </TabsContent>
               </Tabs>
 
               {/* Important Notes */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
                 <div className="flex items-start space-x-2">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-yellow-800 mb-1">Important Notes:</p>
+                    <p className="font-medium text-blue-800 mb-1">Important Notes:</p>
                     <ul className="text-gray-700 space-y-1 text-xs">
-                      <li>• Only send BEP-20 tokens to this address</li>
-                      <li>• Manual deposits require admin approval</li>
-                      <li>• Processing time: 10-30 minutes</li>
-                      <li>• Minimum deposit: 10 tokens</li>
+                      <li>• Crypto: Only send BEP-20 tokens to the address above</li>
+                      <li>• UPI: Pay exact amount and upload screenshot immediately</li>
+                      <li>• Processing time: 5-15 minutes after verification</li>
+                      <li>• Minimum deposit: 10 tokens or ₹100 via UPI</li>
+                      <li>• Contact support if payment is not credited within 30 minutes</li>
                     </ul>
                   </div>
                 </div>
@@ -280,7 +346,7 @@ export default function DepositSection() {
                       </div>
                       {deposit.transactionHash && (
                         <p className="text-sm text-gray-500 break-all">
-                          Hash: {deposit.transactionHash}
+                          Ref: {deposit.transactionHash}
                         </p>
                       )}
                       {deposit.adminNotes && (
