@@ -292,6 +292,7 @@ export const memeGenerations = pgTable("meme_generations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   prompt: text("prompt").notNull(),
+  overlayText: text("overlay_text"), // Text that will be displayed on the image
   style: varchar("style").default("funny"),
   generatedDescription: text("generated_description"),
   cost: varchar("cost"),

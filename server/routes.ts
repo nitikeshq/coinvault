@@ -916,7 +916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/memes/generate', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { prompt } = req.body;
+      const { prompt, overlayText } = req.body;
       
       if (!prompt || prompt.trim().length === 0) {
         return res.status(400).json({ message: 'Prompt is required' });
@@ -949,6 +949,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const meme = await storage.createMemeGeneration({
         userId,
         prompt: prompt.trim(),
+        overlayText: overlayText ? overlayText.trim() : null,
         style: 'funny',
         cost: cost.toString(),
         status: 'processing'
@@ -961,8 +962,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let imageUrl = null;
           
           try {
-            // Generate meme image with AI
-            imageUrl = await imageManager.generateAndSaveMemeImage(prompt.trim(), 'funny');
+            // Generate meme image with AI, including overlay text if provided
+            const fullPrompt = overlayText ? 
+              `${prompt.trim()}. Please include this text visibly in the image: "${overlayText.trim()}"` : 
+              prompt.trim();
+            imageUrl = await imageManager.generateAndSaveMemeImage(fullPrompt, 'funny');
           } catch (imageError) {
             console.error('Failed to generate meme image:', imageError);
             // Fallback to placeholder if AI generation fails
@@ -1205,7 +1209,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quality: "standard",
         });
 
-        const imageUrl = imageResponse.data[0].url;
+        const imageUrl = imageResponse.data?.[0]?.url;
+        if (!imageUrl) {
+          throw new Error('No image URL received from OpenAI');
+        }
         console.log('🖼️ AI image generated successfully!');
         
         // Create traits hash for uniqueness tracking
@@ -1243,7 +1250,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('❌ Mint NFT error:', error);
-      res.status(500).json({ message: error.message || "Failed to mint NFT" });
+      const message = error instanceof Error ? error.message : "Failed to mint NFT";
+      res.status(500).json({ message });
     }
   });
 

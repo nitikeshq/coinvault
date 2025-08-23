@@ -725,6 +725,7 @@ export class DatabaseStorage implements IStorage {
       .values({
         userId: data.userId,
         prompt: data.prompt,
+        overlayText: data.overlayText || null, // Add overlay text field
         style: data.style || 'funny',
         generatedDescription: data.generatedDescription,
         cost: data.cost,

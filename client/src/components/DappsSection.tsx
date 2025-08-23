@@ -27,6 +27,7 @@ const getRarityColor = (rarity: string) => {
 export default function DappsSection() {
   const { toast } = useToast();
   const [memePrompt, setMemePrompt] = useState("");
+  const [memeOverlayText, setMemeOverlayText] = useState("");
   const [nftTheme, setNftTheme] = useState("");
   const [nftStyle, setNftStyle] = useState("");
   const { tokenSymbol } = useTokenInfo();
@@ -86,8 +87,8 @@ export default function DappsSection() {
   });
 
   const memeGenerationMutation = useMutation({
-    mutationFn: async (prompt: string) => {
-      return apiRequest("POST", "/api/memes/generate", { prompt });
+    mutationFn: async ({ prompt, overlayText }: { prompt: string; overlayText: string }) => {
+      return apiRequest("POST", "/api/memes/generate", { prompt, overlayText });
     },
     onSuccess: () => {
       toast({
@@ -95,6 +96,7 @@ export default function DappsSection() {
         description: "Your meme is being generated...",
       });
       setMemePrompt("");
+      setMemeOverlayText("");
       queryClient.invalidateQueries({ queryKey: ["/api/user/memes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/balance"] });
     },
@@ -136,7 +138,7 @@ export default function DappsSection() {
 
   const handleGenerateMeme = () => {
     if (!memePrompt.trim()) return;
-    memeGenerationMutation.mutate(memePrompt.trim());
+    memeGenerationMutation.mutate({ prompt: memePrompt.trim(), overlayText: memeOverlayText.trim() });
   };
 
   const handleGenerateNft = () => {
@@ -475,6 +477,17 @@ export default function DappsSection() {
                       />
                     </div>
                     
+                    <div>
+                      <Label htmlFor="meme-overlay-text">Type your text here (it will be shown in the image)</Label>
+                      <Input
+                        id="meme-overlay-text"
+                        placeholder="Optional: Text to display on the meme image..."
+                        value={memeOverlayText}
+                        onChange={(e) => setMemeOverlayText(e.target.value)}
+                        data-testid="input-meme-overlay-text"
+                      />
+                    </div>
+                    
                     <Button 
                       onClick={handleGenerateMeme}
                       disabled={memeGenerationMutation.isPending || userBalance < memeCost || !memePrompt.trim()}
@@ -506,6 +519,11 @@ export default function DappsSection() {
                           <div className="flex items-start space-x-3">
                             <div className="flex-1">
                               <div className="font-medium text-sm mb-1">"{meme.prompt}"</div>
+                              {meme.overlayText && (
+                                <div className="text-xs text-blue-600 mb-1 font-medium">
+                                  Text on image: "{meme.overlayText}"
+                                </div>
+                              )}
                               <div className="flex items-center space-x-2 text-xs text-gray-600">
                                 {meme.status === 'completed' ? (
                                   <>
