@@ -223,7 +223,7 @@ export default function AuthPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full border-slate-600 text-black hover:bg-gray-100"
+                      className="w-full border-gray-300 bg-white text-black hover:bg-gray-100"
                       onClick={handleGoogleAuth}
                       data-testid="button-google-login"
                     >
@@ -378,7 +378,7 @@ export default function AuthPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full border-slate-600 text-black hover:bg-gray-100"
+                      className="w-full border-gray-300 bg-white text-black hover:bg-gray-100"
                       onClick={handleGoogleAuth}
                       data-testid="button-google-register"
                     >
