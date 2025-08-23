@@ -9,13 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Edit, Trash2, Check, X, Settings, Users, FileText, Link, TrendingUp, Shield } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Check, X, Settings, Users, FileText, Link, TrendingUp, Shield, Clock } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { PresaleAdmin } from "@/components/PresaleAdmin";
 
 const tokenConfigSchema = z.object({
   contractAddress: z.string().min(1, "Contract address is required"),
@@ -391,10 +392,14 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200">
           <TabsTrigger value="overview" className="flex items-center space-x-2">
             <TrendingUp className="h-4 w-4" />
             <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="presale" className="flex items-center space-x-2">
+            <Clock className="h-4 w-4" />
+            <span>Presale</span>
           </TabsTrigger>
           <TabsTrigger value="website" className="flex items-center space-x-2">
             <Settings className="h-4 w-4" />
@@ -450,6 +455,10 @@ export default function AdminPanel() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="presale" className="space-y-6">
+          <PresaleAdmin />
         </TabsContent>
 
         <TabsContent value="website" className="space-y-6">

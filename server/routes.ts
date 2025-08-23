@@ -379,6 +379,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Presale endpoints
+  app.get('/api/presale/config', async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      if (!config) {
+        return res.status(404).json({ message: 'Presale config not found' });
+      }
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching presale config:', error);
+      res.status(500).json({ message: 'Failed to fetch presale config' });
+    }
+  });
+
+  app.get('/api/presale/timer', async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      if (!config) {
+        return res.status(404).json({ message: 'Presale config not found' });
+      }
+
+      const now = new Date();
+      const endDate = new Date(config.endDate);
+      const timeRemaining = Math.max(0, endDate.getTime() - now.getTime());
+      
+      const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+      res.json({
+        timeRemaining,
+        days,
+        hours,
+        minutes,
+        seconds,
+        isEnded: timeRemaining === 0,
+        endDate: config.endDate
+      });
+    } catch (error) {
+      console.error('Error calculating presale timer:', error);
+      res.status(500).json({ message: 'Failed to calculate timer' });
+    }
+  });
+
+  app.get('/api/presale/progress', async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      if (!config) {
+        return res.status(404).json({ message: 'Presale config not found' });
+      }
+
+      // Calculate total raised from approved deposits
+      const approvedDeposits = await storage.getApprovedDeposits();
+      const fromDeposits = approvedDeposits.reduce((total, deposit) => 
+        total + parseFloat(deposit.amount), 0
+      );
+
+      const initialLiquidity = parseFloat(config.initialLiquidity);
+      const totalRaised = initialLiquidity + fromDeposits;
+      const targetAmount = parseFloat(config.targetAmount);
+      const progressPercentage = (totalRaised / targetAmount) * 100;
+
+      res.json({
+        totalRaised: totalRaised.toString(),
+        targetAmount: config.targetAmount,
+        initialLiquidity: config.initialLiquidity,
+        fromDeposits: fromDeposits.toString(),
+        progressPercentage: Math.min(100, progressPercentage)
+      });
+    } catch (error) {
+      console.error('Error calculating presale progress:', error);
+      res.status(500).json({ message: 'Failed to calculate progress' });
+    }
+  });
+
+  app.put('/api/admin/presale/config', requireAdmin, async (req, res) => {
+    try {
+      const config = await storage.updatePresaleConfig(req.body);
+      res.json(config);
+    } catch (error) {
+      console.error('Error updating presale config:', error);
+      res.status(500).json({ message: 'Failed to update presale config' });
+    }
+  });
+
+  app.post('/api/admin/presale/liquidity', requireAdmin, async (req, res) => {
+    try {
+      const { currentAmount } = req.body;
+      const config = await storage.updatePresaleLiquidity(currentAmount);
+      res.json(config);
+    } catch (error) {
+      console.error('Error updating presale liquidity:', error);
+      res.status(500).json({ message: 'Failed to update liquidity' });
+    }
+  });
+
+  // Withdrawal restriction during presale
+  app.get('/api/withdraw/status', requireAuth, async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      if (!config) {
+        return res.json({ available: false, reason: 'Presale config not found' });
+      }
+
+      const now = new Date();
+      const endDate = new Date(config.endDate);
+      const presaleActive = now < endDate && config.isActive;
+
+      res.json({
+        available: !presaleActive,
+        reason: presaleActive ? 'Withdrawals are disabled during the presale period' : null,
+        presaleEndDate: config.endDate
+      });
+    } catch (error) {
+      res.json({ available: false, reason: 'Unable to check withdrawal status' });
+    }
+  });
+
+  app.post('/api/withdraw', requireAuth, async (req, res) => {
+    try {
+      const config = await storage.getPresaleConfig();
+      if (config) {
+        const now = new Date();
+        const endDate = new Date(config.endDate);
+        if (now < endDate && config.isActive) {
+          return res.status(403).json({ 
+            message: 'Withdrawals are disabled during the presale period' 
+          });
+        }
+      }
+      
+      // Normal withdrawal logic would go here
+      res.status(503).json({ message: 'Withdrawal functionality coming soon' });
+    } catch (error) {
+      res.status(500).json({ message: 'Withdrawal failed' });
+    }
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 

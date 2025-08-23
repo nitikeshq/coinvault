@@ -5,6 +5,7 @@ import DepositSection from "@/components/DepositSection";
 import SwapTrading from "@/components/SwapTrading";
 import NewsSection from "@/components/NewsSection";
 import AdminPanel from "@/components/AdminPanel";
+import { PresaleCountdown } from "@/components/PresaleCountdown";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
@@ -20,13 +21,18 @@ export default function Home() {
 
   // Update document title based on website settings
   useEffect(() => {
-    document.title = websiteSettings.siteName || "CryptoWallet Pro";
-  }, [websiteSettings.siteName]);
+    document.title = websiteSettings?.siteName || "CryptoWallet Pro";
+  }, [websiteSettings?.siteName]);
 
   const renderSection = () => {
     switch (activeSection) {
       case 'wallet':
-        return <WalletDashboard />;
+        return (
+          <div className="container mx-auto px-4 space-y-6">
+            <PresaleCountdown />
+            <WalletDashboard />
+          </div>
+        );
       case 'deposit':
         return <DepositSection />;
       case 'swap':
@@ -34,9 +40,19 @@ export default function Home() {
       case 'news':
         return <NewsSection />;
       case 'admin':
-        return isAdmin ? <AdminPanel /> : <WalletDashboard />;
+        return isAdmin ? <AdminPanel /> : (
+          <div className="container mx-auto px-4 space-y-6">
+            <PresaleCountdown />
+            <WalletDashboard />
+          </div>
+        );
       default:
-        return <WalletDashboard />;
+        return (
+          <div className="container mx-auto px-4 space-y-6">
+            <PresaleCountdown />
+            <WalletDashboard />
+          </div>
+        );
     }
   };
 

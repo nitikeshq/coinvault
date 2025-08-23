@@ -140,6 +140,19 @@ export const websiteSettings = pgTable("website_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Presale configuration table
+export const presaleConfig = pgTable("presale_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  targetAmount: decimal("target_amount", { precision: 20, scale: 8 }).default("1000000"),
+  currentAmount: decimal("current_amount", { precision: 20, scale: 8 }).default("0"),
+  initialLiquidity: decimal("initial_liquidity", { precision: 20, scale: 8 }).default("0"),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date").default(sql`now() + interval '30 days'`),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -196,6 +209,12 @@ export const insertWebsiteSettingsSchema = createInsertSchema(websiteSettings).o
   updatedAt: true,
 });
 
+export const insertPresaleConfigSchema = createInsertSchema(presaleConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
@@ -214,3 +233,5 @@ export type TokenPrice = typeof tokenPrices.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type WebsiteSettings = typeof websiteSettings.$inferSelect;
 export type InsertWebsiteSettings = z.infer<typeof insertWebsiteSettingsSchema>;
+export type PresaleConfig = typeof presaleConfig.$inferSelect;
+export type InsertPresaleConfig = z.infer<typeof insertPresaleConfigSchema>;

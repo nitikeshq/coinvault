@@ -8,6 +8,7 @@ import {
   tokenPrices,
   transactions,
   websiteSettings,
+  presaleConfig,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -24,6 +25,8 @@ import {
   type Transaction,
   type WebsiteSettings,
   type InsertWebsiteSettings,
+  type PresaleConfig,
+  type InsertPresaleConfig,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -363,6 +366,56 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newSettings;
     }
+  }
+
+  async getApprovedDeposits(): Promise<DepositRequest[]> {
+    return await db
+      .select()
+      .from(depositRequests)
+      .where(eq(depositRequests.status, 'approved'));
+  }
+
+  // Presale operations
+  async getPresaleConfig(): Promise<PresaleConfig | undefined> {
+    const [config] = await db.select().from(presaleConfig).limit(1);
+    return config;
+  }
+
+  async updatePresaleConfig(config: InsertPresaleConfig): Promise<PresaleConfig> {
+    // Check if config exists
+    const existing = await this.getPresaleConfig();
+    
+    if (existing) {
+      const [updated] = await db
+        .update(presaleConfig)
+        .set({ ...config, updatedAt: new Date() })
+        .where(eq(presaleConfig.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(presaleConfig)
+        .values(config)
+        .returning();
+      return created;
+    }
+  }
+
+  async updatePresaleLiquidity(amount: string): Promise<PresaleConfig> {
+    const config = await this.getPresaleConfig();
+    if (!config) {
+      throw new Error('Presale config not found');
+    }
+
+    const [updated] = await db
+      .update(presaleConfig)
+      .set({ 
+        currentAmount: amount,
+        updatedAt: new Date() 
+      })
+      .where(eq(presaleConfig.id, config.id))
+      .returning();
+    return updated;
   }
 }
 
