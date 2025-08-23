@@ -309,8 +309,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Token price routes
   app.get('/api/token/price', async (req, res) => {
+    let config;
     try {
-      const config = await storage.getActiveTokenConfig();
+      config = await storage.getActiveTokenConfig();
       if (!config) {
         return res.status(404).json({ message: "No active token configuration found" });
       }
@@ -332,30 +333,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(realTimePrice);
     } catch (error) {
       console.error("Error fetching token price:", error);
+      
+      // Ensure we have config for fallbacks
+      if (!config) {
+        try {
+          config = await storage.getActiveTokenConfig();
+        } catch (configError) {
+          console.error("Error fetching config for fallback:", configError);
+          return res.status(500).json({ message: "Failed to fetch token configuration" });
+        }
+      }
+      
       // Fallback to database price if blockchain call fails
       try {
-        const price = await storage.getLatestTokenPrice(config!.id);
+        const price = await storage.getLatestTokenPrice(config.id);
         if (price && price.priceUsd && parseFloat(price.priceUsd) > 0) {
           res.json(price);
         } else {
           // Use the admin-configured default price as final fallback
           const defaultPrice = {
-            priceUsd: config!.defaultPriceUsd || "0.001",
+            priceUsd: config.defaultPriceUsd || "0.001",
             priceChange24h: "0.00",
-            high24h: config!.defaultPriceUsd || "0.001",
-            low24h: config!.defaultPriceUsd || "0.001",
+            high24h: config.defaultPriceUsd || "0.001",
+            low24h: config.defaultPriceUsd || "0.001",
             volume24h: "0",
             marketCap: "0"
           };
           res.json(defaultPrice);
         }
-      } catch {
+      } catch (fallbackError) {
+        console.error("Error in fallback price fetch:", fallbackError);
         // Final fallback to admin-configured default price
         const defaultPrice = {
-          priceUsd: config!.defaultPriceUsd || "0.001",
+          priceUsd: config.defaultPriceUsd || "0.001",
           priceChange24h: "0.00",
-          high24h: config!.defaultPriceUsd || "0.001",
-          low24h: config!.defaultPriceUsd || "0.001",
+          high24h: config.defaultPriceUsd || "0.001",
+          low24h: config.defaultPriceUsd || "0.001",
           volume24h: "0",
           marketCap: "0"
         };
