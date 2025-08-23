@@ -225,14 +225,14 @@ export default function AdminPanel() {
             <Shield className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Admin Control Panel</h1>
-            <p className="text-gray-400">Manage your cryptocurrency wallet platform</p>
+            <h1 className="text-3xl font-bold text-gray-800">Admin Control Panel</h1>
+            <p className="text-gray-600">Manage your cryptocurrency wallet platform</p>
           </div>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border border-slate-700">
+        <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200">
           <TabsTrigger value="overview" className="flex items-center space-x-2">
             <TrendingUp className="h-4 w-4" />
             <span>Overview</span>
@@ -257,43 +257,43 @@ export default function AdminPanel() {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white">Total Deposits</CardTitle>
+                <CardTitle className="text-gray-800">Total Deposits</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-400">{deposits.length}</div>
-                <p className="text-gray-400">Pending and completed deposits</p>
+                <div className="text-3xl font-bold text-green-600">{deposits.length}</div>
+                <p className="text-gray-500">Pending and completed deposits</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white">Published Articles</CardTitle>
+                <CardTitle className="text-gray-800">Published Articles</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-blue-400">{allNews.filter((n: any) => n.isPublished).length}</div>
-                <p className="text-gray-400">Live news articles</p>
+                <div className="text-3xl font-bold text-blue-600">{allNews.filter((n: any) => n.isPublished).length}</div>
+                <p className="text-gray-500">Live news articles</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white">Active Social Links</CardTitle>
+                <CardTitle className="text-gray-800">Active Social Links</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-purple-400">{socialLinks.filter((s: any) => s.isActive).length}</div>
-                <p className="text-gray-400">Connected social platforms</p>
+                <div className="text-3xl font-bold text-purple-600">{socialLinks.filter((s: any) => s.isActive).length}</div>
+                <p className="text-gray-500">Connected social platforms</p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
         <TabsContent value="token" className="space-y-6">
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">Token Configuration</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle className="text-gray-800">Token Configuration</CardTitle>
+              <CardDescription className="text-gray-600">
                 Manage the BEP-20 token settings for your wallet
               </CardDescription>
             </CardHeader>
@@ -305,12 +305,12 @@ export default function AdminPanel() {
                     name="contractAddress"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Contract Address</FormLabel>
+                        <FormLabel className="text-gray-700">Contract Address</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="0x..."
-                            className="bg-slate-700 border-slate-600 text-white"
+                            className="bg-gray-50 border-gray-300 text-gray-900"
                             data-testid="input-contract-address"
                           />
                         </FormControl>
@@ -325,12 +325,12 @@ export default function AdminPanel() {
                       name="tokenName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Token Name</FormLabel>
+                          <FormLabel className="text-gray-700">Token Name</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="My Token"
-                              className="bg-slate-700 border-slate-600 text-white"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
                               data-testid="input-token-name"
                             />
                           </FormControl>
@@ -344,12 +344,12 @@ export default function AdminPanel() {
                       name="tokenSymbol"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Token Symbol</FormLabel>
+                          <FormLabel className="text-gray-700">Token Symbol</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="MTK"
-                              className="bg-slate-700 border-slate-600 text-white"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
                               data-testid="input-token-symbol"
                             />
                           </FormControl>
@@ -365,14 +365,14 @@ export default function AdminPanel() {
                       name="decimals"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Decimals</FormLabel>
+                          <FormLabel className="text-gray-700">Decimals</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="number"
                               min="0"
                               max="18"
-                              className="bg-slate-700 border-slate-600 text-white"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
                               data-testid="input-decimals"
                               onChange={(e) => field.onChange(parseInt(e.target.value))}
                             />
@@ -386,10 +386,10 @@ export default function AdminPanel() {
                       control={tokenForm.control}
                       name="isActive"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-slate-600 p-4 bg-slate-700">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4 bg-gray-50">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-gray-300">Active</FormLabel>
-                            <div className="text-sm text-gray-400">Enable this token configuration</div>
+                            <FormLabel className="text-gray-700">Active</FormLabel>
+                            <div className="text-sm text-gray-500">Enable this token configuration</div>
                           </div>
                           <FormControl>
                             <Switch
@@ -405,7 +405,7 @@ export default function AdminPanel() {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     disabled={updateTokenConfigMutation.isPending}
                     data-testid="button-save-token-config"
                   >
@@ -425,37 +425,37 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="deposits" className="space-y-6">
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">Deposit Requests</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle className="text-gray-800">Deposit Requests</CardTitle>
+              <CardDescription className="text-gray-600">
                 Review and manage user deposit requests
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow className="border-slate-700">
-                    <TableHead className="text-gray-300">User</TableHead>
-                    <TableHead className="text-gray-300">Amount</TableHead>
-                    <TableHead className="text-gray-300">Transaction Hash</TableHead>
-                    <TableHead className="text-gray-300">Status</TableHead>
-                    <TableHead className="text-gray-300">Actions</TableHead>
+                  <TableRow className="border-gray-200">
+                    <TableHead className="text-gray-700">User</TableHead>
+                    <TableHead className="text-gray-700">Amount</TableHead>
+                    <TableHead className="text-gray-700">Transaction Hash</TableHead>
+                    <TableHead className="text-gray-700">Status</TableHead>
+                    <TableHead className="text-gray-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {deposits.map((deposit: any) => (
-                    <TableRow key={deposit.id} className="border-slate-700">
-                      <TableCell className="text-white">{deposit.userId}</TableCell>
-                      <TableCell className="text-white">{deposit.amount} {deposit.currency}</TableCell>
-                      <TableCell className="text-white font-mono text-sm">{deposit.transactionHash}</TableCell>
+                    <TableRow key={deposit.id} className="border-gray-200">
+                      <TableCell className="text-gray-900">{deposit.userId}</TableCell>
+                      <TableCell className="text-gray-900">{deposit.amount} {deposit.currency}</TableCell>
+                      <TableCell className="text-gray-900 font-mono text-sm">{deposit.transactionHash}</TableCell>
                       <TableCell>
                         <Badge 
                           variant={deposit.status === 'confirmed' ? 'default' : deposit.status === 'pending' ? 'secondary' : 'destructive'}
                           className={
-                            deposit.status === 'confirmed' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                            deposit.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-                            'bg-red-500/20 text-red-400 border-red-500/30'
+                            deposit.status === 'confirmed' ? 'bg-green-100 text-green-700 border-green-200' :
+                            deposit.status === 'pending' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                            'bg-red-100 text-red-700 border-red-200'
                           }
                           data-testid={`badge-status-${deposit.id}`}
                         >
@@ -466,7 +466,7 @@ export default function AdminPanel() {
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600 hover:bg-green-700 text-white"
                             onClick={() => updateDepositMutation.mutate({ id: deposit.id, status: 'confirmed' })}
                             data-testid={`button-confirm-${deposit.id}`}
                           >
@@ -491,12 +491,12 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="news" className="space-y-6">
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">
+              <CardTitle className="text-gray-800">
                 {editingItem ? "Edit News Article" : "Create News Article"}
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-gray-600">
                 {editingItem ? "Update the selected news article" : "Add a new news article to your platform"}
               </CardDescription>
             </CardHeader>
@@ -508,12 +508,12 @@ export default function AdminPanel() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Title</FormLabel>
+                        <FormLabel className="text-gray-700">Title</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="Article title"
-                            className="bg-slate-700 border-slate-600 text-white"
+                            className="bg-gray-50 border-gray-300 text-gray-900"
                             data-testid="input-news-title"
                           />
                         </FormControl>
@@ -527,12 +527,12 @@ export default function AdminPanel() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Description</FormLabel>
+                        <FormLabel className="text-gray-700">Description</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             placeholder="Article description"
-                            className="bg-slate-700 border-slate-600 text-white"
+                            className="bg-gray-50 border-gray-300 text-gray-900"
                             data-testid="textarea-news-description"
                           />
                         </FormControl>
@@ -547,12 +547,12 @@ export default function AdminPanel() {
                       name="imageUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Image URL</FormLabel>
+                          <FormLabel className="text-gray-700">Image URL</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="https://example.com/image.jpg"
-                              className="bg-slate-700 border-slate-600 text-white"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
                               data-testid="input-news-image"
                             />
                           </FormControl>
@@ -566,12 +566,12 @@ export default function AdminPanel() {
                       name="externalUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">External URL</FormLabel>
+                          <FormLabel className="text-gray-700">External URL</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="https://example.com/article"
-                              className="bg-slate-700 border-slate-600 text-white"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
                               data-testid="input-news-external-url"
                             />
                           </FormControl>
@@ -587,14 +587,14 @@ export default function AdminPanel() {
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Category</FormLabel>
+                          <FormLabel className="text-gray-700">Category</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-news-category">
+                              <SelectTrigger className="bg-gray-50 border-gray-300 text-gray-900" data-testid="select-news-category">
                                 <SelectValue placeholder="Select category" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-slate-700 border-slate-600">
+                            <SelectContent className="bg-white border-gray-200">
                               <SelectItem value="platform">Platform</SelectItem>
                               <SelectItem value="technology">Technology</SelectItem>
                               <SelectItem value="market">Market</SelectItem>
@@ -610,10 +610,10 @@ export default function AdminPanel() {
                       control={newsForm.control}
                       name="isPublished"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-slate-600 p-4 bg-slate-700">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4 bg-gray-50">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-gray-300">Published</FormLabel>
-                            <div className="text-sm text-gray-400">Make article visible to users</div>
+                            <FormLabel className="text-gray-700">Published</FormLabel>
+                            <div className="text-sm text-gray-500">Make article visible to users</div>
                           </div>
                           <FormControl>
                             <Switch
@@ -630,7 +630,7 @@ export default function AdminPanel() {
                   <div className="flex space-x-4">
                     <Button 
                       type="submit" 
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
                       disabled={createNewsMutation.isPending || updateNewsMutation.isPending}
                       data-testid="button-save-news"
                     >
@@ -648,7 +648,7 @@ export default function AdminPanel() {
                       <Button 
                         type="button" 
                         variant="outline"
-                        className="border-slate-600 text-gray-300 hover:bg-slate-700"
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
                         onClick={handleCancelEdit}
                         data-testid="button-cancel-edit-news"
                       >
@@ -661,29 +661,29 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">Existing Articles</CardTitle>
+              <CardTitle className="text-gray-800">Existing Articles</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow className="border-slate-700">
-                    <TableHead className="text-gray-300">Title</TableHead>
-                    <TableHead className="text-gray-300">Category</TableHead>
-                    <TableHead className="text-gray-300">Status</TableHead>
-                    <TableHead className="text-gray-300">Actions</TableHead>
+                  <TableRow className="border-gray-200">
+                    <TableHead className="text-gray-700">Title</TableHead>
+                    <TableHead className="text-gray-700">Category</TableHead>
+                    <TableHead className="text-gray-700">Status</TableHead>
+                    <TableHead className="text-gray-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allNews.map((article: any) => (
-                    <TableRow key={article.id} className="border-slate-700">
-                      <TableCell className="text-white">{article.title}</TableCell>
-                      <TableCell className="text-white capitalize">{article.category}</TableCell>
+                    <TableRow key={article.id} className="border-gray-200">
+                      <TableCell className="text-gray-900">{article.title}</TableCell>
+                      <TableCell className="text-gray-900 capitalize">{article.category}</TableCell>
                       <TableCell>
                         <Badge 
                           variant={article.isPublished ? 'default' : 'secondary'}
-                          className={article.isPublished ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-gray-500/20 text-gray-400 border-gray-500/30'}
+                          className={article.isPublished ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}
                           data-testid={`badge-news-status-${article.id}`}
                         >
                           {article.isPublished ? 'Published' : 'Draft'}
@@ -694,7 +694,7 @@ export default function AdminPanel() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-slate-600 text-gray-300 hover:bg-slate-700"
+                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
                             onClick={() => handleEditNews(article)}
                             data-testid={`button-edit-news-${article.id}`}
                           >
@@ -719,10 +719,10 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="social" className="space-y-6">
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">Add Social Link</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle className="text-gray-800">Add Social Link</CardTitle>
+              <CardDescription className="text-gray-600">
                 Add social media links to your platform footer
               </CardDescription>
             </CardHeader>
@@ -735,14 +735,14 @@ export default function AdminPanel() {
                       name="platform"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Platform</FormLabel>
+                          <FormLabel className="text-gray-700">Platform</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-social-platform">
+                              <SelectTrigger className="bg-gray-50 border-gray-300 text-gray-900" data-testid="select-social-platform">
                                 <SelectValue placeholder="Select platform" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-slate-700 border-slate-600">
+                            <SelectContent className="bg-white border-gray-200">
                               <SelectItem value="telegram">Telegram</SelectItem>
                               <SelectItem value="twitter">Twitter</SelectItem>
                               <SelectItem value="discord">Discord</SelectItem>
@@ -763,12 +763,12 @@ export default function AdminPanel() {
                       name="url"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">URL</FormLabel>
+                          <FormLabel className="text-gray-700">URL</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="https://..."
-                              className="bg-slate-700 border-slate-600 text-white"
+                              className="bg-gray-50 border-gray-300 text-gray-900"
                               data-testid="input-social-url"
                             />
                           </FormControl>
@@ -782,10 +782,10 @@ export default function AdminPanel() {
                     control={socialForm.control}
                     name="isActive"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border border-slate-600 p-4 bg-slate-700">
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4 bg-gray-50">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-gray-300">Active</FormLabel>
-                          <div className="text-sm text-gray-400">Show this link in the footer</div>
+                          <FormLabel className="text-gray-700">Active</FormLabel>
+                          <div className="text-sm text-gray-500">Show this link in the footer</div>
                         </div>
                         <FormControl>
                           <Switch
@@ -800,7 +800,7 @@ export default function AdminPanel() {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     disabled={createSocialLinkMutation.isPending}
                     data-testid="button-save-social-link"
                   >
@@ -818,29 +818,29 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">Existing Social Links</CardTitle>
+              <CardTitle className="text-gray-800">Existing Social Links</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow className="border-slate-700">
-                    <TableHead className="text-gray-300">Platform</TableHead>
-                    <TableHead className="text-gray-300">URL</TableHead>
-                    <TableHead className="text-gray-300">Status</TableHead>
-                    <TableHead className="text-gray-300">Actions</TableHead>
+                  <TableRow className="border-gray-200">
+                    <TableHead className="text-gray-700">Platform</TableHead>
+                    <TableHead className="text-gray-700">URL</TableHead>
+                    <TableHead className="text-gray-700">Status</TableHead>
+                    <TableHead className="text-gray-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {socialLinks.map((link: any) => (
-                    <TableRow key={link.id} className="border-slate-700">
-                      <TableCell className="text-white capitalize">{link.platform}</TableCell>
-                      <TableCell className="text-white">{link.url}</TableCell>
+                    <TableRow key={link.id} className="border-gray-200">
+                      <TableCell className="text-gray-900 capitalize">{link.platform}</TableCell>
+                      <TableCell className="text-gray-900">{link.url}</TableCell>
                       <TableCell>
                         <Badge 
                           variant={link.isActive ? 'default' : 'secondary'}
-                          className={link.isActive ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-gray-500/20 text-gray-400 border-gray-500/30'}
+                          className={link.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}
                           data-testid={`badge-social-status-${link.id}`}
                         >
                           {link.isActive ? 'Active' : 'Inactive'}
