@@ -1,0 +1,78 @@
+{
+  "name": "CryptoWallet Pro",
+  "short_name": "CryptoWallet",
+  "description": "Secure BEP-20 token wallet for cryptocurrency trading and management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "business", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSI0OCIgZmlsbD0idXJsKCNncmFkaWVudCkiLz48cGF0aCBkPSJNNDggOTZjMC0yNi41MSAyMS40OS00OCA0OC00OGgyNGMxMy4yNSAwIDI0IDEwLjc1IDI0IDI0djBjMCAxMy4yNS0xMC43NSAyNC0yNCAyNEg5NmMtMTMuMjUgMC0yNCA2LjMtMjQgMjR2MjRjMCAxMy4yNSAxMC43NSAyNCAyNCAyNGgyNGMxMy4yNSAwIDI0IDEwLjc1IDI0IDI0djBjMCAxMy4yNS0xMC43NSAyNC0yNCAyNEg5NmMtMjYuNTEgMC00OC0yMS40OS00OC00OFY5NnoiIGZpbGw9IndoaXRlIi8+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudCIgeDE9IjAiIHkxPSIwIiB4Mj0iMTkyIiB5Mj0iMTkyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agc3RvcC1jb2xvcj0iIzA1OTY2OSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI0Y1OUUwQiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjwvc3ZnPg==",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMjgiIGZpbGw9InVybCgjZ3JhZGllbnQpIi8+PHBhdGggZD0iTTEyOCAyNTZjMC03MC42OSA1Ny4zMS0xMjggMTI4LTEyOGg2NGMzNS4zNSAwIDY0IDI4LjY1IDY0IDY0djBjMCAzNS4zNS0yOC42NSA2NC02NCA2NEgyNTZjLTM1LjM1IDAtNjQgMTYuOC02NCA2NHY2NGMwIDM1LjM1IDI4LjY1IDY0IDY0IDY0aDY0YzM1LjM1IDAgNjQgMjguNjUgNjQgNjR2MGMwIDM1LjM1LTI4LjY1IDY0LTY0IDY0SDI1NmMtNzAuNjkgMC0xMjgtNTcuMzEtMTI4LTEyOFYyNTZ6IiBmaWxsPSJ3aGl0ZSIvPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwIiB5MT0iMCIgeDI9IjUxMiIgeTI9IjUxMiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIHN0b3AtY29sb3I9IiMwNTk2NjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNGNTlFMEIiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Wallet",
+      "short_name": "Wallet",
+      "description": "View wallet balance and transactions",
+      "url": "/?section=wallet",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNCIgZmlsbD0iIzA1OTY2OSIvPjxwYXRoIGQ9Ik0yNCA0OGMwLTEzLjI1IDEwLjc1LTI0IDI0LTI0aDEyYzYuNjMgMCAxMiA1LjM3IDEyIDEydjBjMCA2LjYzLTUuMzcgMTItMTIgMTJINDhjLTYuNjMgMC0xMiAzLjE1LTEyIDEydjEyYzAgNi42MyA1LjM3IDEyIDEyIDEyaDEyYzYuNjMgMCAxMiA1LjM3IDEyIDEydjBjMCA2LjYzLTUuMzcgMTItMTIgMTJINDhjLTEzLjI1IDAtMjQtMTAuNzUtMjQtMjRWNDh6IiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Swap",
+      "short_name": "Swap",
+      "description": "Trade tokens on PancakeSwap",
+      "url": "/?section=swap",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNCIgZmlsbD0iIzFFNDBBRiIvPjxwYXRoIGQ9Ik0zNiAzNmwxMi0xMiAxMiAxMk00OCAyNHYyNE0zNiA2MGwxMiAxMiAxMi0xMk00OCA3MlY0OCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Deposit",
+      "short_name": "Deposit",
+      "description": "Add funds to your wallet",
+      "url": "/?section=deposit",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNCIgZmlsbD0iI0Y1OUUwQiIvPjxwYXRoIGQ9Ik00OCAyNHYyNE0zNiAzNmwxMiAxMiAxMi0xMk00OCA3MmMxMy4yNSAwIDI0LTEwLjc1IDI0LTI0UzYxLjI1IDI0IDQ4IDI0IDI0IDM0Ljc1IDI0IDQ4czEwLjc1IDI0IDI0IDI0eiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjU2OCIgdmlld0JveD0iMCAwIDMyMCA1NjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSI1NjgiIGZpbGw9IiMwRjE3MkEiLz48dGV4dCB4PSIxNjAiIHk9IjI4NCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCI+Q3J5cHRvV2FsbGV0IFBybzwvdGV4dD48L3N2Zz4=",
+      "sizes": "320x568",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 320
+  }
+}

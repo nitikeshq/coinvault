@@ -1,0 +1,191 @@
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Copy, ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+export default function WalletDashboard() {
+  const { toast } = useToast();
+
+  const { data: tokenConfig } = useQuery<any>({
+    queryKey: ['/api/token/config'],
+  });
+
+  const { data: balance } = useQuery<any>({
+    queryKey: ['/api/user/balance'],
+  });
+
+  const { data: tokenPrice } = useQuery<any>({
+    queryKey: ['/api/token/price'],
+  });
+
+  const { data: transactions = [] } = useQuery<any[]>({
+    queryKey: ['/api/transactions'],
+  });
+
+  const { data: user } = useQuery<any>({
+    queryKey: ['/api/auth/user'],
+  });
+
+  const copyAddress = () => {
+    if (user?.walletAddress) {
+      navigator.clipboard.writeText(user.walletAddress);
+      toast({
+        title: "Copied!",
+        description: "Wallet address copied to clipboard",
+      });
+    }
+  };
+
+  const formatBalance = (balance: string) => {
+    return parseFloat(balance || "0").toFixed(2);
+  };
+
+  const formatPrice = (price: string) => {
+    return parseFloat(price || "0").toFixed(2);
+  };
+
+  return (
+    <section className="container mx-auto px-4 py-8">
+      {/* Token Balance Card */}
+      <div className="bg-gradient-to-br from-crypto-blue to-crypto-navy rounded-2xl p-6 mb-6 border border-white/10">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <p className="text-gray-300 text-sm">Total Balance</p>
+            <h2 className="text-3xl font-bold" data-testid="text-balance">
+              {formatBalance(balance?.balance || "0")}
+            </h2>
+            <p className="text-sm text-gray-300" data-testid="text-token-symbol">
+              {tokenConfig?.tokenSymbol || "TOKEN"}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-gray-300 text-sm">USD Value</p>
+            <p className="text-xl font-semibold text-crypto-gold" data-testid="text-usd-value">
+              ${formatBalance(balance?.usdValue || "0")}
+            </p>
+            <p className="text-xs text-crypto-green flex items-center justify-end">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              +{formatPrice(tokenPrice?.priceChange24h || "0")}%
+            </p>
+          </div>
+        </div>
+        
+        {/* Wallet Address */}
+        {user?.walletAddress && (
+          <div className="bg-black/20 rounded-lg p-3 mb-4">
+            <p className="text-xs text-gray-400 mb-1">Wallet Address</p>
+            <div className="flex items-center justify-between">
+              <code className="text-sm font-mono text-gray-200 break-all" data-testid="text-wallet-address">
+                {user.walletAddress}
+              </code>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={copyAddress}
+                className="ml-2 p-1 hover:bg-white/10 text-crypto-gold"
+                data-testid="button-copy-address"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <Button className="bg-crypto-green hover:bg-green-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors" data-testid="button-deposit">
+            <ArrowDown className="h-4 w-4" />
+            <span>Deposit</span>
+          </Button>
+          <Button className="bg-crypto-gold hover:bg-yellow-500 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-black" data-testid="button-send">
+            <ArrowUp className="h-4 w-4" />
+            <span>Send</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Token Info Card */}
+      <div className="bg-crypto-dark rounded-2xl p-6 mb-6 border border-white/10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Token Information</h3>
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <span>Live Price</span>
+            <div className="w-2 h-2 bg-crypto-green rounded-full animate-pulse"></div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Token Name</p>
+            <p className="font-semibold" data-testid="text-token-name">
+              {tokenConfig?.tokenName || "Loading..."}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Symbol</p>
+            <p className="font-semibold" data-testid="text-symbol">
+              {tokenConfig?.tokenSymbol || "TOKEN"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Decimals</p>
+            <p className="font-semibold" data-testid="text-decimals">
+              {tokenConfig?.decimals || 18}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Price</p>
+            <p className="font-semibold text-crypto-gold" data-testid="text-price">
+              ${formatPrice(tokenPrice?.priceUsd || "0")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Transactions */}
+      <div className="bg-crypto-dark rounded-2xl p-6 border border-white/10">
+        <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
+        
+        <div className="space-y-3">
+          {transactions.length > 0 ? (
+            transactions.map((tx: any) => (
+              <div key={tx.id} className="flex items-center justify-between p-3 bg-crypto-gray/30 rounded-lg" data-testid={`transaction-${tx.id}`}>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    tx.type === 'deposit' ? 'bg-crypto-green' : 'bg-crypto-gold'
+                  }`}>
+                    {tx.type === 'deposit' ? (
+                      <ArrowDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUp className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium capitalize">{tx.type}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(tx.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`font-semibold ${
+                    tx.type === 'deposit' ? 'text-crypto-green' : 'text-red-400'
+                  }`}>
+                    {tx.type === 'deposit' ? '+' : '-'}{formatBalance(tx.amount)} {tokenConfig?.tokenSymbol || 'TOKEN'}
+                  </p>
+                  <p className="text-xs text-gray-400 capitalize">{tx.status}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-400">No transactions found</p>
+              <p className="text-sm text-gray-500 mt-2">Your transaction history will appear here</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
