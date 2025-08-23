@@ -565,16 +565,16 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getNftById(id: string): Promise<any> {
+    const [nft] = await db.select().from(nftCollection)
+      .where(eq(nftCollection.id, id));
+    return nft;
+  }
+
   async getUserMemes(userId: string): Promise<any[]> {
-    try {
-      return await db.select().from(memeGenerations)
-        .where(eq(memeGenerations.userId, userId))
-        .orderBy(memeGenerations.generatedAt);
-    } catch (error) {
-      // Handle case where new columns don't exist yet
-      console.log('Meme table columns not found, returning empty array:', error);
-      return [];
-    }
+    return await db.select().from(memeGenerations)
+      .where(eq(memeGenerations.userId, userId))
+      .orderBy(memeGenerations.createdAt);
   }
 
   async getNftCollectionStats(): Promise<any> {
