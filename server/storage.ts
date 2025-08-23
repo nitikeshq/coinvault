@@ -138,6 +138,9 @@ export interface IStorage {
   
   // Public URLs for sharing
   generateMemePublicUrl(memeId: string): Promise<string>;
+  
+  // Admin operations
+  getAllUsersForAdmin(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {

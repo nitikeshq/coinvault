@@ -146,6 +146,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin users endpoint
+  app.get('/api/admin/users', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsersForAdmin();
+      res.json(users);
+    } catch (error) {
+      console.error('Failed to get users:', error);
+      res.status(500).json({ message: 'Failed to get users' });
+    }
+  });
+
   // Admin presale endpoints
   app.put('/api/admin/presale/config', requireAdmin, async (req: any, res) => {
     try {
