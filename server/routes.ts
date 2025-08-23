@@ -79,27 +79,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get token balance for user
+  // Get token balance for user (during presale, read from database; post-presale, read from blockchain)
   app.get('/api/user/token/balance', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const wallet = await storage.getUserWallet(userId);
-      const tokenConfig = await storage.getActiveTokenConfig();
       
-      if (!wallet?.address || !tokenConfig) {
-        return res.json({ balance: '0', usdValue: '0' });
-      }
+      // Check if presale is active
+      const presaleConfig = await storage.getPresaleConfig();
+      const isPresaleActive = presaleConfig?.isActive && new Date() < new Date(presaleConfig.endDate);
+      
+      if (isPresaleActive) {
+        // During presale: Read from database
+        const balance = await storage.getUserBalance(userId);
+        const tokenPrice = await storage.getTokenPrice();
+        
+        if (balance && tokenPrice) {
+          const usdValue = (parseFloat(balance.balance) * parseFloat(tokenPrice.priceUsd)).toString();
+          res.json({ 
+            balance: balance.balance || '0', 
+            usdValue: usdValue || '0' 
+          });
+        } else {
+          res.json({ balance: '0', usdValue: '0' });
+        }
+      } else {
+        // Post-presale: Read from blockchain
+        const wallet = await storage.getUserWallet(userId);
+        const tokenConfig = await storage.getActiveTokenConfig();
+        
+        if (!wallet?.address || !tokenConfig) {
+          return res.json({ balance: '0', usdValue: '0' });
+        }
 
-      const tokenBalance = await blockchainService.getTokenBalance(tokenConfig.contractAddress, wallet.address);
-      
-      // Get current price to calculate USD value
-      const priceData = await blockchainService.getTokenPrice(tokenConfig.contractAddress);
-      const usdValue = (parseFloat(tokenBalance) * parseFloat(priceData.priceUsd)).toString();
-      
-      // Update user balance in database
-      await storage.updateUserBalance(userId, tokenBalance, usdValue);
-      
-      res.json({ balance: tokenBalance, usdValue });
+        const tokenBalance = await blockchainService.getTokenBalance(tokenConfig.contractAddress, wallet.address);
+        
+        // Get current price to calculate USD value
+        const priceData = await blockchainService.getTokenPrice(tokenConfig.contractAddress);
+        const usdValue = (parseFloat(tokenBalance) * parseFloat(priceData.priceUsd)).toString();
+        
+        // Update user balance in database
+        await storage.updateUserBalance(userId, tokenBalance, usdValue);
+        
+        res.json({ balance: tokenBalance, usdValue });
+      }
     } catch (error) {
       console.error("Error fetching user token balance:", error);
       res.status(500).json({ message: "Failed to fetch token balance" });
