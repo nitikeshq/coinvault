@@ -1,204 +1,58 @@
-import { useState } from "react";
+import { Switch, Route } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import Home from "@/pages/Home";
+import AuthPage from "@/pages/AuthPage";
+import NftMarketplace from "@/pages/NftMarketplace";
+import MemeMarketplace from "@/pages/MemeMarketplace";
 
-export default function App() {
-  const [showMarketDropdown, setShowMarketDropdown] = useState(false);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function AppContent() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Navigation Menu */}
-      <nav className="bg-black/20 backdrop-blur-lg p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">CryptoWallet Pro</h1>
-          <div className="flex items-center space-x-6">
-            <a href="/" className="text-white hover:text-purple-300 transition-colors">Home</a>
-            
-            {/* Market Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowMarketDropdown(!showMarketDropdown)}
-                className="text-white hover:text-purple-300 transition-colors flex items-center space-x-1"
-              >
-                <span>Market</span>
-                <svg className={`w-4 h-4 transition-transform ${showMarketDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showMarketDropdown && (
-                <div className="absolute top-full mt-2 w-48 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
-                  <button 
-                    onClick={() => {
-                      setShowMarketDropdown(false);
-                      document.body.innerHTML = `
-                        <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-                          <nav class="bg-black/20 backdrop-blur-lg rounded-lg p-4 mb-8">
-                            <div class="flex items-center justify-between">
-                              <h1 class="text-2xl font-bold text-white">CryptoWallet Pro</h1>
-                              <div class="flex items-center space-x-4">
-                                <a href="/" class="text-gray-300 hover:text-white cursor-pointer" onclick="location.reload()">Home</a>
-                                <span class="text-purple-400 font-semibold">Market → NFTs</span>
-                                <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                  <span class="mr-1">⭐</span>
-                                  <span>Premium</span>
-                                  <span class="ml-2 text-xs opacity-90">(₹5.2K)</span>
-                                </div>
-                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
-                              </div>
-                            </div>
-                          </nav>
-                          <div class="max-w-4xl mx-auto">
-                            <h1 class="text-4xl font-bold text-white mb-4">NFT Marketplace</h1>
-                            <p class="text-gray-300 mb-8">Browse and trade unique digital collectibles</p>
-                            <div class="bg-slate-800 p-6 rounded-lg">
-                              <p class="text-white">Welcome to the NFT Marketplace! Your Premium investment tag (⭐ Premium ₹5.2K) shows in the navigation above!</p>
-                              <button onclick="location.reload()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">← Back Home</button>
-                            </div>
-                          </div>
-                        </div>
-                      `;
-                    }}
-                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors rounded-t-lg"
-                  >
-                    🖼️ NFTs
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setShowMarketDropdown(false);
-                      document.body.innerHTML = `
-                        <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-                          <nav class="bg-black/20 backdrop-blur-lg rounded-lg p-4 mb-8">
-                            <div class="flex items-center justify-between">
-                              <h1 class="text-2xl font-bold text-white">CryptoWallet Pro</h1>
-                              <div class="flex items-center space-x-4">
-                                <a href="/" class="text-gray-300 hover:text-white cursor-pointer" onclick="location.reload()">Home</a>
-                                <span class="text-blue-400 font-semibold">Market → Memes</span>
-                                <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                  <span class="mr-1">⭐</span>
-                                  <span>Premium</span>
-                                  <span class="ml-2 text-xs opacity-90">(₹5.2K)</span>
-                                </div>
-                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
-                              </div>
-                            </div>
-                          </nav>
-                          <div class="max-w-4xl mx-auto">
-                            <h1 class="text-4xl font-bold text-white mb-4">Meme Marketplace</h1>
-                            <p class="text-gray-300 mb-8">Share laughs, trade memes, and spread joy</p>
-                            <div class="bg-slate-800 p-6 rounded-lg">
-                              <p class="text-white">Welcome to the Meme Marketplace! Your Premium investor tag (⭐ Premium ₹5.2K) appears in the navigation!</p>
-                              <button onclick="location.reload()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">← Back Home</button>
-                            </div>
-                          </div>
-                        </div>
-                      `;
-                    }}
-                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors rounded-b-lg border-t border-slate-600"
-                  >
-                    😂 Memes
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-              <span className="mr-1">⭐</span>
-              <span>Premium</span>
-              <span className="ml-2 text-xs opacity-90">(₹5.2K)</span>
-            </div>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
-          </div>
-        </div>
-      </nav>
+    <Switch>
+      {!user ? (
+        <>
+          <Route path="/auth" component={AuthPage} />
+          <Route component={AuthPage} />
+        </>
+      ) : (
+        <>
+          <Route path="/" component={Home} />
+          <Route path="/nft-marketplace" component={NftMarketplace} />
+          <Route path="/meme-marketplace" component={MemeMarketplace} />
+          <Route component={Home} />
+        </>
+      )}
+    </Switch>
+  );
+}
 
-      {/* Main Content */}
-      <div className="flex items-center justify-center py-16">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-4">CryptoWallet Pro</h1>
-        <p className="text-gray-300 mb-8">Investment Tagging System Complete!</p>
-        
-        <div className="mb-8">
-          <h3 className="text-xl text-white mb-4">Investment Tiers</h3>
-          <div className="flex flex-wrap justify-center gap-3">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1 rounded-full text-sm font-medium border border-blue-500">
-              <span className="mr-1">👤</span>
-              <span>Members</span>
-              <span className="ml-2 text-xs opacity-90">(₹100-1K)</span>
-            </div>
-            <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-              <span className="mr-1">⭐</span>
-              <span>Premium</span>
-              <span className="ml-2 text-xs opacity-90">(₹1K-10K)</span>
-            </div>
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-              <span className="mr-1">👑</span>
-              <span>VIP</span>
-              <span className="ml-2 text-xs opacity-90">(₹10K-1L)</span>
-            </div>
-            <div className="bg-gradient-to-r from-yellow-600 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-              <span className="mr-1">💎</span>
-              <span>VVIP</span>
-              <span className="ml-2 text-xs opacity-90">(₹1L-10L)</span>
-            </div>
-            <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-              <span className="mr-1">🦈</span>
-              <span>Sharks</span>
-              <span className="ml-2 text-xs opacity-90">(₹10L-1Cr)</span>
-            </div>
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-              <span className="mr-1">🐋</span>
-              <span>Whales</span>
-              <span className="ml-2 text-xs opacity-90">(₹1Cr-10Cr)</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <p className="text-green-400 text-lg">✅ Market menu created with NFTs and Memes dropdown!</p>
-          <p className="text-gray-300">Click the "Market" menu in the navigation above to access NFTs and Memes marketplaces.</p>
-        </div>
-        
-        <div className="mt-8 space-y-6">
-          <div className="bg-slate-800 p-6 rounded-lg">
-            <h4 className="text-lg font-semibold text-white mb-4">✅ Investment Tagging System Features</h4>
-            <div className="text-left text-gray-300 space-y-2">
-              <p>• Database schema updated with investment tag fields</p>
-              <p>• Automatic tag calculation based on approved deposit amounts</p>
-              <p>• Six tier system: Members → Premium → VIP → VVIP → Sharks → Whales</p>
-              <p>• Tags display in navigation with icons and investment amounts</p>
-              <p>• System integrates with deposit approval workflow</p>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-green-900 to-blue-900 p-6 rounded-lg">
-            <h4 className="text-lg font-semibold text-white mb-4">🎁 Weekly Rewards Pool</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="bg-black/20 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-green-400">₹45</div>
-                <div className="text-sm text-gray-300">Current Pool</div>
-              </div>
-              <div className="bg-black/20 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-blue-400">5</div>
-                <div className="text-sm text-gray-300">New Contributors</div>
-              </div>
-              <div className="bg-black/20 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-purple-400">100</div>
-                <div className="text-sm text-gray-300">Eligible Members</div>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-gray-300 mb-2">Estimated reward per member this week:</div>
-              <div className="text-xl font-bold text-yellow-400">₹0.45 each</div>
-            </div>
-            <div className="mt-4 text-xs text-gray-400 text-center">
-              <p>10% of deposits from new members goes to existing members weekly</p>
-              <p>Example: 5 people deposit ₹100 each → ₹50 goes to pool → ₹0.50 per existing member</p>
-            </div>
-          </div>
-        </div>
-        
-        <p className="text-gray-400 mt-6">Use the Market dropdown menu to navigate to NFTs and Memes!</p>
-      </div>
-      </div>
-    </div>
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppContent />
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

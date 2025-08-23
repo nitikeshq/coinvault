@@ -1,9 +1,34 @@
+import { createContext, useContext, ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { User, LoginUser, RegisterUser } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-export function useAuth() {
+// Create Auth Context
+const AuthContext = createContext<{
+  user: User | null;
+  isLoading: boolean;
+  error: Error | null;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  login: (credentials: LoginUser) => void;
+  register: (userData: RegisterUser) => void;
+  logout: () => void;
+  isLoginLoading: boolean;
+  isRegisterLoading: boolean;
+  isLogoutLoading: boolean;
+} | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const authData = useAuthLogic();
+  return (
+    <AuthContext.Provider value={authData}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+function useAuthLogic() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -15,7 +40,6 @@ export function useAuth() {
           credentials: "include",
         });
         if (response.status === 401) {
-          // Return null for unauthenticated users instead of throwing
           return null;
         }
         if (!response.ok) {
@@ -23,14 +47,13 @@ export function useAuth() {
         }
         return response.json();
       } catch (error) {
-        // For network errors or other issues, return null
         console.log("Auth check failed:", error);
         return null;
       }
     },
     retry: false,
     refetchOnWindowFocus: false,
-    staleTime: 1 * 60 * 1000, // Reduce to 1 minute for better session detection
+    staleTime: 1 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 
@@ -110,4 +133,12 @@ export function useAuth() {
     isRegisterLoading: registerMutation.isPending,
     isLogoutLoading: logoutMutation.isPending,
   };
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }
