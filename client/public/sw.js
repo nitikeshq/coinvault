@@ -1,12 +1,21 @@
-const CACHE_NAME = 'cryptowallet-pro-v1';
+const CACHE_NAME = 'cryptowallet-pro-v2';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
+
+// API endpoints that should be cached for offline access
+const API_CACHE_URLS = [
+  '/api/me',
+  '/api/user/token/balance',
+  '/api/user/nfts',
+  '/api/user/memes'
+];
+
+// Crypto-specific cache for price data
+const CRYPTO_CACHE = 'crypto-data-v1';
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
@@ -22,8 +31,17 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Enhanced fetch event with crypto-specific caching
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Handle API requests with specific caching strategies
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(handleApiRequest(event.request));
+    return;
+  }
+  
+  // Handle static assets
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -57,6 +75,43 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Handle API requests with smart caching
+async function handleApiRequest(request) {
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  
+  try {
+    // For user data, try cache first, then network
+    if (API_CACHE_URLS.some(endpoint => pathname.includes(endpoint))) {
+      const cache = await caches.open(CRYPTO_CACHE);
+      const cached = await cache.match(request);
+      
+      try {
+        const networkResponse = await fetch(request);
+        if (networkResponse.ok) {
+          cache.put(request, networkResponse.clone());
+          return networkResponse;
+        }
+        return cached || networkResponse;
+      } catch {
+        return cached || new Response(JSON.stringify({ error: 'Offline' }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    }
+    
+    // For other API requests, network first
+    return await fetch(request);
+  } catch (error) {
+    // Return error response for failed requests
+    return new Response(JSON.stringify({ error: 'Network error' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
