@@ -3,13 +3,15 @@ import { Wallet, User, LogOut, Settings } from "lucide-react";
 import { Link } from "wouter";
 
 interface NavigationProps {
-  activeSection: 'wallet' | 'deposit' | 'swap' | 'news';
-  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news') => void;
+  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin';
+  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin') => void;
   user?: any;
+  isAdmin?: boolean;
 }
 
-export default function Navigation({ activeSection, onSectionChange, user }: NavigationProps) {
+export default function Navigation({ activeSection, onSectionChange, user, isAdmin }: NavigationProps) {
   const handleLogout = () => {
+    // Use auth hook logout function instead
     window.location.href = "/api/logout";
   };
 
@@ -63,11 +65,17 @@ export default function Navigation({ activeSection, onSectionChange, user }: Nav
                   {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
                 </div>
               )}
-              <Link href="/admin">
-                <Button variant="ghost" size="sm" data-testid="button-admin">
+              {isAdmin && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onSectionChange('admin')}
+                  className={activeSection === 'admin' ? 'text-purple-400' : ''}
+                  data-testid="button-admin"
+                >
                   <Settings className="h-4 w-4" />
                 </Button>
-              </Link>
+              )}
               <Button variant="ghost" size="sm" onClick={handleLogout} data-testid="button-logout">
                 <LogOut className="h-4 w-4" />
               </Button>

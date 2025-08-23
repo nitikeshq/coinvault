@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, requireAuth, requireAdmin } from "./auth";
 import { insertDepositRequestSchema, insertNewsArticleSchema, insertSocialLinkSchema, insertTokenConfigSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -22,22 +22,22 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  await setupAuth(app);
+  setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // User routes
+  app.get('/api/user', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user?.walletAddress) {
         // Generate wallet address if not exists
-        const walletAddress = await storage.generateWalletAddress(userId);
+        await storage.generateWalletAddress(userId);
         const updatedUser = await storage.getUser(userId);
-        return res.json(updatedUser);
+        return res.json({ ...updatedUser, password: undefined });
       }
       
-      res.json(user);
+      res.json({ ...user, password: undefined });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/token/config', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/token/config', requireAdmin, async (req, res) => {
     try {
       const validatedData = insertTokenConfigSchema.parse(req.body);
       const config = await storage.updateTokenConfig(validatedData);
@@ -70,9 +70,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User balance routes
-  app.get('/api/user/balance', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user/balance', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const balance = await storage.getUserBalance(userId);
       res.json(balance || { balance: "0", usdValue: "0" });
     } catch (error) {
@@ -82,9 +82,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Deposit routes
-  app.post('/api/deposits', isAuthenticated, upload.single('screenshot'), async (req: any, res) => {
+  app.post('/api/deposits', requireAuth, upload.single('screenshot'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const data = { ...req.body };
       
       if (req.file) {
@@ -100,9 +100,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/deposits', isAuthenticated, async (req: any, res) => {
+  app.get('/api/deposits', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const deposits = await storage.getDepositRequests(userId);
       res.json(deposits);
     } catch (error) {
@@ -111,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/deposits', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/deposits', requireAdmin, async (req, res) => {
     try {
       const deposits = await storage.getDepositRequests();
       res.json(deposits);
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/deposits/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/deposits/:id', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const { status, adminNotes } = req.body;
@@ -144,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/news', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/news', requireAdmin, async (req, res) => {
     try {
       const news = await storage.getAllNews();
       res.json(news);
@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/news', isAuthenticated, upload.single('image'), async (req, res) => {
+  app.post('/api/admin/news', requireAdmin, upload.single('image'), async (req, res) => {
     try {
       const data = { ...req.body };
       
@@ -171,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/news/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/news/:id', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const validatedData = insertNewsArticleSchema.partial().parse(req.body);
@@ -183,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/news/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/admin/news/:id', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteNewsArticle(id);
@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/social-links', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/social-links', requireAdmin, async (req, res) => {
     try {
       const links = await storage.getAllSocialLinks();
       res.json(links);
@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/social-links', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/social-links', requireAdmin, async (req, res) => {
     try {
       const validatedData = insertSocialLinkSchema.parse(req.body);
       const link = await storage.upsertSocialLink(validatedData);
@@ -226,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/social-links/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/admin/social-links/:id', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteSocialLink(id);
@@ -254,9 +254,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Transaction routes
-  app.get('/api/transactions', isAuthenticated, async (req: any, res) => {
+  app.get('/api/transactions', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const transactions = await storage.getUserTransactions(userId);
       res.json(transactions);
     } catch (error) {

@@ -24,14 +24,20 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
+  name: varchar("name").notNull(),
+  username: varchar("username").unique().notNull(),
+  email: varchar("email").unique().notNull(),
+  password: varchar("password"), // null for Google OAuth users
+  phone: varchar("phone"),
+  isAdmin: boolean("is_admin").default(false),
+  authProvider: varchar("auth_provider").default("email"), // email, google
+  googleId: varchar("google_id"),
   profileImageUrl: varchar("profile_image_url"),
   walletAddress: varchar("wallet_address").unique(),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -121,11 +127,26 @@ export const transactions = pgTable("transactions", {
 });
 
 // Schemas for validation
-export const insertUserSchema = createInsertSchema(users).pick({
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  walletAddress: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const loginUserSchema = createInsertSchema(users).pick({
   email: true,
-  firstName: true,
-  lastName: true,
-  profileImageUrl: true,
+  password: true,
+}).extend({
+  username: z.string().optional(),
+});
+
+export const registerUserSchema = createInsertSchema(users).pick({
+  name: true,
+  username: true,
+  email: true,
+  password: true,
+  phone: true,
 });
 
 export const insertTokenConfigSchema = createInsertSchema(tokenConfig).omit({
@@ -156,7 +177,9 @@ export const insertSocialLinkSchema = createInsertSchema(socialLinks).omit({
 });
 
 // Types
-export type UpsertUser = typeof users.$inferInsert;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type LoginUser = z.infer<typeof loginUserSchema>;
+export type RegisterUser = z.infer<typeof registerUserSchema>;
 export type User = typeof users.$inferSelect;
 export type TokenConfig = typeof tokenConfig.$inferSelect;
 export type InsertTokenConfig = z.infer<typeof insertTokenConfigSchema>;
