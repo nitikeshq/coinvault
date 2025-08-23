@@ -16,7 +16,7 @@ import bscQrImage from "../assets/bsc_qr.png";
 
 export default function DepositSection() {
   const { toast } = useToast();
-  const { tokenConfig } = useTokenInfo();
+  const { tokenSymbol, tokenConfig } = useTokenInfo();
   
   const [upiForm, setUpiForm] = useState({
     amount: "",
@@ -310,10 +310,10 @@ export default function DepositSection() {
                             <span className="text-sm font-medium text-purple-800">Token Calculation</span>
                           </div>
                           <div className="mt-1 text-lg font-bold text-purple-900" data-testid="text-token-calculation">
-                            ≈ {calculateTokensFromINR(upiForm.amount)} {tokenConfig?.tokenSymbol || "TOKEN"}
+                            ≈ {calculateTokensFromINR(upiForm.amount)} {tokenSymbol}
                           </div>
                           <div className="text-xs text-purple-600 mt-1">
-                            At current rate: ₹{getTokenPriceInINR()} per {tokenConfig?.tokenSymbol || "TOKEN"}
+                            At current rate: ₹{getTokenPriceInINR()} per {tokenSymbol}
                           </div>
                         </div>
                       )}
@@ -492,10 +492,10 @@ export default function DepositSection() {
                             <span className="text-sm font-medium text-blue-800">Token Calculation</span>
                           </div>
                           <div className="mt-1 text-lg font-bold text-blue-900" data-testid="text-bsc-token-calculation">
-                            ≈ {calculateTokens(bscForm.amount)} {tokenConfig?.tokenSymbol || "TOKEN"}
+                            ≈ {calculateTokens(bscForm.amount)} {tokenSymbol}
                           </div>
                           <div className="text-xs text-blue-600 mt-1">
-                            At current rate: ${parseFloat(tokenPrice.priceUsd || "0").toFixed(4)} per {tokenConfig?.tokenSymbol || "TOKEN"}
+                            At current rate: ${parseFloat(tokenPrice.priceUsd || "0").toFixed(4)} per {tokenSymbol}
                           </div>
                         </div>
                       )}
