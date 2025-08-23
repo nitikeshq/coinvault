@@ -71,7 +71,10 @@ export const userBalances = pgTable("user_balances", {
 export const depositRequests = pgTable("deposit_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
+  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(), // Amount in USD after conversion
+  originalAmount: decimal("original_amount", { precision: 18, scale: 8 }), // Original amount in submitted currency
+  currency: varchar("currency").notNull().default("USD"), // Currency: INR, USD
+  paymentMethod: varchar("payment_method").notNull().default("bsc"), // Payment method: upi, bsc
   transactionHash: varchar("transaction_hash"),
   screenshot: varchar("screenshot"),
   status: varchar("status").notNull().default("pending"), // pending, approved, rejected

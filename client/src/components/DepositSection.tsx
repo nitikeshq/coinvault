@@ -43,13 +43,34 @@ export default function DepositSection() {
     queryKey: ['/api/token/price'],
   });
 
-  // Calculate token amounts
+  // INR to USD conversion rate (approximately 83 INR = 1 USD)
+  const INR_TO_USD_RATE = 83;
+
+  // Calculate token amounts for USD (used for BSC deposits)
   const calculateTokens = (usdAmount: string) => {
     if (!usdAmount || !tokenPrice?.priceUsd) return "0";
     const amount = parseFloat(usdAmount);
     const price = parseFloat(tokenPrice.priceUsd);
     if (isNaN(amount) || isNaN(price) || price === 0) return "0";
     return (amount / price).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
+
+  // Calculate token amounts for INR (used for UPI deposits)
+  const calculateTokensFromINR = (inrAmount: string) => {
+    if (!inrAmount || !tokenPrice?.priceUsd) return "0";
+    const amount = parseFloat(inrAmount);
+    const price = parseFloat(tokenPrice.priceUsd);
+    if (isNaN(amount) || isNaN(price) || price === 0) return "0";
+    // Convert INR to USD first, then calculate tokens
+    const usdAmount = amount / INR_TO_USD_RATE;
+    return (usdAmount / price).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
+
+  // Get token price in INR
+  const getTokenPriceInINR = () => {
+    if (!tokenPrice?.priceUsd) return "0";
+    const usdPrice = parseFloat(tokenPrice.priceUsd);
+    return (usdPrice * INR_TO_USD_RATE).toFixed(2);
   };
 
   const upiDepositMutation = useMutation({
@@ -270,14 +291,14 @@ export default function DepositSection() {
 
                   <form onSubmit={handleUpiSubmit} className="space-y-4">
                     <div>
-                      <Label htmlFor="upi-amount" className="text-gray-700">Deposit Amount *</Label>
+                      <Label htmlFor="upi-amount" className="text-gray-700">Deposit Amount (INR) *</Label>
                       <Input
                         id="upi-amount"
                         type="number"
                         step="0.01"
                         value={upiForm.amount}
                         onChange={(e) => setUpiForm(prev => ({ ...prev, amount: e.target.value }))}
-                        placeholder="Enter amount paid via UPI"
+                        placeholder="Enter amount in INR paid via UPI"
                         className="bg-gray-50 border-gray-300 text-gray-900"
                         data-testid="input-upi-amount"
                         required
@@ -289,10 +310,10 @@ export default function DepositSection() {
                             <span className="text-sm font-medium text-purple-800">Token Calculation</span>
                           </div>
                           <div className="mt-1 text-lg font-bold text-purple-900" data-testid="text-token-calculation">
-                            ≈ {calculateTokens(upiForm.amount)} {tokenConfig?.tokenSymbol || "TOKEN"}
+                            ≈ {calculateTokensFromINR(upiForm.amount)} {tokenConfig?.tokenSymbol || "TOKEN"}
                           </div>
                           <div className="text-xs text-purple-600 mt-1">
-                            At current rate: ₹{parseFloat(tokenPrice.priceUsd || "0").toFixed(4)} per {tokenConfig?.tokenSymbol || "TOKEN"}
+                            At current rate: ₹{getTokenPriceInINR()} per {tokenConfig?.tokenSymbol || "TOKEN"}
                           </div>
                         </div>
                       )}

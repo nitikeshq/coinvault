@@ -139,6 +139,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data.screenshot = req.file.path;
       }
       
+      // Convert INR to USD for UPI deposits (approximately 83 INR = 1 USD)
+      if (data.paymentMethod === 'upi' && data.amount) {
+        const inrAmount = parseFloat(data.amount);
+        const usdAmount = inrAmount / 83; // Convert INR to USD
+        data.amount = usdAmount.toString();
+        data.originalAmount = inrAmount.toString(); // Store original INR amount
+        data.currency = 'INR'; // Mark original currency
+      } else {
+        data.currency = 'USD'; // BSC deposits are in USD
+      }
+      
       const validatedData = insertDepositRequestSchema.parse(data);
       const depositRequest = await storage.createDepositRequest(userId, validatedData);
       res.json(depositRequest);
