@@ -547,13 +547,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNftCollectionStats(): Promise<any> {
+    // Get admin-set NFT limit
+    const settings = await this.getWebsiteSettings();
+    const totalNfts = settings?.maxNfts || 1000;
+    
+    // Get actual minted count from database
     const [stats] = await db.select({
-      totalNfts: sql<number>`count(*)`,
       mintedNfts: sql<number>`sum(case when is_minted = true then 1 else 0 end)`,
-      availableNfts: sql<number>`sum(case when is_minted = false then 1 else 0 end)`
+      availableInDb: sql<number>`sum(case when is_minted = false then 1 else 0 end)`
     }).from(nftCollection);
     
-    return stats;
+    const mintedCount = stats?.mintedNfts || 0;
+    const availableInDb = stats?.availableInDb || 0;
+    const totalCreated = mintedCount + availableInDb;
+    
+    // Calculate how many can still be created
+    const availableNfts = Math.max(0, totalNfts - mintedCount);
+    
+    return {
+      totalNfts,
+      mintedNfts: mintedCount,
+      availableNfts,
+      totalCreated
+    };
   }
 
   // Admin user management methods
@@ -660,7 +676,8 @@ export class DatabaseStorage implements IStorage {
         style: data.style || 'funny',
         generatedDescription: data.generatedDescription,
         cost: data.cost,
-        status: data.status || 'processing'
+        imageUrl: data.imageUrl, // Add missing imageUrl field
+        status: data.status || 'completed'
       })
       .returning();
     return meme;

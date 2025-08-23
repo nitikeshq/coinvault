@@ -435,6 +435,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin route to set NFT collection limit
+  app.post('/api/admin/nft-limit', requireAdmin, async (req, res) => {
+    try {
+      const { maxNfts } = req.body;
+      
+      if (!maxNfts || maxNfts < 1) {
+        return res.status(400).json({ message: "NFT limit must be at least 1" });
+      }
+      
+      await storage.updateWebsiteSettings({ maxNfts: parseInt(maxNfts) });
+      
+      res.json({ message: "NFT collection limit set successfully", maxNfts: parseInt(maxNfts) });
+    } catch (error) {
+      console.error("Error setting NFT limit:", error);
+      res.status(500).json({ message: "Failed to set NFT limit" });
+    }
+  });
+
+  // Admin route to get current NFT limit
+  app.get('/api/admin/nft-limit', requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getWebsiteSettings();
+      res.json({ maxNfts: settings?.maxNfts || 1000 });
+    } catch (error) {
+      console.error("Error fetching NFT limit:", error);
+      res.status(500).json({ message: "Failed to fetch NFT limit" });
+    }
+  });
+
   // Token price routes
   app.get('/api/token/price', async (req, res) => {
     try {

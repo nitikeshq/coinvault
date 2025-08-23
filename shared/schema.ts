@@ -148,6 +148,7 @@ export const websiteSettings = pgTable("website_settings", {
   auditReportUrl: varchar("audit_report_url"),
   whitepaperUrl: varchar("whitepaper_url"),
   nftCharacterPrompt: text("nft_character_prompt"), // Admin-set character for NFT generation
+  maxNfts: integer("max_nfts").default(1000), // Admin-set total NFT collection limit
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
