@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Heart, ThumbsDown, TrendingUp, Trophy, Zap, Clock, Star, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTokenInfo } from "@/hooks/useTokenInfo";
 
 export default function MarketSection() {
   const [activeMarket, setActiveMarket] = useState<'nfts' | 'memes'>('nfts');
@@ -17,6 +18,7 @@ export default function MarketSection() {
   const [selectedNFT, setSelectedNFT] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { tokenName } = useTokenInfo();
 
   // NFT Data Queries
   const { data: nftListings = [] } = useQuery<any[]>({
@@ -123,8 +125,8 @@ export default function MarketSection() {
                       <Badge variant="outline">
                         {listing.nft.rarity}
                       </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        Limited
+                      <Badge variant="default" className="text-xs bg-purple-500">
+                        {tokenName}
                       </Badge>
                     </div>
                     <div className="space-y-2">
@@ -310,9 +312,16 @@ export default function MarketSection() {
                       <h3 className="font-semibold text-lg mb-2" data-testid={`owned-nft-name-${nft?.id || userNft.id}`}>
                         {nft?.name || `NFT #${nft?.tokenId || userNft.id?.slice(-4)}`}
                       </h3>
-                      <Badge variant="outline" className="mb-2">
-                        {nft?.rarity || 'Common'}
-                      </Badge>
+                      <div className="flex gap-2 mb-2">
+                        <Badge variant="outline">
+                          {nft?.rarity || 'Common'}
+                        </Badge>
+                        {!nft?.isUserGenerated && (
+                          <Badge variant="default" className="text-xs bg-purple-500">
+                            {tokenName}
+                          </Badge>
+                        )}
+                      </div>
                       <div className="space-y-2">
                         <Dialog>
                           <DialogTrigger asChild>

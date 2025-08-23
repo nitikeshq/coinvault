@@ -6,7 +6,9 @@ import type { Request, Response } from "express";
 
 interface AuthRequest extends Request {
   user?: { id: string; email: string; name?: string };
-  session?: any;
+  session?: any & {
+    user?: { id: string; email: string; name?: string };
+  };
 }
 
 const router = Router();
@@ -39,7 +41,10 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
 
     // Verify user owns the NFT
     const userNfts = await storage.getUserNfts(userId);
-    const ownsNFT = userNfts.some(nft => nft.nft.id === nftId);
+    const ownsNFT = userNfts.some(userNft => {
+      const nft = userNft.nft || userNft;
+      return nft?.id === nftId;
+    });
     
     if (!ownsNFT) {
       return res.status(403).json({ error: "You don't own this NFT" });
@@ -67,7 +72,7 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
 router.post("/api/marketplace/nft/bid", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { listingId, bidAmount } = req.body;
-    const userId = req.session?.user?.id;
+    const userId = req.user?.id;
     const platformFeeAmount = "1"; // $1 worth of tokens
 
     if (!userId || !listingId || !bidAmount) {
@@ -201,7 +206,7 @@ router.get("/api/marketplace/nft/user-generated-listings", async (req: Request, 
 
 router.get("/api/marketplace/nft/my-listings", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.session?.user?.id;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
