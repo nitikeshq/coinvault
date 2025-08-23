@@ -265,6 +265,9 @@ export const nftCollection = pgTable("nft_collection", {
   name: varchar("name").notNull(),
   description: text("description"),
   imageUrl: varchar("image_url"),
+  rarity: varchar("rarity").default("Common"), // Common, Rare, Epic, Legendary
+  attributes: jsonb("attributes"), // Store NFT metadata as JSON
+  referenceImageUrl: varchar("reference_image_url"), // Admin uploaded reference image
   isMinted: boolean("is_minted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });

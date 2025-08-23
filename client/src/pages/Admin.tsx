@@ -16,6 +16,8 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { Sparkles, Users, Send, Minus, Image, Coins } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -1093,10 +1095,55 @@ function NFTMintingPanel() {
   const [nftTheme, setNftTheme] = useState("");
   const [nftRarity, setNftRarity] = useState("Common");
   const [nftQuantity, setNftQuantity] = useState(1);
+  const [referenceImage, setReferenceImage] = useState<File | null>(null);
+  const [referenceImageUrl, setReferenceImageUrl] = useState("");
+  const [isUploadingReference, setIsUploadingReference] = useState(false);
+
+  // Handle reference image upload
+  const handleReferenceImageUpload = async (file: File) => {
+    setIsUploadingReference(true);
+    try {
+      // Get upload URL
+      const uploadResponse = await apiRequest("POST", "/api/objects/upload");
+      const { uploadURL } = uploadResponse;
+
+      // Upload the file
+      await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      // Set the uploaded image URL
+      setReferenceImageUrl(uploadURL.split('?')[0]); // Remove query params
+      setReferenceImage(file);
+      
+      toast({
+        title: "Success",
+        description: "Reference image uploaded successfully",
+      });
+    } catch (error) {
+      console.error("Error uploading reference image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload reference image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingReference(false);
+    }
+  };
 
   const mintNftMutation = useMutation({
-    mutationFn: async ({ theme, rarity, quantity }: { theme: string; rarity: string; quantity: number }) => {
-      return apiRequest("POST", "/api/admin/mint-nft", { theme, rarity, quantity });
+    mutationFn: async ({ theme, rarity, quantity, referenceImageUrl }: { 
+      theme: string; 
+      rarity: string; 
+      quantity: number;
+      referenceImageUrl?: string;
+    }) => {
+      return apiRequest("POST", "/api/admin/mint-nft", { theme, rarity, quantity, referenceImageUrl });
     },
     onSuccess: (data: any) => {
       toast({
@@ -1129,7 +1176,8 @@ function NFTMintingPanel() {
     mintNftMutation.mutate({ 
       theme: nftTheme.trim(), 
       rarity: nftRarity,
-      quantity: nftQuantity 
+      quantity: nftQuantity,
+      referenceImageUrl: referenceImageUrl || undefined
     });
   };
 
@@ -1145,7 +1193,7 @@ function NFTMintingPanel() {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <div>
               <Label htmlFor="nft-theme">NFT Theme</Label>
@@ -1193,6 +1241,32 @@ function NFTMintingPanel() {
                 Generate multiple NFTs with the same theme (max 100)
               </p>
             </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label>Reference Image (Optional)</Label>
+              <ObjectUploader
+                onFileSelected={handleReferenceImageUpload}
+                isUploading={isUploadingReference}
+                acceptedFileTypes="image/*"
+                buttonClassName="bg-crypto-gray border-white/20 hover:bg-gray-600"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Upload a reference image for AI to generate similar styled NFTs
+              </p>
+            </div>
+            
+            {referenceImageUrl && (
+              <div className="border border-white/20 rounded-lg p-2">
+                <img 
+                  src={referenceImageUrl} 
+                  alt="Reference" 
+                  className="w-full h-32 object-cover rounded"
+                />
+                <div className="text-xs text-green-400 mt-1">✓ Reference uploaded</div>
+              </div>
+            )}
           </div>
           
           <div className="bg-crypto-gray rounded-lg p-4 border border-white/10">

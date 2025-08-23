@@ -609,11 +609,12 @@ export class DatabaseStorage implements IStorage {
     const [nft] = await db.insert(nftCollection)
       .values({
         tokenId: nextTokenId,
-        name: `NFT #${nextTokenId}`,
+        name: nftData.name || `NFT #${nextTokenId}`,
         description: nftData.description,
-        imageUrl: `https://via.placeholder.com/512x512.png?text=NFT+${nextTokenId}`,
-        attributes: nftData.attributes,
+        imageUrl: nftData.imageUrl || `https://via.placeholder.com/512x512.png?text=NFT+${nextTokenId}`,
         rarity: nftData.rarity || 'Common',
+        attributes: nftData.attributes,
+        referenceImageUrl: nftData.referenceImageUrl,
         isMinted: false
       })
       .returning();

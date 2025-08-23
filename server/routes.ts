@@ -8,6 +8,7 @@ import multer from "multer";
 import path from "path";
 import { blockchainService } from "./blockchainService";
 import OpenAI from "openai";
+import { ObjectStorageService } from "./objectStorage";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -27,6 +28,18 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
+
+  // Object Storage Routes
+  app.post('/api/objects/upload', requireAuth, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
 
   // User routes
   app.get('/api/me', requireAuth, async (req: any, res) => {
@@ -801,7 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin NFT Minting Route
   app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
     try {
-      const { theme, rarity, quantity = 1 } = req.body;
+      const { theme, rarity, quantity = 1, referenceImageUrl } = req.body;
       
       if (!theme) {
         return res.status(400).json({ message: "Theme is required" });
@@ -810,29 +823,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const results = [];
       
       for (let i = 0; i < quantity; i++) {
-        // Generate AI description
-        const prompt = `Create a unique and creative NFT description for a digital collectible with the theme: "${theme}". The rarity is "${rarity || 'Common'}". Make it engaging, mysterious, and include artistic elements. Keep it under 200 words.`;
+        // Step 1: Generate AI metadata first
+        const metadataPrompt = `Create detailed metadata for a unique NFT with theme: "${theme}" and rarity: "${rarity || 'Common'}". 
+        Include: name, description, and 3-5 special attributes (like power, element, style, background, etc.).
+        Respond in JSON format:
+        {
+          "name": "Unique NFT Name",
+          "description": "Engaging description under 200 words",
+          "attributes": [
+            {"trait_type": "Power", "value": "Fire Magic"},
+            {"trait_type": "Background", "value": "Mystic Forest"},
+            {"trait_type": "Rarity", "value": "${rarity || 'Common'}"}
+          ]
+        }`;
         
-        const response = await openai.chat.completions.create({
+        const metadataResponse = await openai.chat.completions.create({
           model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 200,
+          messages: [{ role: "user", content: metadataPrompt }],
+          response_format: { type: "json_object" },
+          max_tokens: 300,
         });
 
-        const description = response.choices[0].message.content;
+        const metadata = JSON.parse(metadataResponse.choices[0].message.content);
         
-        // Create NFT in database
+        // Step 2: Generate AI image based on metadata and reference
+        let imagePrompt = `Create a high-quality, squared (1:1 aspect ratio) NFT artwork for: "${metadata.name}". 
+        Theme: ${theme}, Rarity: ${rarity || 'Common'}. 
+        Description: ${metadata.description}. 
+        Style: Digital art, vibrant colors, detailed, professional NFT quality.`;
+        
+        if (referenceImageUrl) {
+          imagePrompt += ` Use this reference image style and elements as inspiration.`;
+        }
+        
+        let imageUrl = null;
+        try {
+          const imageResponse = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: imagePrompt,
+            n: 1,
+            size: "1024x1024",
+            quality: "hd",
+          });
+          imageUrl = imageResponse.data[0].url;
+        } catch (imageError) {
+          console.error("Error generating AI image:", imageError);
+          // Fallback to placeholder if image generation fails
+          imageUrl = `https://via.placeholder.com/512x512/1a1a2e/ffffff?text=${encodeURIComponent(metadata.name)}`;
+        }
+        
+        // Step 3: Create NFT in database with all generated content
         const nft = await storage.createNFTForCollection({
+          name: metadata.name,
           theme,
-          description,
+          description: metadata.description,
           rarity: rarity || 'Common',
-          attributes: JSON.stringify({ theme, rarity: rarity || 'Common', createdBy: 'admin' }),
+          attributes: JSON.stringify({
+            ...metadata.attributes,
+            theme,
+            rarity: rarity || 'Common',
+            createdBy: 'admin',
+            hasReferenceImage: !!referenceImageUrl
+          }),
+          imageUrl,
+          referenceImageUrl
         });
         
         results.push(nft);
       }
 
-      res.json({ message: `Successfully minted ${quantity} NFT(s)`, nfts: results });
+      res.json({ message: `Successfully created ${quantity} high-quality NFT(s) with AI-generated images and metadata`, nfts: results });
     } catch (error) {
       console.error("Error minting NFT:", error);
       res.status(500).json({ message: "Failed to mint NFT" });

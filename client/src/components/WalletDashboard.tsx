@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, ExternalLink, ArrowRightLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { NFTModal } from "@/components/NFTModal";
 
 interface WalletDashboardProps {
   onSectionChange?: (section: string) => void;
@@ -303,18 +304,39 @@ interface UserNFTsSectionProps {
 }
 
 function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: UserNFTsSectionProps) {
+  const [selectedNFT, setSelectedNFT] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  
   const { data: userNfts = [] } = useQuery<any[]>({
     queryKey: ['/api/user/nfts'],
   });
 
-  const handleShareNFT = (nft: any) => {
-    const shareText = `Check out my ${nft.name} NFT! 🎨 #NFT #Crypto`;
-    shareOnTelegram(shareText);
+  const handleShareNFT = (platform: string, nft: any) => {
+    const shareText = `Check out my ${nft.name} NFT! 🎨\nRarity: ${nft.rarity}\n#NFT #Crypto`;
+    if (platform === 'telegram') {
+      shareOnTelegram(shareText);
+    } else if (platform === 'twitter') {
+      shareOnTwitter(shareText);
+    }
   };
 
-  const handleCopyNFT = (nft: any) => {
-    const shareText = `${nft.name} - ${nft.description}`;
-    copyToClipboard(shareText);
+  const handleCopyNFT = (text: string) => {
+    copyToClipboard(text);
+  };
+
+  const handleNFTClick = (nft: any) => {
+    setSelectedNFT(nft);
+    setModalOpen(true);
+  };
+
+  const getRarityColor = (rarity: string) => {
+    const colors = {
+      Common: "bg-gray-500",
+      Rare: "bg-blue-500",
+      Epic: "bg-purple-500", 
+      Legendary: "bg-yellow-500"
+    };
+    return colors[rarity as keyof typeof colors] || "bg-gray-500";
   };
 
   if (userNfts.length === 0) return null;
@@ -331,13 +353,25 @@ function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: U
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {userNfts.map((nft: any) => (
-          <div key={nft.id} className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200" data-testid={`nft-card-${nft.id}`}>
+          <div key={nft.id} className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer" 
+               data-testid={`nft-card-${nft.id}`}
+               onClick={() => handleNFTClick(nft)}>
+            {/* NFT Image */}
+            <div className="mb-3">
+              <img
+                src={nft.imageUrl || `https://via.placeholder.com/200x200/6b46c1/ffffff?text=${encodeURIComponent(nft.name)}`}
+                alt={nft.name}
+                className="w-full h-40 object-cover rounded-lg border border-purple-200"
+                loading="lazy"
+              />
+            </div>
+            
             <div className="flex justify-between items-start mb-2">
               <div>
                 <h4 className="font-semibold text-gray-800">{nft.name}</h4>
                 <p className="text-sm text-gray-600">Token #{nft.tokenId}</p>
               </div>
-              <Badge variant="outline" className="text-purple-600">
+              <Badge className={`${getRarityColor(nft.rarity)} text-white text-xs`}>
                 {nft.rarity || 'Common'}
               </Badge>
             </div>
@@ -348,7 +382,10 @@ function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: U
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleShareNFT(nft)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShareNFT('telegram', nft);
+                }}
                 className="flex items-center gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
                 data-testid={`button-share-nft-${nft.id}`}
               >
@@ -358,7 +395,10 @@ function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: U
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleCopyNFT(nft)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopyNFT(`${nft.name} - ${nft.description}`);
+                }}
                 className="flex items-center gap-1 text-gray-600 border-gray-200 hover:bg-gray-50"
                 data-testid={`button-copy-nft-${nft.id}`}
               >
@@ -369,6 +409,17 @@ function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: U
           </div>
         ))}
       </div>
+
+      {/* NFT Modal */}
+      {selectedNFT && (
+        <NFTModal
+          nft={selectedNFT}
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onShare={handleShareNFT}
+          onCopy={handleCopyNFT}
+        />
+      )}
     </div>
   );
 }
