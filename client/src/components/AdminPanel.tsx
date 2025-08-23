@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Edit, Trash2, Check, X, Settings, Users, FileText, Link, TrendingUp, Shield, Clock } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Check, X, Settings, Users, FileText, Link, TrendingUp, Shield, Clock, Sparkles, Image, Send, Minus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -317,7 +317,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-10 bg-white border border-gray-200">
           <TabsTrigger value="overview" className="flex items-center space-x-2">
             <TrendingUp className="h-4 w-4" />
             <span>Overview</span>
@@ -345,6 +345,18 @@ export default function AdminPanel() {
           <TabsTrigger value="social" className="flex items-center space-x-2">
             <Link className="h-4 w-4" />
             <span>Social Links</span>
+          </TabsTrigger>
+          <TabsTrigger value="dapps" className="flex items-center space-x-2">
+            <Sparkles className="h-4 w-4" />
+            <span>Dapps</span>
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center space-x-2">
+            <Users className="h-4 w-4" />
+            <span>Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="nft-mint" className="flex items-center space-x-2">
+            <Image className="h-4 w-4" />
+            <span>NFT Mint</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1132,7 +1144,460 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Dapps Management */}
+        <TabsContent value="dapps" className="space-y-6">
+          <DappsManagementPanel />
+        </TabsContent>
+
+        {/* Users Management */}
+        <TabsContent value="users" className="space-y-6">
+          <UsersManagementPanel />
+        </TabsContent>
+
+        {/* NFT Mint */}
+        <TabsContent value="nft-mint" className="space-y-6">
+          <NFTMintingPanel />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// Dapps Management Panel Component
+function DappsManagementPanel() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: dappSettings = [] } = useQuery<any[]>({
+    queryKey: ["/api/dapps/settings"],
+  });
+
+  const updateDappMutation = useMutation({
+    mutationFn: async ({ appName, isEnabled }: { appName: string; isEnabled: boolean }) => {
+      return apiRequest("PUT", `/api/admin/dapps/${appName}`, { isEnabled });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dapps/settings"] });
+      toast({
+        title: "Success",
+        description: "Dapp settings updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleDapp = (appName: string, isEnabled: boolean) => {
+    updateDappMutation.mutate({ appName, isEnabled });
+  };
+
+  return (
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-gray-800">Dapps Settings</CardTitle>
+        <CardDescription className="text-gray-600">
+          Enable or disable decentralized applications for users
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {dappSettings.map((dapp: any) => (
+          <div key={dapp.appName} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  {dapp.appName === 'nft_mint' ? 'NFT Mint' : 'Memes Generator'}
+                </h3>
+                <p className="text-gray-600 text-sm mb-2">
+                  {dapp.description}
+                </p>
+                <div className="text-sm text-gray-700">
+                  <span className="font-medium">Cost:</span> {parseFloat(dapp.cost).toLocaleString()} CHILL tokens
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={dapp.isEnabled}
+                    onChange={(e) => handleToggleDapp(dapp.appName, e.target.checked)}
+                    disabled={updateDappMutation.isPending}
+                    className="sr-only peer"
+                    data-testid={`toggle-${dapp.appName}`}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <span className={`text-sm font-medium ${
+                  dapp.isEnabled ? 'text-green-600' : 'text-gray-500'
+                }`}>
+                  {dapp.isEnabled ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {dappSettings.length === 0 && (
+          <div className="text-center py-8 text-gray-400">
+            <Sparkles className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <div>No dapps configured</div>
+            <div className="text-sm">Dapp settings will appear here when configured</div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Users Management Panel Component
+function UsersManagementPanel() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [tokenAmount, setTokenAmount] = useState("");
+  const [tokenReason, setTokenReason] = useState("");
+
+  // Fetch all users
+  const { data: users = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+  });
+
+  const sendTokensMutation = useMutation({
+    mutationFn: async ({ userId, amount, reason }: { userId: string; amount: number; reason: string }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/tokens/send`, { amount, reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "Tokens sent successfully",
+      });
+      setTokenAmount("");
+      setTokenReason("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deductTokensMutation = useMutation({
+    mutationFn: async ({ userId, amount, reason }: { userId: string; amount: number; reason: string }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/tokens/deduct`, { amount, reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "Tokens deducted successfully",
+      });
+      setTokenAmount("");
+      setTokenReason("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendTokens = (userId: string) => {
+    const amount = parseFloat(tokenAmount);
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    sendTokensMutation.mutate({ userId, amount, reason: tokenReason });
+  };
+
+  const handleDeductTokens = (userId: string) => {
+    const amount = parseFloat(tokenAmount);
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    deductTokensMutation.mutate({ userId, amount, reason: tokenReason });
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <div className="text-gray-600">Loading users...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-gray-800">User Management</CardTitle>
+        <CardDescription className="text-gray-600">
+          Manage user accounts and token balances. Users can add their BEP-20 withdrawal address in their profile.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {users.map((user: any) => (
+            <div key={user.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div>
+                  <div className="font-medium text-gray-900">{user.name || user.email}</div>
+                  <div className="text-sm text-gray-500">{user.email}</div>
+                  {user.isAdmin && (
+                    <Badge className="mt-1 bg-purple-100 text-purple-700 border-purple-200">Admin</Badge>
+                  )}
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-sm text-gray-500">Token Balance</div>
+                  <div className="font-bold text-green-600">
+                    {parseFloat(user.tokenBalance || '0').toLocaleString()} CHILL
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-sm text-gray-500">Withdrawal Address</div>
+                  <div className="text-sm text-gray-900">
+                    {user.withdrawalAddress ? (
+                      <span className="break-all font-mono text-xs">{user.withdrawalAddress}</span>
+                    ) : (
+                      <span className="text-gray-400">Not set</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSendTokens(user.id)}
+                    disabled={sendTokensMutation.isPending || !tokenAmount}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    data-testid={`button-send-${user.id}`}
+                  >
+                    <Send className="h-3 w-3 mr-1" />
+                    Send
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDeductTokens(user.id)}
+                    disabled={deductTokensMutation.isPending || !tokenAmount}
+                    data-testid={`button-deduct-${user.id}`}
+                  >
+                    <Minus className="h-3 w-3 mr-1" />
+                    Deduct
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {users.length === 0 && (
+            <div className="text-center py-8 text-gray-400">
+              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <div>No users found</div>
+            </div>
+          )}
+        </div>
+        
+        {/* Token Management Form */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Amount (CHILL)</label>
+              <Input
+                type="number"
+                placeholder="Enter amount"
+                value={tokenAmount}
+                onChange={(e) => setTokenAmount(e.target.value)}
+                className="mt-1 bg-gray-50 border-gray-300"
+                data-testid="input-token-amount"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Reason</label>
+              <Input
+                placeholder="Optional reason"
+                value={tokenReason}
+                onChange={(e) => setTokenReason(e.target.value)}
+                className="mt-1 bg-gray-50 border-gray-300"
+                data-testid="input-token-reason"
+              />
+            </div>
+            <div className="flex items-end">
+              <div className="text-sm text-gray-500">
+                Fill in amount and reason, then click Send or Deduct for any user above
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// NFT Minting Panel Component  
+function NFTMintingPanel() {
+  const { toast } = useToast();
+  const [nftTheme, setNftTheme] = useState("");
+  const [nftRarity, setNftRarity] = useState("Common");
+  const [nftQuantity, setNftQuantity] = useState(1);
+
+  const mintNftMutation = useMutation({
+    mutationFn: async ({ theme, rarity, quantity }: { theme: string; rarity: string; quantity: number }) => {
+      return apiRequest("POST", "/api/admin/mint-nft", { theme, rarity, quantity });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: `Successfully minted ${nftQuantity} NFT(s) with AI-generated descriptions`,
+      });
+      setNftTheme("");
+      setNftRarity("Common");
+      setNftQuantity(1);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMintNft = () => {
+    if (!nftTheme.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a theme for the NFT",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    mintNftMutation.mutate({ 
+      theme: nftTheme.trim(), 
+      rarity: nftRarity,
+      quantity: nftQuantity 
+    });
+  };
+
+  return (
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-gray-800">Admin NFT Minting</CardTitle>
+        <CardDescription className="text-gray-600">
+          Mint NFTs with AI-generated descriptions. These will be stored in the database and can be moved to blockchain post-presale.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">NFT Theme</label>
+              <Input
+                placeholder="e.g., Mystical Dragons, Cyber Punks, Abstract Art..."
+                value={nftTheme}
+                onChange={(e) => setNftTheme(e.target.value)}
+                className="mt-1 bg-gray-50 border-gray-300"
+                data-testid="input-nft-theme"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                AI will generate unique descriptions based on this theme
+              </p>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Rarity</label>
+              <Select value={nftRarity} onValueChange={setNftRarity}>
+                <SelectTrigger className="mt-1 bg-gray-50 border-gray-300" data-testid="select-nft-rarity">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Common">Common</SelectItem>
+                  <SelectItem value="Rare">Rare</SelectItem>
+                  <SelectItem value="Epic">Epic</SelectItem>
+                  <SelectItem value="Legendary">Legendary</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Quantity</label>
+              <Input
+                type="number"
+                min="1"
+                max="100"
+                value={nftQuantity}
+                onChange={(e) => setNftQuantity(parseInt(e.target.value) || 1)}
+                className="mt-1 bg-gray-50 border-gray-300"
+                data-testid="input-nft-quantity"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Generate multiple NFTs with the same theme (max 100)
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <h4 className="font-medium text-gray-800 mb-2">Preview</h4>
+            <div className="space-y-2 text-sm">
+              <div><span className="text-gray-600">Theme:</span> {nftTheme || "Not set"}</div>
+              <div><span className="text-gray-600">Rarity:</span> {nftRarity}</div>
+              <div><span className="text-gray-600">Quantity:</span> {nftQuantity}</div>
+              <div><span className="text-gray-600">Collection:</span> CHILL NFTs</div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+              <div className="text-xs text-blue-600 mb-1 font-medium">ℹ️ AI Generation</div>
+              <div className="text-xs text-gray-700">
+                Each NFT will get a unique AI-generated description based on the theme and rarity.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t border-gray-200">
+          <Button 
+            onClick={handleMintNft}
+            disabled={mintNftMutation.isPending || !nftTheme.trim()}
+            className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white"
+            data-testid="button-mint-nft"
+          >
+            {mintNftMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Minting...
+              </>
+            ) : (
+              `Mint ${nftQuantity} NFT${nftQuantity > 1 ? 's' : ''} with AI`
+            )}
+          </Button>
+          
+          <div className="mt-2 text-xs text-gray-500">
+            NFTs will be stored in database for the presale. After presale ends, they can be deployed to blockchain.
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
