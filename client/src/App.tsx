@@ -1,6 +1,117 @@
+import { useState } from "react";
+
 export default function App() {
+  const [showMarketDropdown, setShowMarketDropdown] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Navigation Menu */}
+      <nav className="bg-black/20 backdrop-blur-lg p-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">CryptoWallet Pro</h1>
+          <div className="flex items-center space-x-6">
+            <a href="/" className="text-white hover:text-purple-300 transition-colors">Home</a>
+            
+            {/* Market Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowMarketDropdown(!showMarketDropdown)}
+                className="text-white hover:text-purple-300 transition-colors flex items-center space-x-1"
+              >
+                <span>Market</span>
+                <svg className={`w-4 h-4 transition-transform ${showMarketDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {showMarketDropdown && (
+                <div className="absolute top-full mt-2 w-48 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50">
+                  <button 
+                    onClick={() => {
+                      setShowMarketDropdown(false);
+                      document.body.innerHTML = `
+                        <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+                          <nav class="bg-black/20 backdrop-blur-lg rounded-lg p-4 mb-8">
+                            <div class="flex items-center justify-between">
+                              <h1 class="text-2xl font-bold text-white">CryptoWallet Pro</h1>
+                              <div class="flex items-center space-x-4">
+                                <a href="/" class="text-gray-300 hover:text-white cursor-pointer" onclick="location.reload()">Home</a>
+                                <span class="text-purple-400 font-semibold">Market → NFTs</span>
+                                <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                  <span class="mr-1">⭐</span>
+                                  <span>Premium</span>
+                                  <span class="ml-2 text-xs opacity-90">(₹5.2K)</span>
+                                </div>
+                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
+                              </div>
+                            </div>
+                          </nav>
+                          <div class="max-w-4xl mx-auto">
+                            <h1 class="text-4xl font-bold text-white mb-4">NFT Marketplace</h1>
+                            <p class="text-gray-300 mb-8">Browse and trade unique digital collectibles</p>
+                            <div class="bg-slate-800 p-6 rounded-lg">
+                              <p class="text-white">Welcome to the NFT Marketplace! Your Premium investment tag (⭐ Premium ₹5.2K) shows in the navigation above!</p>
+                              <button onclick="location.reload()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">← Back Home</button>
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    }}
+                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors rounded-t-lg"
+                  >
+                    🖼️ NFTs
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowMarketDropdown(false);
+                      document.body.innerHTML = `
+                        <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+                          <nav class="bg-black/20 backdrop-blur-lg rounded-lg p-4 mb-8">
+                            <div class="flex items-center justify-between">
+                              <h1 class="text-2xl font-bold text-white">CryptoWallet Pro</h1>
+                              <div class="flex items-center space-x-4">
+                                <a href="/" class="text-gray-300 hover:text-white cursor-pointer" onclick="location.reload()">Home</a>
+                                <span class="text-blue-400 font-semibold">Market → Memes</span>
+                                <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                  <span class="mr-1">⭐</span>
+                                  <span>Premium</span>
+                                  <span class="ml-2 text-xs opacity-90">(₹5.2K)</span>
+                                </div>
+                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
+                              </div>
+                            </div>
+                          </nav>
+                          <div class="max-w-4xl mx-auto">
+                            <h1 class="text-4xl font-bold text-white mb-4">Meme Marketplace</h1>
+                            <p class="text-gray-300 mb-8">Share laughs, trade memes, and spread joy</p>
+                            <div class="bg-slate-800 p-6 rounded-lg">
+                              <p class="text-white">Welcome to the Meme Marketplace! Your Premium investor tag (⭐ Premium ₹5.2K) appears in the navigation!</p>
+                              <button onclick="location.reload()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">← Back Home</button>
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    }}
+                    className="w-full text-left px-4 py-3 text-white hover:bg-slate-700 transition-colors rounded-b-lg border-t border-slate-600"
+                  >
+                    😂 Memes
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+              <span className="mr-1">⭐</span>
+              <span>Premium</span>
+              <span className="ml-2 text-xs opacity-90">(₹5.2K)</span>
+            </div>
+            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="flex items-center justify-center py-16">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-white mb-4">CryptoWallet Pro</h1>
         <p className="text-gray-300 mb-8">Investment Tagging System Complete!</p>
@@ -42,76 +153,8 @@ export default function App() {
         </div>
         
         <div className="space-y-4">
-          <button 
-            onClick={() => {
-              document.body.innerHTML = `
-                <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-                  <nav class="bg-black/20 backdrop-blur-lg rounded-lg p-4 mb-8">
-                    <div class="flex items-center justify-between">
-                      <h1 class="text-2xl font-bold text-white">CryptoWallet Pro</h1>
-                      <div class="flex items-center space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white">Home</a>
-                        <span class="text-purple-400 font-semibold">NFTs</span>
-                        <span class="text-gray-300">Memes</span>
-                        <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                          <span class="mr-1">⭐</span>
-                          <span>Premium</span>
-                          <span class="ml-2 text-xs opacity-90">(₹5.2K)</span>
-                        </div>
-                        <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
-                      </div>
-                    </div>
-                  </nav>
-                  <div class="max-w-4xl mx-auto">
-                    <h1 class="text-4xl font-bold text-white mb-4">NFT Marketplace</h1>
-                    <p class="text-gray-300 mb-8">Browse and trade unique digital collectibles</p>
-                    <div class="bg-slate-800 p-6 rounded-lg">
-                      <p class="text-white">Welcome! Your Premium investment tag (⭐ Premium ₹5.2K) shows in the navigation above!</p>
-                      <button onclick="location.reload()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">← Back Home</button>
-                    </div>
-                  </div>
-                </div>
-              `;
-            }}
-            className="block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors cursor-pointer"
-          >
-            Visit NFT Marketplace (See Premium Tag)
-          </button>
-          <button 
-            onClick={() => {
-              document.body.innerHTML = `
-                <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-                  <nav class="bg-black/20 backdrop-blur-lg rounded-lg p-4 mb-8">
-                    <div class="flex items-center justify-between">
-                      <h1 class="text-2xl font-bold text-white">CryptoWallet Pro</h1>
-                      <div class="flex items-center space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white">Home</a>
-                        <span class="text-gray-300">NFTs</span>
-                        <span class="text-blue-400 font-semibold">Memes</span>
-                        <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                          <span class="mr-1">⭐</span>
-                          <span>Premium</span>
-                          <span class="ml-2 text-xs opacity-90">(₹5.2K)</span>
-                        </div>
-                        <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Login</button>
-                      </div>
-                    </div>
-                  </nav>
-                  <div class="max-w-4xl mx-auto">
-                    <h1 class="text-4xl font-bold text-white mb-4">Meme Marketplace</h1>
-                    <p class="text-gray-300 mb-8">Share laughs, trade memes, and spread joy</p>
-                    <div class="bg-slate-800 p-6 rounded-lg">
-                      <p class="text-white">Welcome! Your Premium investor tag (⭐ Premium ₹5.2K) appears in the navigation!</p>
-                      <button onclick="location.reload()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">← Back Home</button>
-                    </div>
-                  </div>
-                </div>
-              `;
-            }}
-            className="block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors cursor-pointer"
-          >
-            Visit Meme Marketplace (See Premium Tag)
-          </button>
+          <p className="text-green-400 text-lg">✅ Market menu created with NFTs and Memes dropdown!</p>
+          <p className="text-gray-300">Click the "Market" menu in the navigation above to access NFTs and Memes marketplaces.</p>
         </div>
         
         <div className="mt-8 space-y-6">
@@ -153,7 +196,8 @@ export default function App() {
           </div>
         </div>
         
-        <p className="text-gray-400 mt-6">Click buttons above to see tags in navigation bars!</p>
+        <p className="text-gray-400 mt-6">Use the Market dropdown menu to navigate to NFTs and Memes!</p>
+      </div>
       </div>
     </div>
   );
