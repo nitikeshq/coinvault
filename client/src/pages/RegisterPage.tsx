@@ -66,8 +66,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 items-stretch min-h-[85vh]">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 pt-[30px]">
+      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 items-start mx-auto">
         {/* Left Side - Hero Content */}
         <div className="flex flex-col justify-center space-y-6 text-gray-800 px-4">
           <div className="space-y-5">
