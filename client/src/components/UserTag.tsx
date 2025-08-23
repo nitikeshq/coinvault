@@ -18,7 +18,7 @@ export function UserTag({ tag, totalInvestmentInr, showAmount = false }: UserTag
       case "Premium":
         return "bg-gradient-to-r from-green-600 to-blue-600 text-white";
       case "Members":
-        return "bg-gradient-to-r from-gray-600 to-gray-700 text-white";
+        return "bg-gradient-to-r from-slate-700 to-slate-800 text-white border border-slate-600";
       default:
         return "bg-gray-500 text-white";
     }

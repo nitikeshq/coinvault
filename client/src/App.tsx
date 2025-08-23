@@ -8,7 +8,7 @@ export default function App() {
         <div className="mb-8">
           <h3 className="text-xl text-white mb-4">Investment Tiers</h3>
           <div className="flex flex-wrap justify-center gap-3">
-            <div className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-3 py-1 rounded-full text-sm font-medium">
+            <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
               <span className="mr-1">👤</span>
               <span>Members</span>
               <span className="ml-2 text-xs opacity-90">(₹100-1K)</span>
