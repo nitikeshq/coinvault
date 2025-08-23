@@ -57,10 +57,18 @@ interface DappSettings {
 }
 
 interface TokenConfig {
-  name: string;
-  symbol: string;
+  contractAddress: string;
+  tokenName: string;
+  tokenSymbol: string;
   decimals: number;
   totalSupply: string;
+}
+
+// Add window.ethereum type
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
 }
 
 export default function LandingPage() {
@@ -116,6 +124,41 @@ export default function LandingPage() {
     const interval = setInterval(updateTimer, 60000);
     return () => clearInterval(interval);
   }, [presaleConfig?.endDate]);
+
+  // Handle adding token to wallet
+  const handleAddToWallet = async () => {
+    if (!tokenConfig) {
+      alert('Token configuration not available');
+      return;
+    }
+
+    if (typeof window.ethereum === 'undefined') {
+      alert('Please install MetaMask or a compatible wallet to add this token');
+      return;
+    }
+
+    try {
+      const wasAdded = await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: tokenConfig.contractAddress,
+            symbol: tokenConfig.tokenSymbol,
+            decimals: tokenConfig.decimals,
+            image: websiteSettings?.logoUrl || ''
+          },
+        },
+      });
+
+      if (wasAdded) {
+        alert(`${tokenConfig.tokenSymbol} token has been added to your wallet!`);
+      }
+    } catch (error) {
+      console.error('Error adding token to wallet:', error);
+      alert('Failed to add token to wallet. Please try again.');
+    }
+  };
 
   const roadmapItems = [
     {
@@ -272,11 +315,24 @@ export default function LandingPage() {
                 </div>
               )}
 
-              <Link href="/register">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg">
-                  Invest Now - Limited Time
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/register">
+                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg">
+                    Invest Now - Limited Time
+                  </Button>
+                </Link>
+                
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={handleAddToWallet}
+                  className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg flex items-center gap-2"
+                  data-testid="button-add-to-wallet"
+                >
+                  <Wallet className="h-5 w-5" />
+                  Add Token to Wallet
                 </Button>
-              </Link>
+              </div>
             </div>
           </div>
         </section>
