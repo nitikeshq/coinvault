@@ -544,13 +544,13 @@ export default function AdminPanel() {
                           <FormControl>
                             <Textarea
                               {...field}
-                              placeholder="e.g., Mystical dragons with glowing eyes and magical auras..."
+                              placeholder="Cool man with messy gray hair, thick full beard with curled mustache"
                               className="bg-gray-50 border-gray-300 text-gray-900"
                               data-testid="textarea-nft-character"
                             />
                           </FormControl>
                           <div className="text-xs text-gray-500 mt-1">
-                            This prompt will be used as the base character theme for all AI-generated NFTs
+                            Base character description for all NFTs. Traits will be added to this foundation for variety.
                           </div>
                           <FormMessage />
                         </FormItem>
@@ -1639,6 +1639,16 @@ function NFTMintingPanel() {
   const [nftTheme, setNftTheme] = useState("");
   const [nftRarity, setNftRarity] = useState("Common");
   const [nftQuantity, setNftQuantity] = useState(1);
+  
+  // NFT Trait States based on user specifications
+  const [nftExpression, setNftExpression] = useState("Serious");
+  const [nftMouth, setNftMouth] = useState("Normal");
+  const [nftEyewear, setNftEyewear] = useState("Black sunglasses");
+  const [nftBeard, setNftBeard] = useState("Thick curled beard");
+  const [nftHairStyle, setNftHairStyle] = useState("Messy gray");
+  const [nftBackground, setNftBackground] = useState("Yellow");
+  const [nftAccessories, setNftAccessories] = useState("");
+  
   const { tokenSymbol } = useTokenInfo();
 
   // Fetch website settings to show current NFT character and limits
@@ -1647,17 +1657,25 @@ function NFTMintingPanel() {
   });
 
   const mintNftMutation = useMutation({
-    mutationFn: async ({ theme, rarity, quantity }: { theme: string; rarity: string; quantity: number }) => {
-      return apiRequest("POST", "/api/admin/mint-nft", { theme, rarity, quantity });
+    mutationFn: async ({ traits, rarity, quantity }: { traits: any; rarity: string; quantity: number }) => {
+      return apiRequest("POST", "/api/admin/mint-nft", { traits, rarity, quantity });
     },
     onSuccess: (data: any) => {
       toast({
         title: "Success",
-        description: `Successfully minted ${nftQuantity} NFT(s) with AI-generated descriptions`,
+        description: `Successfully minted ${nftQuantity} NFT(s) with detailed traits`,
       });
       setNftTheme("");
       setNftRarity("Common");
       setNftQuantity(1);
+      // Reset traits to defaults
+      setNftExpression("Serious");
+      setNftMouth("Normal");
+      setNftEyewear("Black sunglasses");
+      setNftBeard("Thick curled beard");
+      setNftHairStyle("Messy gray");
+      setNftBackground("Yellow");
+      setNftAccessories("");
     },
     onError: (error: any) => {
       toast({
@@ -1678,17 +1696,19 @@ function NFTMintingPanel() {
       return;
     }
     
-    if (!nftTheme.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a theme for the NFT",
-        variant: "destructive",
-      });
-      return;
-    }
+    const traits = {
+      expression: nftExpression,
+      mouth: nftMouth,
+      eyewear: nftEyewear,
+      beard: nftBeard,
+      hairStyle: nftHairStyle,
+      background: nftBackground,
+      accessories: nftAccessories.trim() || undefined,
+      customTheme: nftTheme.trim() || undefined
+    };
     
     mintNftMutation.mutate({ 
-      theme: nftTheme.trim(), 
+      traits, 
       rarity: nftRarity,
       quantity: nftQuantity 
     });
@@ -1703,19 +1723,142 @@ function NFTMintingPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Trait Selection Column 1 */}
           <div className="space-y-4">
+            <h4 className="font-medium text-gray-800 border-b pb-2">Character Traits</h4>
+            
             <div>
-              <label className="text-sm font-medium text-gray-700">NFT Theme</label>
+              <label className="text-sm font-medium text-gray-700">Expression</label>
+              <Select value={nftExpression} onValueChange={setNftExpression}>
+                <SelectTrigger className="mt-1 bg-gray-50 border-gray-300" data-testid="select-nft-expression">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Serious">Serious (base)</SelectItem>
+                  <SelectItem value="Smiling">Smiling 😎</SelectItem>
+                  <SelectItem value="Angry">Angry</SelectItem>
+                  <SelectItem value="Surprised">Surprised</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Mouth / Extras</label>
+              <Select value={nftMouth} onValueChange={setNftMouth}>
+                <SelectTrigger className="mt-1 bg-gray-50 border-gray-300" data-testid="select-nft-mouth">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                  <SelectItem value="Cigarette">Cigarette</SelectItem>
+                  <SelectItem value="Cigar">Cigar</SelectItem>
+                  <SelectItem value="Pipe">Pipe</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Eyewear</label>
+              <Select value={nftEyewear} onValueChange={setNftEyewear}>
+                <SelectTrigger className="mt-1 bg-gray-50 border-gray-300" data-testid="select-nft-eyewear">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Black sunglasses">Black sunglasses (base)</SelectItem>
+                  <SelectItem value="Colored sunglasses">Colored sunglasses</SelectItem>
+                  <SelectItem value="No glasses">No glasses</SelectItem>
+                  <SelectItem value="Round glasses">Round glasses</SelectItem>
+                  <SelectItem value="Dollar eyes">Dollar eyes (when no glasses)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Trait Selection Column 2 */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-800 border-b pb-2">Style & Appearance</h4>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Beard / Mustache</label>
+              <Select value={nftBeard} onValueChange={setNftBeard}>
+                <SelectTrigger className="mt-1 bg-gray-50 border-gray-300" data-testid="select-nft-beard">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Thick curled beard">Thick curled beard (base)</SelectItem>
+                  <SelectItem value="Short beard">Short beard</SelectItem>
+                  <SelectItem value="Goatee">Goatee</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Hair Style / Color</label>
+              <Select value={nftHairStyle} onValueChange={setNftHairStyle}>
+                <SelectTrigger className="mt-1 bg-gray-50 border-gray-300" data-testid="select-nft-hair">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Messy gray">Messy gray (base)</SelectItem>
+                  <SelectItem value="Black">Black</SelectItem>
+                  <SelectItem value="Brown">Brown</SelectItem>
+                  <SelectItem value="Blonde">Blonde</SelectItem>
+                  <SelectItem value="Blue">Colored (blue)</SelectItem>
+                  <SelectItem value="Purple">Colored (purple)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Background</label>
+              <Select value={nftBackground} onValueChange={setNftBackground}>
+                <SelectTrigger className="mt-1 bg-gray-50 border-gray-300" data-testid="select-nft-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yellow">Yellow</SelectItem>
+                  <SelectItem value="Red">Red</SelectItem>
+                  <SelectItem value="Blue">Blue</SelectItem>
+                  <SelectItem value="Green">Green</SelectItem>
+                  <SelectItem value="Gradient">Gradient</SelectItem>
+                  <SelectItem value="Stripes">Patterned (stripes)</SelectItem>
+                  <SelectItem value="Dots">Patterned (dots)</SelectItem>
+                  <SelectItem value="Waves">Patterned (waves)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Settings Column */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-800 border-b pb-2">Generation Settings</h4>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Accessories (Optional)</label>
               <Input
-                placeholder="e.g., Mystical Dragons, Cyber Punks, Abstract Art..."
+                placeholder="e.g., Hat, Earrings, Chains, Headphones..."
+                value={nftAccessories}
+                onChange={(e) => setNftAccessories(e.target.value)}
+                className="mt-1 bg-gray-50 border-gray-300"
+                data-testid="input-nft-accessories"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Optional extra accessories for variety
+              </p>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700">Custom Theme (Optional)</label>
+              <Input
+                placeholder="e.g., Space warrior, Cyber punk..."
                 value={nftTheme}
                 onChange={(e) => setNftTheme(e.target.value)}
                 className="mt-1 bg-gray-50 border-gray-300"
                 data-testid="input-nft-theme"
               />
               <p className="text-xs text-gray-500 mt-1">
-                AI will generate unique descriptions based on this theme
+                Additional theme overlay
               </p>
             </div>
             
@@ -1746,61 +1889,71 @@ function NFTMintingPanel() {
                 data-testid="input-nft-quantity"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Generate multiple NFTs with the same theme (max 100)
+                Generate multiple NFTs (max 100)
               </p>
             </div>
           </div>
+        </div>
+        
+        {/* NFT Preview Section */}
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mt-6">
+          <h4 className="font-medium text-gray-800 mb-3">NFT Generation Preview</h4>
           
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <h4 className="font-medium text-gray-800 mb-2">NFT Collection Status</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Character Description */}
+            <div className="bg-white rounded-lg p-3 border">
+              <div className="text-xs text-gray-600 mb-2">Base Character</div>
+              <div className="text-sm font-medium text-gray-800 mb-2">
+                {websiteSettings?.nftCharacterPrompt || (
+                  <span className="text-red-600">⚠️ Set character prompt in Website Settings first</span>
+                )}
+              </div>
+              
+              <div className="space-y-1 text-xs text-gray-700">
+                <div><span className="font-medium">Expression:</span> {nftExpression}</div>
+                <div><span className="font-medium">Mouth:</span> {nftMouth}</div>
+                <div><span className="font-medium">Eyewear:</span> {nftEyewear}</div>
+                <div><span className="font-medium">Beard:</span> {nftBeard}</div>
+                <div><span className="font-medium">Hair:</span> {nftHairStyle}</div>
+                <div><span className="font-medium">Background:</span> {nftBackground}</div>
+                {nftAccessories && <div><span className="font-medium">Accessories:</span> {nftAccessories}</div>}
+                {nftTheme && <div><span className="font-medium">Custom Theme:</span> {nftTheme}</div>}
+              </div>
+            </div>
             
-            {/* Current Settings Display */}
-            <div className="space-y-3 mb-4">
-              <div className="bg-white rounded-lg p-3 border">
-                <div className="text-xs text-gray-600 mb-1">Character Prompt</div>
-                <div className="text-sm font-medium text-gray-800">
-                  {websiteSettings?.nftCharacterPrompt || (
-                    <span className="text-red-600">⚠️ Not configured - Set in Website Settings first</span>
-                  )}
+            {/* Generation Settings */}
+            <div className="bg-white rounded-lg p-3 border">
+              <div className="text-xs text-gray-600 mb-2">Generation Details</div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Rarity:</span>
+                  <span className="font-medium">{nftRarity}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Quantity:</span>
+                  <span className="font-medium">{nftQuantity}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Collection Limit:</span>
+                  <span className="font-medium">{websiteSettings?.maxNfts?.toLocaleString() || "Not set"}</span>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white rounded-lg p-3 border">
-                  <div className="text-xs text-gray-600 mb-1">Collection Limit</div>
-                  <div className="text-lg font-bold text-blue-600">
-                    {websiteSettings?.maxNfts?.toLocaleString() || "Not set"}
-                  </div>
+              <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+                <div className="text-xs text-blue-600 font-medium mb-1">🎨 AI Generation</div>
+                <div className="text-xs text-gray-700">
+                  Each NFT will combine the base character with selected traits for unique AI artwork and metadata.
                 </div>
-                <div className="bg-white rounded-lg p-3 border">
-                  <div className="text-xs text-gray-600 mb-1">Next Theme</div>
-                  <div className="text-sm font-medium text-gray-800">
-                    {nftTheme || "Enter theme"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Preview */}
-            <div className="space-y-2 text-sm border-t pt-3">
-              <div><span className="text-gray-600">Rarity:</span> {nftRarity}</div>
-              <div><span className="text-gray-600">Quantity:</span> {nftQuantity}</div>
-              <div><span className="text-gray-600">Collection:</span> {tokenSymbol} NFTs</div>
-            </div>
-            
-            <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
-              <div className="text-xs text-blue-600 mb-1 font-medium">🎨 AI Generation Process</div>
-              <div className="text-xs text-gray-700">
-                Each NFT combines your character prompt + theme + rarity for unique AI descriptions and images.
               </div>
             </div>
           </div>
         </div>
         
+        
         <div className="pt-4 border-t border-gray-200">
           <Button 
             onClick={handleMintNft}
-            disabled={mintNftMutation.isPending || !nftTheme.trim() || !websiteSettings?.nftCharacterPrompt}
+            disabled={mintNftMutation.isPending || !websiteSettings?.nftCharacterPrompt}
             className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white"
             data-testid="button-mint-nft"
           >
@@ -1810,12 +1963,12 @@ function NFTMintingPanel() {
                 Minting...
               </>
             ) : (
-              `Mint ${nftQuantity} NFT${nftQuantity > 1 ? 's' : ''} with AI`
+              `Mint ${nftQuantity} NFT${nftQuantity > 1 ? 's' : ''} with Selected Traits`
             )}
           </Button>
           
           <div className="mt-2 text-xs text-gray-500">
-            NFTs will be stored in database for the presale. After presale ends, they can be deployed to blockchain.
+            NFTs will be stored in database with unique trait combinations. Users can purchase them during presale.
           </div>
         </div>
       </CardContent>

@@ -1065,25 +1065,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin NFT Minting Route
   app.post('/api/admin/mint-nft', requireAdmin, async (req, res) => {
     try {
-      const { theme, rarity, quantity = 1, referenceImageUrl } = req.body;
+      const { traits, rarity, quantity = 1, referenceImageUrl } = req.body;
       
-      if (!theme) {
-        return res.status(400).json({ message: "Theme is required" });
+      if (!traits) {
+        return res.status(400).json({ message: "Traits are required" });
       }
 
       const results = [];
       
       for (let i = 0; i < quantity; i++) {
-        // Step 1: Generate AI metadata first
-        const metadataPrompt = `Create detailed metadata for a unique NFT with theme: "${theme}" and rarity: "${rarity || 'Common'}". 
-        Include: name, description, and 3-5 special attributes (like power, element, style, background, etc.).
+        // Step 1: Generate AI metadata based on detailed traits
+        const traitDescription = `
+        Character Traits:
+        - Expression: ${traits.expression}
+        - Mouth/Extras: ${traits.mouth}
+        - Eyewear: ${traits.eyewear}
+        - Beard/Mustache: ${traits.beard}
+        - Hair Style/Color: ${traits.hairStyle}
+        - Background: ${traits.background}
+        ${traits.accessories ? `- Accessories: ${traits.accessories}` : ''}
+        ${traits.customTheme ? `- Custom Theme: ${traits.customTheme}` : ''}
+        `;
+
+        const metadataPrompt = `Create detailed metadata for a unique NFT with these specific character traits and rarity: "${rarity || 'Common'}". 
+        ${traitDescription}
+        
+        Create a unique name and engaging description that incorporates these specific traits. Include these exact traits plus any additional special attributes.
         Respond in JSON format:
         {
-          "name": "Unique NFT Name",
-          "description": "Engaging description under 200 words",
+          "name": "Unique NFT Name incorporating the traits",
+          "description": "Engaging description under 200 words that mentions the specific character traits",
           "attributes": [
-            {"trait_type": "Power", "value": "Fire Magic"},
-            {"trait_type": "Background", "value": "Mystic Forest"},
+            {"trait_type": "Expression", "value": "${traits.expression}"},
+            {"trait_type": "Mouth", "value": "${traits.mouth}"},
+            {"trait_type": "Eyewear", "value": "${traits.eyewear}"},
+            {"trait_type": "Beard", "value": "${traits.beard}"},
+            {"trait_type": "Hair", "value": "${traits.hairStyle}"},
+            {"trait_type": "Background", "value": "${traits.background}"},
+            ${traits.accessories ? `{"trait_type": "Accessories", "value": "${traits.accessories}"},` : ''}
             {"trait_type": "Rarity", "value": "${rarity || 'Common'}"}
           ]
         }`;
@@ -1113,16 +1132,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error("Admin must set NFT character first before generating NFTs");
         }
         
-        // Step 3: Generate AI image using the character prompt
+        // Step 3: Generate AI image using the character prompt + traits
         const imageManager = new ImageManager();
         let imageUrl = null;
         try {
+          // Combine base character prompt with specific traits for image generation
+          const detailedImagePrompt = `${characterPrompt}. 
+          Character has: ${traits.expression} expression, ${traits.mouth} mouth, ${traits.eyewear} eyewear, ${traits.beard} beard, ${traits.hairStyle} hair, on ${traits.background} background.
+          ${traits.accessories ? `Additional accessories: ${traits.accessories}.` : ''}
+          ${traits.customTheme ? `Theme style: ${traits.customTheme}.` : ''}
+          High quality digital art, detailed, professional NFT artwork.`;
+          
           imageUrl = await imageManager.generateAndSaveNFTImage({
             name: metadata.name,
             description: metadata.description,
             rarity: rarity || 'Common',
             attributes: metadata.attributes
-          }, characterPrompt);
+          }, detailedImagePrompt);
         } catch (imageError) {
           console.error("Error generating AI image:", imageError);
           // Fallback to placeholder if image generation fails
