@@ -104,7 +104,7 @@ export const socialLinks = pgTable("social_links", {
 // Token price data
 export const tokenPrices = pgTable("token_prices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  tokenConfigId: varchar("token_config_id").notNull().references(() => tokenConfig.id),
+  tokenConfigId: varchar("token_config_id").notNull().unique().references(() => tokenConfig.id),
   priceUsd: decimal("price_usd", { precision: 18, scale: 8 }).notNull(),
   priceChange24h: decimal("price_change_24h", { precision: 5, scale: 2 }).default("0"),
   volume24h: decimal("volume_24h", { precision: 18, scale: 2 }).default("0"),

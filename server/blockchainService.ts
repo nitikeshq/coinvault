@@ -14,7 +14,7 @@ const PANCAKE_ROUTER_ABI = [
   "function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)"
 ];
 
-class Web3Service {
+class BlockchainService {
   private provider: ethers.JsonRpcProvider;
   private bscRpcUrl = 'https://bsc-dataseed.binance.org/';
   private pancakeRouterAddress = '0x10ED43C718714eb63d5aA57B78B54704E256024E';
@@ -23,15 +23,6 @@ class Web3Service {
 
   constructor() {
     this.provider = new ethers.JsonRpcProvider(this.bscRpcUrl);
-  }
-
-  // Generate a new wallet address and private key
-  generateWallet() {
-    const wallet = ethers.Wallet.createRandom();
-    return {
-      address: wallet.address,
-      privateKey: wallet.privateKey,
-    };
   }
 
   // Get token information from contract
@@ -91,8 +82,12 @@ class Web3Service {
     try {
       const router = new ethers.Contract(this.pancakeRouterAddress, PANCAKE_ROUTER_ABI, this.provider);
       
+      // First, get token decimals to use correct amount
+      const tokenContract = new ethers.Contract(contractAddress, ERC20_ABI, this.provider);
+      const decimals = await tokenContract.decimals();
+      
       // Get 1 token price in BUSD (1 USD equivalent)
-      const amountIn = ethers.parseUnits('1', 18); // Assume 18 decimals for simplicity
+      const amountIn = ethers.parseUnits('1', decimals);
       const path = [contractAddress, this.wbnbAddress, this.busdAddress];
       
       try {
@@ -151,7 +146,16 @@ class Web3Service {
       return null;
     }
   }
+
+  // Generate a new wallet address and private key
+  generateWallet() {
+    const wallet = ethers.Wallet.createRandom();
+    return {
+      address: wallet.address,
+      privateKey: wallet.privateKey,
+    };
+  }
 }
 
-export const web3Service = new Web3Service();
-export default web3Service;
+export const blockchainService = new BlockchainService();
+export default blockchainService;

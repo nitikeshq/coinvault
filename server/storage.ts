@@ -313,13 +313,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTokenPrice(tokenConfigId: string, priceData: Partial<TokenPrice>): Promise<void> {
-    await db
-      .insert(tokenPrices)
-      .values({ tokenConfigId, ...priceData } as any)
-      .onConflictDoUpdate({
-        target: tokenPrices.tokenConfigId,
-        set: { ...priceData, updatedAt: new Date() },
-      });
+    // Check if a price entry already exists for this token
+    const existingPrice = await db
+      .select()
+      .from(tokenPrices)
+      .where(eq(tokenPrices.tokenConfigId, tokenConfigId))
+      .limit(1);
+
+    if (existingPrice.length > 0) {
+      // Update existing price entry
+      await db
+        .update(tokenPrices)
+        .set({ ...priceData, updatedAt: new Date() })
+        .where(eq(tokenPrices.tokenConfigId, tokenConfigId));
+    } else {
+      // Insert new price entry
+      await db
+        .insert(tokenPrices)
+        .values({ tokenConfigId, ...priceData } as any);
+    }
   }
 
   async getUserTransactions(userId: string): Promise<Transaction[]> {
