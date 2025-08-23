@@ -30,8 +30,8 @@ export default function Home() {
       case 'wallet':
         return (
           <div className="container mx-auto px-4 space-y-6">
+            <WalletDashboard onSectionChange={setActiveSection} />
             <PresaleCountdown />
-            <WalletDashboard />
           </div>
         );
       case 'deposit':
@@ -45,15 +45,15 @@ export default function Home() {
       case 'admin':
         return isAdmin ? <AdminPanel /> : (
           <div className="container mx-auto px-4 space-y-6">
+            <WalletDashboard onSectionChange={setActiveSection} />
             <PresaleCountdown />
-            <WalletDashboard />
           </div>
         );
       default:
         return (
           <div className="container mx-auto px-4 space-y-6">
+            <WalletDashboard onSectionChange={setActiveSection} />
             <PresaleCountdown />
-            <WalletDashboard />
           </div>
         );
     }
