@@ -53,7 +53,7 @@ export default function AuthPage() {
   });
 
   const onLogin = (data: LoginForm) => {
-    login({ username: data.email, password: data.password });
+    login({ email: data.email, password: data.password });
   };
 
   const onRegister = (data: RegisterForm) => {
