@@ -300,6 +300,8 @@ export default function MemeMarketplace() {
       <Navigation 
         activeSection="dapps" 
         onSectionChange={() => window.location.href = '/'} 
+        user={user}
+        isAdmin={user?.isAdmin || false}
       />
       <div className="pt-20 p-4">
         <div className="max-w-7xl mx-auto">
