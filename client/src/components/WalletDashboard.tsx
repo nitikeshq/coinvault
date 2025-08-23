@@ -300,6 +300,33 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
                     {referralData.referralCode}
                   </code>
                 </div>
+                
+                {/* Referral URL Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Your Referral Link</label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={`${window.location.origin}/register?ref=${referralData.referralCode}`}
+                      readOnly
+                      className="font-mono bg-gray-50 text-sm"
+                      data-testid="input-referral-url"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const referralUrl = `${window.location.origin}/register?ref=${referralData.referralCode}`;
+                        navigator.clipboard.writeText(referralUrl);
+                        alert('Referral link copied to clipboard!');
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      data-testid="button-copy-referral-url"
+                    >
+                      <Copy className="h-3 w-3 mr-1" />
+                      Copy Link
+                    </Button>
+                  </div>
+                </div>
+                
                 <div className="flex gap-2">
                   <Button
                     size="sm"
