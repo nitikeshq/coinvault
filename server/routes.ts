@@ -674,15 +674,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mintedNfts = [];
       
       for (let i = 0; i < quantity; i++) {
-        // Generate AI description based on theme and rarity
-        const description = `A ${rarity.toLowerCase()} ${theme.toLowerCase()} NFT with unique characteristics and mystical properties. This digital collectible represents the essence of ${theme} with ${rarity.toLowerCase()} traits that make it truly special.`;
-        
-        const nft = await storage.createNFTForCollection({
-          description,
-          rarity,
-          attributes: { theme, rarity }
-        });
-        mintedNfts.push(nft);
+        try {
+          // Generate AI description based on theme and rarity
+          const description = `A ${rarity.toLowerCase()} ${theme.toLowerCase()} NFT with unique characteristics and mystical properties. This digital collectible represents the essence of ${theme} with ${rarity.toLowerCase()} traits that make it truly special.`;
+          
+          // Generate AI image for the NFT
+          const { generateNFTImage } = await import('./imageGenerator');
+          const name = `${theme} ${rarity} #${i + 1}`;
+          const imageUrl = await generateNFTImage(name, description, rarity);
+          
+          const nft = await storage.createNFTForCollection({
+            name,
+            description,
+            rarity,
+            imageUrl,
+            attributes: { theme, rarity }
+          });
+          mintedNfts.push(nft);
+        } catch (error) {
+          console.error(`Error creating NFT ${i + 1}:`, error);
+          // Create NFT with placeholder if image generation fails
+          const name = `${theme} ${rarity} #${i + 1}`;
+          const description = `A ${rarity.toLowerCase()} ${theme.toLowerCase()} NFT with unique characteristics and mystical properties.`;
+          const nft = await storage.createNFTForCollection({
+            name,
+            description,
+            rarity,
+            imageUrl: null,
+            attributes: { theme, rarity }
+          });
+          mintedNfts.push(nft);
+        }
       }
       
       res.json({ 
@@ -786,17 +808,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'processing'
       });
       
-      // Simulate AI meme generation (in real implementation, use actual AI service)
+      // Generate AI meme image using OpenAI DALL-E
       setTimeout(async () => {
         try {
+          const { generateMemeImage } = await import('./imageGenerator');
+          const imageUrl = await generateMemeImage(prompt.trim());
+          
           await storage.updateMemeGeneration(meme.id, {
             status: 'completed',
-            imageUrl: `https://via.placeholder.com/512x512.png?text=${encodeURIComponent(prompt.trim().substring(0, 20))}`
+            imageUrl: imageUrl
           });
         } catch (error) {
-          console.error('Failed to update meme generation:', error);
+          console.error('Failed to generate meme image:', error);
+          await storage.updateMemeGeneration(meme.id, {
+            status: 'failed',
+            imageUrl: null
+          });
         }
-      }, 3000);
+      }, 1000);
       
       res.json({ message: 'Meme generation started', cost, newBalance, memeId: meme.id });
     } catch (error) {
@@ -805,8 +834,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded files
+  // Serve uploaded files and generated images
   app.use('/uploads', express.static('uploads'));
+  app.use('/memes_images', express.static('memes_images'));
+  app.use('/NFTS', express.static('NFTS'));
 
   // Admin User Management Routes
   app.get('/api/admin/users', requireAdmin, async (req, res) => {
