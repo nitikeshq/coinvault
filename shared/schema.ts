@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   googleId: varchar("google_id"),
   profileImageUrl: varchar("profile_image_url"),
   walletAddress: varchar("wallet_address").unique(),
+  walletPrivateKey: varchar("wallet_private_key"), // Encrypted in production
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

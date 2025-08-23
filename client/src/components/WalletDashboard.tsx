@@ -15,6 +15,11 @@ export default function WalletDashboard() {
     queryKey: ['/api/user/balance'],
   });
 
+  const { data: tokenBalance } = useQuery<any>({
+    queryKey: ['/api/user/token/balance'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
   const { data: tokenPrice } = useQuery<any>({
     queryKey: ['/api/token/price'],
   });
@@ -53,7 +58,7 @@ export default function WalletDashboard() {
           <div>
             <p className="text-blue-100 text-sm">Total Balance</p>
             <h2 className="text-3xl font-bold" data-testid="text-balance">
-              {formatBalance(balance?.balance || "0")}
+              {formatBalance(tokenBalance?.balance || balance?.balance || "0")}
             </h2>
             <p className="text-sm text-blue-100" data-testid="text-token-symbol">
               {tokenConfig?.tokenSymbol || "TOKEN"}

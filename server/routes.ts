@@ -6,6 +6,7 @@ import { setupAuth, requireAuth, requireAdmin } from "./auth";
 import { insertDepositRequestSchema, insertNewsArticleSchema, insertSocialLinkSchema, insertTokenConfigSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
+import Web3 from "web3";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -55,6 +56,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching token config:", error);
       res.status(500).json({ message: "Failed to fetch token configuration" });
+    }
+  });
+
+  // Real blockchain token info endpoint
+  app.get('/api/token/info/:contractAddress', async (req, res) => {
+    try {
+      const { contractAddress } = req.params;
+      
+      if (!contractAddress || !contractAddress.startsWith('0x') || contractAddress.length !== 42) {
+        return res.status(400).json({ message: "Invalid contract address" });
+      }
+
+      const web3 = new Web3('https://bsc-dataseed1.binance.org/');
+      
+      // ERC-20 function selectors
+      const nameSelector = '0x06fdde03'; // name()
+      const symbolSelector = '0x95d89b41'; // symbol()
+      const decimalsSelector = '0x313ce567'; // decimals()
+
+      // Make RPC calls to get token info
+      const [nameResponse, symbolResponse, decimalsResponse] = await Promise.all([
+        web3.eth.call({ to: contractAddress, data: nameSelector }),
+        web3.eth.call({ to: contractAddress, data: symbolSelector }),
+        web3.eth.call({ to: contractAddress, data: decimalsSelector })
+      ]);
+
+      // Decode hex strings
+      const decodeName = (hex: string) => {
+        if (hex === '0x') return '';
+        const hex2 = hex.slice(2);
+        const length = parseInt(hex2.slice(64, 128), 16);
+        const nameHex = hex2.slice(128, 128 + length * 2);
+        return nameHex ? Buffer.from(nameHex, 'hex').toString('utf8') : '';
+      };
+
+      const decodeSymbol = (hex: string) => {
+        if (hex === '0x') return '';
+        const hex2 = hex.slice(2);
+        const length = parseInt(hex2.slice(64, 128), 16);
+        const symbolHex = hex2.slice(128, 128 + length * 2);
+        return symbolHex ? Buffer.from(symbolHex, 'hex').toString('utf8') : '';
+      };
+
+      const tokenName = decodeName(nameResponse);
+      const tokenSymbol = decodeSymbol(symbolResponse);
+      const decimals = parseInt(decimalsResponse, 16);
+
+      res.json({
+        name: tokenName,
+        symbol: tokenSymbol,
+        decimals,
+        contractAddress
+      });
+    } catch (error) {
+      console.error("Error fetching token info from blockchain:", error);
+      res.status(500).json({ message: "Failed to fetch token information from blockchain" });
+    }
+  });
+
+  // Get token balance for user
+  app.get('/api/user/token/balance', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const wallet = await storage.getUserWallet(userId);
+      const tokenConfig = await storage.getActiveTokenConfig();
+      
+      if (!wallet?.address || !tokenConfig) {
+        return res.json({ balance: '0', usdValue: '0' });
+      }
+
+      const web3 = new Web3('https://bsc-dataseed1.binance.org/');
+      
+      // Get token balance
+      const balanceSelector = '0x70a08231'; // balanceOf(address)
+      const addressParam = wallet.address.slice(2).padStart(64, '0');
+      
+      const balanceResponse = await web3.eth.call({
+        to: tokenConfig.contractAddress,
+        data: balanceSelector + addressParam
+      });
+
+      const balance = parseInt(balanceResponse, 16);
+      const tokenBalance = (balance / Math.pow(10, tokenConfig.decimals)).toString();
+      
+      // Update user balance in database
+      await storage.updateUserBalance(userId, tokenBalance, '0'); // USD value would come from price API
+      
+      res.json({ balance: tokenBalance, usdValue: '0' });
+    } catch (error) {
+      console.error("Error fetching user token balance:", error);
+      res.status(500).json({ message: "Failed to fetch token balance" });
     }
   });
 

@@ -37,6 +37,7 @@ export interface IStorage {
   
   // Wallet operations
   generateWalletAddress(userId: string): Promise<string>;
+  getUserWallet(userId: string): Promise<{address: string, privateKey?: string} | undefined>;
   getUserBalance(userId: string): Promise<UserBalance | undefined>;
   updateUserBalance(userId: string, balance: string, usdValue: string): Promise<void>;
   
@@ -117,12 +118,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async generateWalletAddress(userId: string): Promise<string> {
-    // Generate a mock BEP-20 wallet address (in production, use proper wallet generation)
-    const walletAddress = `0x${randomUUID().replace(/-/g, '').substring(0, 40)}`;
+    // Generate a real BEP-20 wallet address using Web3
+    const Web3 = require('web3');
+    const web3 = new Web3();
+    
+    // Generate a new account with real private key
+    const account = web3.eth.accounts.create();
     
     await db
       .update(users)
-      .set({ walletAddress })
+      .set({ 
+        walletAddress: account.address,
+        walletPrivateKey: account.privateKey, // In production, encrypt this
+        updatedAt: new Date()
+      })
       .where(eq(users.id, userId));
     
     // Create initial balance record
@@ -136,7 +145,23 @@ export class DatabaseStorage implements IStorage {
       });
     }
     
-    return walletAddress;
+    return account.address;
+  }
+
+  async getUserWallet(userId: string): Promise<{address: string, privateKey?: string} | undefined> {
+    const [user] = await db
+      .select({ walletAddress: users.walletAddress, walletPrivateKey: users.walletPrivateKey })
+      .from(users)
+      .where(eq(users.id, userId));
+    
+    if (!user?.walletAddress) {
+      return undefined;
+    }
+    
+    return {
+      address: user.walletAddress,
+      privateKey: user.walletPrivateKey || undefined
+    };
   }
 
   async getUserBalance(userId: string): Promise<UserBalance | undefined> {
