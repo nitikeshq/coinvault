@@ -203,14 +203,14 @@ export default function DappsSection() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Sold:</span>
-                        <span>{nftStats.mintedNfts || 0} / {nftStats.totalNfts || 0}</span>
+                        <span>{nftStats.mintedNfts || 0} / {nftStats.collectionLimit || '10000'}</span>
                       </div>
                       <Progress 
-                        value={((nftStats.mintedNfts || 0) / (nftStats.totalNfts || 1)) * 100} 
+                        value={((nftStats.mintedNfts || 0) / (parseInt(nftStats.collectionLimit || '10000'))) * 100} 
                         className="h-2"
                       />
                       <div className="text-sm text-gray-600">
-                        Available: {nftStats.availableNfts || 0} NFTs
+                        Available: {nftStats.availableNfts || 0} NFTs (Total Limit: {nftStats.collectionLimit || '10000'})
                       </div>
                     </div>
                   )}

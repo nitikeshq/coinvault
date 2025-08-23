@@ -530,6 +530,31 @@ export default function AdminPanel() {
                     />
                   </div>
 
+                  <FormField
+                    control={websiteForm.control}
+                    name="nftCollectionLimit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">NFT Collection Limit</FormLabel>
+                        <FormDescription className="text-gray-500">
+                          Maximum number of NFTs that can be minted in the collection
+                        </FormDescription>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min="1"
+                            placeholder="10000"
+                            className="bg-gray-50 border-gray-300 text-gray-900"
+                            data-testid="input-nft-collection-limit"
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <Button 
                     type="submit" 
                     className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white"

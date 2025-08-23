@@ -147,6 +147,7 @@ export const websiteSettings = pgTable("website_settings", {
   secondaryColor: varchar("secondary_color").default("#8b5cf6"),
   auditReportUrl: varchar("audit_report_url"),
   whitepaperUrl: varchar("whitepaper_url"),
+  nftCollectionLimit: integer("nft_collection_limit").default(10000),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -264,7 +265,7 @@ export const dappSettings = pgTable("dapp_settings", {
 // NFT Collection table
 export const nftCollection = pgTable("nft_collection", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  tokenId: integer("token_id").notNull().unique(), // NFT token ID (1-10000)
+  tokenId: integer("token_id").notNull().unique(), // NFT token ID (configured by admin)
   name: varchar("name").notNull(),
   description: text("description"),
   imageUrl: varchar("image_url"),

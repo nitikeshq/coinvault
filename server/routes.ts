@@ -644,7 +644,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/nfts/stats', requireAuth, async (req, res) => {
     try {
       const stats = await storage.getNftCollectionStats();
-      res.json(stats);
+      const websiteSettings = await storage.getWebsiteSettings();
+      const collectionLimit = websiteSettings?.nftCollectionLimit || 10000;
+      res.json({
+        ...stats,
+        collectionLimit: collectionLimit.toString()
+      });
     } catch (error) {
       console.error("Error fetching NFT stats:", error);
       res.status(500).json({ message: "Failed to fetch NFT stats" });
@@ -901,6 +906,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!theme) {
         return res.status(400).json({ message: "Theme is required" });
+      }
+
+      // Check NFT collection limit from admin settings
+      const websiteSettings = await storage.getWebsiteSettings();
+      const collectionLimit = websiteSettings?.nftCollectionLimit || 10000;
+      const currentStats = await storage.getNftCollectionStats();
+      const currentTotal = parseInt(currentStats.totalNfts || '0');
+      
+      if (currentTotal + quantity > collectionLimit) {
+        return res.status(400).json({ 
+          message: `Cannot mint ${quantity} NFT(s). Would exceed collection limit of ${collectionLimit} (current: ${currentTotal})` 
+        });
       }
 
       const results = [];
