@@ -1,7 +1,9 @@
 import { ObjectStorageService } from "./objectStorage";
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = process.env.OPENAI_API_KEY 
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 export class ImageManager {
   private objectStorageService: ObjectStorageService;
@@ -12,6 +14,11 @@ export class ImageManager {
 
   async generateAndSaveNFTImage(metadata: any, theme: string, rarity: string, referenceImageUrl?: string): Promise<string> {
     try {
+      if (!openai) {
+        console.warn("OpenAI API key not configured, using placeholder image");
+        return `https://via.placeholder.com/512x512/1a1a2e/ffffff?text=${encodeURIComponent(metadata.name)}`;
+      }
+
       // Generate AI image based on metadata
       let imagePrompt = `Create a high-quality, squared (1:1 aspect ratio) NFT artwork for: "${metadata.name}". 
       Theme: ${theme}, Rarity: ${rarity}. 
@@ -52,6 +59,11 @@ export class ImageManager {
 
   async generateAndSaveMemeImage(prompt: string, style: string): Promise<string> {
     try {
+      if (!openai) {
+        console.warn("OpenAI API key not configured, using placeholder image");
+        return `https://via.placeholder.com/512x512/ff6b6b/ffffff?text=${encodeURIComponent('Meme Failed')}`;
+      }
+
       const imagePrompt = `Create a funny meme image based on: "${prompt}". 
       Style: ${style}, humorous, engaging, meme format, high quality.
       Make it suitable for sharing and social media.`;

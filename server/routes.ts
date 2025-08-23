@@ -11,7 +11,9 @@ import OpenAI from "openai";
 import { ObjectStorageService } from "./objectStorage";
 import marketRoutes from "./marketRoutes";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = process.env.OPENAI_API_KEY 
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 // Configure multer for file uploads
 const upload = multer({
@@ -906,6 +908,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         }`;
         
+        if (!openai) {
+          throw new Error('OpenAI API key not configured');
+        }
+        
         const metadataResponse = await openai.chat.completions.create({
           model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
           messages: [{ role: "user", content: metadataPrompt }],
@@ -931,7 +937,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         let imageUrl = null;
         try {
-          const imageResponse = await openai.images.generate({
+          const imageResponse = await openai!.images.generate({
             model: "dall-e-3",
             prompt: imagePrompt,
             n: 1,
@@ -997,6 +1003,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate meme description with AI
       const memePrompt = `Create a ${style} meme concept based on: "${prompt}". Describe the visual elements, text, and style. Make it engaging and shareable. Keep it under 150 words.`;
+      
+      if (!openai) {
+        throw new Error('OpenAI API key not configured');
+      }
       
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
