@@ -21,7 +21,10 @@ import {
   Rocket,
   Target,
   Calendar,
-  Star
+  Star,
+  Globe,
+  Twitter,
+  MessageSquare
 } from "lucide-react";
 
 interface WebsiteSettings {
@@ -98,6 +101,11 @@ export default function LandingPage() {
   // Fetch token configuration
   const { data: tokenConfig } = useQuery<TokenConfig>({
     queryKey: ['/api/token/config'],
+  });
+
+  // Fetch social links
+  const { data: socialLinks = [] } = useQuery<any[]>({
+    queryKey: ['/api/social-links'],
   });
 
   // Calculate time remaining
@@ -315,7 +323,7 @@ export default function LandingPage() {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
                 <Link href="/register">
                   <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg">
                     Invest Now - Limited Time
@@ -333,12 +341,78 @@ export default function LandingPage() {
                   Add Token to Wallet
                 </Button>
               </div>
+
+              {/* Token Information & Resources */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                {websiteSettings?.whitepaperUrl && (
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    onClick={() => window.open(websiteSettings.whitepaperUrl, '_blank')}
+                    className="border-white/30 text-white hover:bg-white/10 px-6 py-3 flex items-center gap-2"
+                    data-testid="button-whitepaper"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Whitepaper
+                  </Button>
+                )}
+                
+                {websiteSettings?.auditReportUrl && (
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    onClick={() => window.open(websiteSettings.auditReportUrl, '_blank')}
+                    className="border-white/30 text-white hover:bg-white/10 px-6 py-3 flex items-center gap-2"
+                    data-testid="button-audit-report"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Audit Report
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
+        {/* Token Details Section */}
+        {tokenConfig && (
+          <section className="py-20 px-4 bg-black/20">
+            <div className="container mx-auto max-w-6xl">
+              <h2 className="text-4xl font-bold text-center text-white mb-16">Token Information</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+                <Card className="bg-white/10 border-white/20 backdrop-blur-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-2xl font-bold text-white mb-2">{tokenConfig.tokenName}</div>
+                    <div className="text-gray-400">Token Name</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white/10 border-white/20 backdrop-blur-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-2xl font-bold text-white mb-2">{tokenConfig.tokenSymbol}</div>
+                    <div className="text-gray-400">Symbol</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white/10 border-white/20 backdrop-blur-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-2xl font-bold text-white mb-2">{tokenConfig.decimals}</div>
+                    <div className="text-gray-400">Decimals</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white/10 border-white/20 backdrop-blur-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-lg font-mono text-white mb-2 break-all">
+                      {tokenConfig.contractAddress.slice(0, 8)}...{tokenConfig.contractAddress.slice(-8)}
+                    </div>
+                    <div className="text-gray-400">Contract Address</div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Features Section */}
-        <section className="py-20 px-4 bg-black/20">
+        <section className="py-20 px-4">
           <div className="container mx-auto max-w-6xl">
             <h2 className="text-4xl font-bold text-center text-white mb-16">Why Choose Our Platform?</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -384,7 +458,7 @@ export default function LandingPage() {
                   <Card key={index} className="bg-white/10 border-white/20 backdrop-blur-lg">
                     <CardHeader>
                       <CardTitle className="text-white">{dapp.displayName}</CardTitle>
-                      <Badge className="w-fit bg-green-600">{dapp.cost} {tokenConfig?.symbol}</Badge>
+                      <Badge className="w-fit bg-green-600">{dapp.cost} {tokenConfig?.tokenSymbol || 'Tokens'}</Badge>
                     </CardHeader>
                     <CardContent>
                       <p className="text-gray-400">{dapp.description}</p>
@@ -491,12 +565,61 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Social Networks Section */}
+        {socialLinks && socialLinks.length > 0 && (
+          <section className="py-20 px-4 bg-black/20">
+            <div className="container mx-auto max-w-4xl">
+              <h2 className="text-4xl font-bold text-center text-white mb-16">Join Our Community</h2>
+              <div className="flex flex-wrap justify-center gap-6">
+                {socialLinks.map((link: any) => (
+                  <Button
+                    key={link.id}
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10 px-6 py-3 flex items-center gap-2"
+                    data-testid={`social-link-${link.platform}`}
+                  >
+                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                      {link.platform.toLowerCase() === 'twitter' && <Twitter className="h-5 w-5" />}
+                      {link.platform.toLowerCase() === 'telegram' && <MessageSquare className="h-5 w-5" />}
+                      {!['twitter', 'telegram'].includes(link.platform.toLowerCase()) && <Globe className="h-5 w-5" />}
+                      {link.platform}
+                      <ExternalLink className="h-4 w-4 ml-1" />
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Footer */}
         <footer className="border-t border-white/10 bg-black/40 py-12 px-4">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center text-gray-400">
               <p>&copy; 2024 {websiteSettings?.siteName || "CryptoWallet Pro"}. All rights reserved.</p>
               <p className="mt-2">Invest responsibly. Cryptocurrency investments carry risk.</p>
+              
+              {/* Social Links in Footer */}
+              {socialLinks && socialLinks.length > 0 && (
+                <div className="mt-6 flex justify-center gap-4">
+                  {socialLinks.map((link: any) => (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-white transition-colors"
+                      data-testid={`footer-social-${link.platform}`}
+                    >
+                      {link.platform.toLowerCase() === 'twitter' && <Twitter className="h-5 w-5" />}
+                      {link.platform.toLowerCase() === 'telegram' && <MessageSquare className="h-5 w-5" />}
+                      {!['twitter', 'telegram'].includes(link.platform.toLowerCase()) && <Globe className="h-5 w-5" />}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </footer>
