@@ -585,7 +585,7 @@ export default function LandingPage() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 px-6 py-3 flex items-center gap-2"
+                    className="border-white/30 !text-white hover:bg-white/10 hover:!text-white px-6 py-3 flex items-center gap-2"
                     data-testid={`social-link-${link.platform}`}
                   >
                     <a href={link.url} target="_blank" rel="noopener noreferrer">
