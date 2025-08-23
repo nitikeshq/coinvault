@@ -256,6 +256,7 @@ export function setupAuth(app: Express) {
     );
   }
 
+  // Handle both GET and POST logout requests
   app.get('/api/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
@@ -263,6 +264,15 @@ export function setupAuth(app: Express) {
       }
       // Redirect to home page after logout
       res.redirect('/');
+    });
+  });
+
+  app.post('/api/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Logout failed' });
+      }
+      res.json({ message: 'Logged out successfully' });
     });
   });
 
