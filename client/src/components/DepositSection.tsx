@@ -376,7 +376,7 @@ export default function DepositSection() {
                         <img 
                           src={bscQrImage} 
                           alt="BSC Wallet QR Code" 
-                          className="w-48 h-48 object-contain"
+                          className="w-64 h-64 object-contain"
                           data-testid="crypto-qr-code"
                         />
                       </div>
