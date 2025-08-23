@@ -28,22 +28,22 @@ export default function NewsSection() {
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      'market': 'bg-crypto-blue/20 text-crypto-blue',
-      'technology': 'bg-crypto-green/20 text-crypto-green',
-      'platform': 'bg-crypto-gold/20 text-crypto-gold',
-      'regulation': 'bg-red-500/20 text-red-400',
-      'investment': 'bg-purple-500/20 text-purple-400',
-      'education': 'bg-cyan-500/20 text-cyan-400',
+      'market': 'bg-blue-100 text-blue-700 border-blue-200',
+      'technology': 'bg-green-100 text-green-700 border-green-200',
+      'platform': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      'regulation': 'bg-red-100 text-red-700 border-red-200',
+      'investment': 'bg-purple-100 text-purple-700 border-purple-200',
+      'education': 'bg-cyan-100 text-cyan-700 border-cyan-200',
     };
-    return colors[category.toLowerCase()] || 'bg-gray-500/20 text-gray-400';
+    return colors[category.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-200';
   };
 
   return (
     <section className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2">Latest News</h2>
-          <p className="text-gray-400">Stay updated with the latest crypto news and announcements</p>
+          <h2 className="text-3xl font-bold mb-2 text-gray-800">Latest News</h2>
+          <p className="text-gray-600">Stay updated with the latest crypto news and announcements</p>
         </div>
 
         {news.length > 0 ? (
@@ -51,7 +51,7 @@ export default function NewsSection() {
             {news.map((article: any) => (
               <Card 
                 key={article.id} 
-                className="bg-crypto-dark border-white/10 hover:border-crypto-gold/50 transition-colors overflow-hidden group"
+                className="bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all overflow-hidden group"
                 data-testid={`news-article-${article.id}`}
               >
                 {article.imageUrl && (
@@ -73,17 +73,17 @@ export default function NewsSection() {
                     <Badge className={getCategoryColor(article.category)} data-testid={`news-category-${article.id}`}>
                       {article.category}
                     </Badge>
-                    <div className="flex items-center text-xs text-gray-400">
+                    <div className="flex items-center text-xs text-gray-500">
                       <Calendar className="h-3 w-3 mr-1" />
                       <span data-testid={`news-date-${article.id}`}>{formatDate(article.createdAt)}</span>
                     </div>
                   </div>
                   
-                  <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-crypto-gold transition-colors" data-testid={`news-title-${article.id}`}>
+                  <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors text-gray-800" data-testid={`news-title-${article.id}`}>
                     {article.title}
                   </h3>
                   
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-3" data-testid={`news-description-${article.id}`}>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3" data-testid={`news-description-${article.id}`}>
                     {article.description}
                   </p>
                   
@@ -92,7 +92,7 @@ export default function NewsSection() {
                       href={article.externalUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-crypto-gold hover:text-yellow-400 text-sm font-medium transition-colors"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
                       data-testid={`news-link-${article.id}`}
                     >
                       Read More
@@ -105,11 +105,11 @@ export default function NewsSection() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <div className="w-24 h-24 bg-crypto-gray/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="h-12 w-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No News Available</h3>
-            <p className="text-gray-400 mb-6">Stay tuned for the latest updates and announcements.</p>
+            <h3 className="text-xl font-semibold mb-2 text-gray-800">No News Available</h3>
+            <p className="text-gray-600 mb-6">Stay tuned for the latest updates and announcements.</p>
           </div>
         )}
       </div>

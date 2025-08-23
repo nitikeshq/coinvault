@@ -107,27 +107,27 @@ export default function DepositSection() {
     <section className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold mb-2">Deposit Tokens</h2>
-          <p className="text-gray-400">Send tokens to your wallet address or submit a manual deposit request</p>
+          <h2 className="text-2xl font-bold mb-2 text-gray-800">Deposit Tokens</h2>
+          <p className="text-gray-600">Send tokens to your wallet address or submit a manual deposit request</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Deposit Form */}
-          <Card className="bg-crypto-dark border-white/10">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle>Make a Deposit</CardTitle>
+              <CardTitle className="text-gray-800">Make a Deposit</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="direct" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-crypto-gray/30">
-                  <TabsTrigger value="direct" data-testid="tab-direct">Direct Transfer</TabsTrigger>
-                  <TabsTrigger value="manual" data-testid="tab-manual">Manual Deposit</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                  <TabsTrigger value="direct" className="text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white" data-testid="tab-direct">Direct Transfer</TabsTrigger>
+                  <TabsTrigger value="manual" className="text-gray-700 data-[state=active]:bg-purple-600 data-[state=active]:text-white" data-testid="tab-manual">Manual Deposit</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="direct" className="space-y-6 mt-6">
                   {/* QR Code Section */}
                   <div className="text-center">
-                    <div className="bg-white p-4 rounded-xl inline-block mb-4">
+                    <div className="bg-white p-4 rounded-xl inline-block mb-4 border border-gray-200">
                       <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center" data-testid="qr-code-placeholder">
                         <div className="text-center">
                           <div className="text-6xl mb-2">📱</div>
@@ -136,22 +136,22 @@ export default function DepositSection() {
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-400">Scan QR code or copy address below</p>
+                    <p className="text-sm text-gray-500">Scan QR code or copy address below</p>
                   </div>
 
                   {/* Wallet Address */}
                   {user?.walletAddress && (
-                    <div className="bg-crypto-gray/50 rounded-lg p-4">
-                      <p className="text-xs text-gray-400 mb-2">Wallet Address (BEP-20)</p>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <p className="text-xs text-gray-500 mb-2">Wallet Address (BEP-20)</p>
                       <div className="flex items-center justify-between">
-                        <code className="text-sm font-mono text-gray-200 break-all mr-2" data-testid="text-deposit-address">
+                        <code className="text-sm font-mono text-gray-800 break-all mr-2" data-testid="text-deposit-address">
                           {user.walletAddress}
                         </code>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={copyAddress}
-                          className="p-2 hover:bg-white/10 text-crypto-gold"
+                          className="p-2 hover:bg-gray-200 text-blue-600"
                           data-testid="button-copy-deposit-address"
                         >
                           <Copy className="h-4 w-4" />
@@ -164,7 +164,7 @@ export default function DepositSection() {
                 <TabsContent value="manual" className="space-y-4 mt-6">
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <Label htmlFor="amount">Deposit Amount</Label>
+                      <Label htmlFor="amount" className="text-gray-700">Deposit Amount</Label>
                       <Input
                         id="amount"
                         type="number"
@@ -172,16 +172,16 @@ export default function DepositSection() {
                         value={depositForm.amount}
                         onChange={(e) => setDepositForm(prev => ({ ...prev, amount: e.target.value }))}
                         placeholder="Enter amount"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-gray-50 border-gray-300 text-gray-900"
                         data-testid="input-deposit-amount"
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="screenshot">Transaction Screenshot</Label>
-                      <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center">
+                      <Label htmlFor="screenshot" className="text-gray-700">Transaction Screenshot</Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-400 mb-2">Drop screenshot here or click to browse</p>
+                        <p className="text-gray-600 mb-2">Drop screenshot here or click to browse</p>
                         <input
                           type="file"
                           accept="image/*"
@@ -194,13 +194,13 @@ export default function DepositSection() {
                           type="button"
                           variant="outline"
                           onClick={() => document.getElementById('screenshot-upload')?.click()}
-                          className="border-crypto-blue text-crypto-blue hover:bg-crypto-blue hover:text-white"
+                          className="border-blue-500 text-blue-600 hover:bg-blue-50"
                           data-testid="button-choose-file"
                         >
                           Choose File
                         </Button>
                         {depositForm.screenshot && (
-                          <p className="text-sm text-green-400 mt-2">
+                          <p className="text-sm text-green-600 mt-2">
                             File selected: {depositForm.screenshot.name}
                           </p>
                         )}
@@ -208,20 +208,20 @@ export default function DepositSection() {
                     </div>
                     
                     <div>
-                      <Label htmlFor="transactionHash">Transaction Hash/UTR (Optional)</Label>
+                      <Label htmlFor="transactionHash" className="text-gray-700">Transaction Hash/UTR (Optional)</Label>
                       <Input
                         id="transactionHash"
                         value={depositForm.transactionHash}
                         onChange={(e) => setDepositForm(prev => ({ ...prev, transactionHash: e.target.value }))}
                         placeholder="Enter transaction hash"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-gray-50 border-gray-300 text-gray-900"
                         data-testid="input-transaction-hash"
                       />
                     </div>
                     
                     <Button
                       type="submit"
-                      className="w-full bg-crypto-green hover:bg-green-600 py-3 rounded-lg font-semibold transition-colors"
+                      className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold transition-colors text-white"
                       disabled={depositMutation.isPending}
                       data-testid="button-submit-deposit"
                     >
@@ -232,12 +232,12 @@ export default function DepositSection() {
               </Tabs>
 
               {/* Important Notes */}
-              <div className="bg-crypto-gold/10 border border-crypto-gold/30 rounded-lg p-4 mt-6">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
                 <div className="flex items-start space-x-2">
-                  <AlertTriangle className="h-5 w-5 text-crypto-gold mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-crypto-gold mb-1">Important Notes:</p>
-                    <ul className="text-gray-300 space-y-1 text-xs">
+                    <p className="font-medium text-yellow-800 mb-1">Important Notes:</p>
+                    <ul className="text-gray-700 space-y-1 text-xs">
                       <li>• Only send BEP-20 tokens to this address</li>
                       <li>• Manual deposits require admin approval</li>
                       <li>• Processing time: 10-30 minutes</li>
@@ -250,9 +250,9 @@ export default function DepositSection() {
           </Card>
 
           {/* Deposit History */}
-          <Card className="bg-crypto-dark border-white/10">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle>Deposit History</CardTitle>
+              <CardTitle className="text-gray-800">Deposit History</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -260,31 +260,31 @@ export default function DepositSection() {
                   deposits.map((deposit: any) => (
                     <div
                       key={deposit.id}
-                      className="border border-white/20 rounded-lg p-4"
+                      className="border border-gray-200 rounded-lg p-4"
                       data-testid={`deposit-history-${deposit.id}`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <p className="font-semibold">Amount: {deposit.amount}</p>
-                          <p className="text-sm text-gray-400">
+                          <p className="font-semibold text-gray-800">Amount: {deposit.amount}</p>
+                          <p className="text-sm text-gray-500">
                             {new Date(deposit.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                         <div className={`px-2 py-1 rounded text-xs font-medium ${
-                          deposit.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                          deposit.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
-                          'bg-orange-500/20 text-orange-400'
+                          deposit.status === 'approved' ? 'bg-green-100 text-green-700' :
+                          deposit.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                          'bg-orange-100 text-orange-700'
                         }`}>
                           {deposit.status}
                         </div>
                       </div>
                       {deposit.transactionHash && (
-                        <p className="text-sm text-gray-400 break-all">
+                        <p className="text-sm text-gray-500 break-all">
                           Hash: {deposit.transactionHash}
                         </p>
                       )}
                       {deposit.adminNotes && (
-                        <p className="text-sm text-gray-300 mt-2">
+                        <p className="text-sm text-gray-700 mt-2">
                           Note: {deposit.adminNotes}
                         </p>
                       )}
@@ -292,8 +292,8 @@ export default function DepositSection() {
                   ))
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-400">No deposits found</p>
-                    <p className="text-sm text-gray-500 mt-2">Your deposit history will appear here</p>
+                    <p className="text-gray-500">No deposits found</p>
+                    <p className="text-sm text-gray-400 mt-2">Your deposit history will appear here</p>
                   </div>
                 )}
               </div>
