@@ -193,6 +193,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User balance endpoint
+  app.get('/api/user/balance', requireAuth, async (req: any, res) => {
+    try {
+      const balance = await storage.getUserBalance(req.user.id);
+      res.json({ balance: balance || "0" });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get balance' });
+    }
+  });
+
+  // News endpoint
+  app.get('/api/news', async (req, res) => {
+    try {
+      const news = await storage.getPublishedNews();
+      res.json(news);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get news' });
+    }
+  });
+
+  // NFT endpoints
+  app.get('/api/nfts/stats', async (req, res) => {
+    try {
+      const stats = { totalMinted: 1250, maxSupply: 10000 };
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get NFT stats' });
+    }
+  });
+
+  app.get('/api/nfts/available', async (req, res) => {
+    try {
+      const nfts = await storage.getAvailableNfts();
+      res.json(nfts);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get available NFTs' });
+    }
+  });
+
+  app.get('/api/user/nfts', requireAuth, async (req: any, res) => {
+    try {
+      const nfts = await storage.getUserNfts(req.user.id);
+      res.json(nfts);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get user NFTs' });
+    }
+  });
+
+  app.get('/api/user/memes', requireAuth, async (req: any, res) => {
+    try {
+      const memes = await storage.getUserMemes(req.user.id);
+      res.json(memes);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get user memes' });
+    }
+  });
+
+  // Social links endpoint
+  app.get('/api/social-links', async (req, res) => {
+    try {
+      const links = await storage.getActiveSocialLinks();
+      res.json(links);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get social links' });
+    }
+  });
+
   // Admin token config endpoint
   app.put('/api/admin/token/config', requireAdmin, async (req: any, res) => {
     try {
