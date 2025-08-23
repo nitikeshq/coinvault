@@ -1,8 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Wallet, Shield, TrendingUp, Smartphone, Globe, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Landing() {
+  const { data: websiteSettings } = useQuery<any>({
+    queryKey: ['/api/website/settings'],
+  });
+
+  const siteName = websiteSettings?.siteName || "CryptoWallet Pro";
+
   const handleLogin = () => {
     window.location.href = "/api/login";
   };
@@ -17,7 +24,7 @@ export default function Landing() {
               <div className="w-10 h-10 crypto-gradient rounded-lg flex items-center justify-center">
                 <Wallet className="text-white h-5 w-5" />
               </div>
-              <h1 className="text-xl font-bold">CryptoWallet Pro</h1>
+              <h1 className="text-xl font-bold">{siteName}</h1>
             </div>
             <Button 
               onClick={handleLogin}
@@ -69,7 +76,7 @@ export default function Landing() {
       <section className="py-16 bg-crypto-dark">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold mb-4">Why Choose CryptoWallet Pro?</h3>
+            <h3 className="text-3xl font-bold mb-4">Why Choose {siteName}?</h3>
             <p className="text-gray-400 max-w-2xl mx-auto">
               Built for both beginners and professionals, our platform combines security, 
               simplicity, and advanced trading features.
@@ -165,10 +172,10 @@ export default function Landing() {
             <div className="w-8 h-8 crypto-gradient rounded-lg flex items-center justify-center">
               <Wallet className="text-white h-4 w-4" />
             </div>
-            <span className="font-semibold">CryptoWallet Pro</span>
+            <span className="font-semibold">{siteName}</span>
           </div>
           <p className="text-gray-400 text-sm">
-            &copy; 2024 CryptoWallet Pro. All rights reserved.
+            &copy; 2024 {siteName}. All rights reserved.
           </p>
         </div>
       </footer>
