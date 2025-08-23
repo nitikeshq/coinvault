@@ -1643,6 +1643,13 @@ function NFTMintingPanel() {
   const [checkingUniqueness, setCheckingUniqueness] = useState(false);
   const [skipUniquenessCheck, setSkipUniquenessCheck] = useState(false);
   
+  // Auto minting states
+  const [autoMinting, setAutoMinting] = useState(false);
+  const [isAutoMinting, setIsAutoMinting] = useState(false);
+  const [autoMintQuantity, setAutoMintQuantity] = useState(10);
+  const [mintedCount, setMintedCount] = useState(0);
+  const [autoMintTarget, setAutoMintTarget] = useState(0);
+  
   // NFT Trait States based on user specifications
   const [nftExpression, setNftExpression] = useState("Serious");
   const [nftMouth, setNftMouth] = useState("Normal");
@@ -1653,6 +1660,39 @@ function NFTMintingPanel() {
   const [nftAccessories, setNftAccessories] = useState("");
   
   const { tokenSymbol } = useTokenInfo();
+
+  // Random trait generation functions
+  const getRandomTrait = (options: string[]) => {
+    return options[Math.floor(Math.random() * options.length)];
+  };
+
+  const generateRandomTraits = () => {
+    const expressions = ['Serious', 'Smiling', 'Angry', 'Surprised', 'Bored', 'Excited', 'Confident'];
+    const mouths = ['Normal', 'Cigarette', 'Cigar', 'Pipe'];
+    const eyewear = ['Black sunglasses', 'Colored sunglasses', 'No glasses', 'Round glasses', 'Dollar eyes'];
+    const beards = ['Thick curled beard', 'Short beard', 'Goatee'];
+    const hairStyles = ['Messy gray', 'Styled gray', 'Long gray', 'Wavy gray'];
+    const backgrounds = ['Yellow', 'Blue', 'Red', 'Green', 'Purple', 'Orange', 'Pink', 'Cosmic', 'Neon city'];
+    
+    return {
+      expression: getRandomTrait(expressions),
+      mouth: getRandomTrait(mouths),
+      eyewear: getRandomTrait(eyewear),
+      beard: getRandomTrait(beards),
+      hairStyle: getRandomTrait(hairStyles),
+      background: getRandomTrait(backgrounds),
+      accessories: Math.random() < 0.3 ? getRandomTrait(['Golden chain', 'Silver watch', 'Diamond ring', '']) : '',
+      customTheme: Math.random() < 0.2 ? getRandomTrait(['Cyberpunk', 'Medieval', 'Futuristic', 'Steampunk']) : ''
+    };
+  };
+
+  const getRandomRarity = () => {
+    const rand = Math.random() * 100;
+    if (rand < 50) return "Common";
+    if (rand < 80) return "Rare"; // 30%
+    if (rand < 95) return "Epic"; // 15% (using Epic instead of Unique)
+    return "Legendary"; // 5%
+  };
 
   // Fetch website settings to show current NFT character and limits
   const { data: websiteSettings } = useQuery<any>({
@@ -1686,6 +1726,88 @@ function NFTMintingPanel() {
       toast({ title: "Failed to check uniqueness", description: error.message, variant: "destructive" });
     },
   });
+
+  // Auto minting mutation
+  const autoMintSingleMutation = useMutation({
+    mutationFn: async ({ traits, rarity }: { traits: any; rarity: string }) => {
+      return apiRequest("POST", "/api/admin/mint-nft", { 
+        traits, 
+        rarity, 
+        quantity: 1,
+        skipUniquenessCheck: true // Skip uniqueness for auto minting
+      });
+    },
+    onSuccess: () => {
+      setMintedCount(prev => prev + 1);
+      if (mintedCount + 1 < autoMintTarget && isAutoMinting) {
+        // Continue auto minting with delay
+        setTimeout(() => {
+          autoMintNext();
+        }, 2000); // 2 second delay between mints
+      } else {
+        // Stop auto minting
+        setIsAutoMinting(false);
+        toast({ 
+          title: "Auto Minting Complete!", 
+          description: `Successfully minted ${mintedCount + 1} NFT(s)` 
+        });
+      }
+    },
+    onError: (error: any) => {
+      setIsAutoMinting(false);
+      toast({ 
+        title: "Auto Minting Error", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Auto mint next NFT
+  const autoMintNext = () => {
+    if (!isAutoMinting) return;
+    
+    const randomTraits = generateRandomTraits();
+    const randomRarity = getRandomRarity();
+    
+    autoMintSingleMutation.mutate({
+      traits: randomTraits,
+      rarity: randomRarity
+    });
+  };
+
+  // Start auto minting
+  const startAutoMinting = () => {
+    if (!websiteSettings?.nftCharacterPrompt) {
+      toast({
+        title: "Error",
+        description: "Please set the NFT character prompt in Website Settings first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsAutoMinting(true);
+    setMintedCount(0);
+    setAutoMintTarget(autoMintQuantity);
+    
+    toast({ 
+      title: "Auto Minting Started!", 
+      description: `Will mint ${autoMintQuantity} random NFTs` 
+    });
+    
+    // Start first mint
+    setTimeout(() => autoMintNext(), 1000);
+  };
+
+  // Stop auto minting
+  const stopAutoMinting = () => {
+    setIsAutoMinting(false);
+    toast({ 
+      title: "Auto Minting Stopped", 
+      description: `Minted ${mintedCount} out of ${autoMintTarget} NFTs` 
+    });
+  };
 
   const mintNftMutation = useMutation({
     mutationFn: async ({ traits, rarity, quantity, skipUniquenessCheck }: { traits: any; rarity: string; quantity: number; skipUniquenessCheck: boolean }) => {
@@ -2073,6 +2195,119 @@ function NFTMintingPanel() {
               )}
             </div>
           )}
+        </div>
+        
+        {/* Auto Minting Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200 mt-6">
+          <h4 className="font-medium text-gray-800 mb-4 flex items-center">
+            <Sparkles className="h-5 w-5 text-purple-600 mr-2" />
+            Auto NFT Minting
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Auto Minting Controls */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <Switch 
+                  checked={autoMinting}
+                  onCheckedChange={setAutoMinting}
+                  disabled={isAutoMinting}
+                  data-testid="switch-auto-minting"
+                />
+                <label className="text-sm font-medium text-gray-700">
+                  Enable Auto Minting
+                </label>
+              </div>
+              
+              {autoMinting && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Quantity to Mint</label>
+                    <Input
+                      type="number"
+                      min="2"
+                      max="100"
+                      value={autoMintQuantity}
+                      onChange={(e) => setAutoMintQuantity(parseInt(e.target.value) || 2)}
+                      disabled={isAutoMinting}
+                      className="mt-1 bg-white"
+                      data-testid="input-auto-mint-quantity"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Min: 2, Max: 100 NFTs
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    {!isAutoMinting ? (
+                      <Button 
+                        onClick={startAutoMinting}
+                        disabled={!websiteSettings?.nftCharacterPrompt || autoMintQuantity < 2}
+                        className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white"
+                        data-testid="button-start-auto-mint"
+                      >
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Keep Minting ({autoMintQuantity})
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={stopAutoMinting}
+                        variant="destructive"
+                        data-testid="button-stop-auto-mint"
+                      >
+                        <X className="mr-2 h-4 w-4" />
+                        Stop Auto Minting
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Auto Minting Status */}
+            <div className="bg-white rounded-lg p-4 border">
+              <div className="text-xs text-gray-600 mb-2">Auto Minting Status</div>
+              
+              {isAutoMinting ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-green-700">🟢 Active</span>
+                    <div className="flex items-center">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600 mr-2" />
+                      <span className="text-sm text-gray-700">Minting...</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-2xl font-bold text-blue-600">
+                    {mintedCount} / {autoMintTarget}
+                  </div>
+                  
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-green-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(mintedCount / autoMintTarget) * 100}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-600">
+                    Progress: {Math.round((mintedCount / autoMintTarget) * 100)}%
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="text-sm text-gray-500">🔴 Inactive</div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Enable auto minting to start
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-4 p-2 bg-gray-50 rounded text-xs">
+                <strong>Rarity Distribution:</strong><br />
+                50% Common, 30% Rare, 15% Epic, 5% Legendary
+              </div>
+            </div>
+          </div>
         </div>
         
         <div className="pt-4 border-t border-gray-200 mt-6">

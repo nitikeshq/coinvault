@@ -711,15 +711,18 @@ export class DatabaseStorage implements IStorage {
 
   async checkTraitsCombinationExists(traitsHash: string, traitsString: string): Promise<any[]> {
     // Check in both nftCollection and userNfts tables for trait combinations
+    const traitsStringPattern = `%"traitsString":"${traitsString}"%`;
+    const traitsHashPattern = `%"traitsHash":"${traitsHash}"%`;
+    
     const existingInCollection = await db
       .select()
       .from(nftCollection)
-      .where(sql`${nftCollection.attributes}::text LIKE '%"traitsString":"${traitsString}"%' OR ${nftCollection.attributes}::text LIKE '%"traitsHash":"${traitsHash}"%'`);
+      .where(sql`${nftCollection.attributes}::text LIKE ${traitsStringPattern} OR ${nftCollection.attributes}::text LIKE ${traitsHashPattern}`);
     
     const existingInUserNfts = await db
       .select()
       .from(userNfts)
-      .where(sql`${userNfts.attributes}::text LIKE '%"traitsString":"${traitsString}"%' OR ${userNfts.attributes}::text LIKE '%"traitsHash":"${traitsHash}"%'`);
+      .where(sql`${userNfts.attributes}::text LIKE ${traitsStringPattern} OR ${userNfts.attributes}::text LIKE ${traitsHashPattern}`);
     
     return [...existingInCollection, ...existingInUserNfts];
   }
