@@ -29,69 +29,7 @@ const upload = multer({
   }
 });
 
-// Test function for debugging the exact request body
-function testMintNFTLogic() {
-  console.log('\n🧪 TESTING MINT NFT LOGIC WITH USER\'S EXACT REQUEST BODY 🧪');
-  console.log('===============================================================');
-  
-  const testRequestBody = {
-    "traits": {
-      "expression": "Serious",
-      "mouth": "Normal",
-      "eyewear": "Black sunglasses", 
-      "beard": "Thick curled beard",
-      "hairStyle": "Messy gray",
-      "background": "Yellow"
-    },
-    "rarity": "Common",
-    "quantity": 1,
-    "skipUniquenessCheck": false
-  };
-  
-  console.log('🧪 Test request body:', JSON.stringify(testRequestBody, null, 2));
-  
-  // Simulate the route logic
-  const { traits, rarity, quantity = 1, referenceImageUrl, skipUniquenessCheck = false } = testRequestBody;
-  
-  console.log('🧪 Extracted values:');
-  console.log('- traits:', traits, typeof traits);
-  console.log('- rarity:', rarity, typeof rarity);
-  console.log('- quantity:', quantity, typeof quantity);
-  console.log('- skipUniquenessCheck:', skipUniquenessCheck, typeof skipUniquenessCheck);
-  
-  if (!traits) {
-    console.log('❌ TEST FAILED: No traits provided');
-    return;
-  }
-  
-  if (typeof traits !== 'object') {
-    console.log('❌ TEST FAILED: Traits is not an object, received:', typeof traits);
-    return;
-  }
-  
-  // Validate required trait properties
-  const requiredTraits = ['expression', 'mouth', 'eyewear', 'beard', 'hairStyle', 'background'];
-  const missingTraits = requiredTraits.filter(trait => !traits[trait]);
-  
-  console.log('🧪 Traits validation:');
-  console.log('- Required traits:', requiredTraits);
-  console.log('- Received trait keys:', Object.keys(traits));
-  console.log('- Missing traits:', missingTraits);
-  
-  if (missingTraits.length > 0) {
-    console.log('❌ TEST FAILED: Missing required traits:', missingTraits);
-    return;
-  }
-  
-  console.log('✅ TEST PASSED: Request body structure is valid!');
-  console.log('🧪 The route SHOULD work with this exact request body');
-  console.log('===============================================================\n');
-}
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Run the test when routes are set up
-  testMintNFTLogic();
-  
   // Auth middleware
   setupAuth(app);
   
