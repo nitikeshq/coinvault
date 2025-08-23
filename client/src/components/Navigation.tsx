@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy, TrendingUp, FileText } from "lucide-react";
+import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy, TrendingUp, FileText, Menu, X } from "lucide-react";
 import { Link } from "wouter";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { useToast } from "@/hooks/use-toast";
@@ -42,10 +42,11 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
 
   return (
     <>
-      {/* Desktop Navigation */}
-      <nav className="hidden md:block fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      {/* Main Navigation Header */}
+      <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
           <div className="flex justify-between items-center">
+            {/* Logo and Site Name */}
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
               {settings?.logoUrl ? (
                 <img 
@@ -61,11 +62,21 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{settings?.siteName || "Crypto Wallet"}</h1>
             </div>
             
-            {/* Mobile Navigation */}
-            <div className="flex items-center space-x-1 sm:space-x-6">
-              {/* Documentation Links - Mobile Optimized */}
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+              data-testid="mobile-menu-toggle"
+              aria-label="Toggle menu"
+            >
+              {showMobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-1 sm:space-x-6">
+              {/* Documentation Links */}
               {(settings?.auditReportUrl || settings?.whitepaperUrl) && (
-                <div className="hidden sm:flex sm:space-x-4">
+                <div className="flex space-x-4">
                   {settings?.auditReportUrl && (
                     <a 
                       href={settings.auditReportUrl}
@@ -92,48 +103,8 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                 </div>
               )}
               
-              {/* Mobile Doc Links Dropdown */}
-              {(settings?.auditReportUrl || settings?.whitepaperUrl) && (
-                <div className="sm:hidden relative">
-                  <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
-                    className="text-gray-600 hover:text-blue-600 p-1 rounded"
-                    data-testid="mobile-docs-menu"
-                  >
-                    <FileText className="h-5 w-5" />
-                  </button>
-                  {showMobileMenu && (
-                    <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-32 z-50">
-                      {settings?.whitepaperUrl && (
-                        <a 
-                          href={settings.whitepaperUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                          data-testid="mobile-whitepaper"
-                          onClick={() => setShowMobileMenu(false)}
-                        >
-                          Whitepaper
-                        </a>
-                      )}
-                      {settings?.auditReportUrl && (
-                        <a 
-                          href={settings.auditReportUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                          data-testid="mobile-audit"
-                          onClick={() => setShowMobileMenu(false)}
-                        >
-                          Audit Report
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
               {/* Desktop Navigation Buttons */}
-              <div className="hidden lg:flex lg:space-x-6">
+              <div className="flex space-x-6">
                 <button 
                   onClick={() => onSectionChange('wallet')}
                   className={`hover:text-blue-600 transition-colors font-medium text-sm ${
@@ -185,61 +156,180 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                   Market
                 </button>
               </div>
-
-            </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              {isAdmin && (
+              
+              {/* Desktop User Actions */}
+              <div className="flex items-center space-x-3">
+                {isAdmin && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onSectionChange('admin')}
+                    className={`hover:bg-purple-100 hover:text-purple-600 ${
+                      activeSection === 'admin' ? 'bg-purple-100 text-purple-600' : 'text-gray-600'
+                    }`}
+                    data-testid="button-admin"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                )}
+                
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => onSectionChange('admin')}
-                  className={`hover:bg-purple-100 hover:text-purple-600 hidden sm:flex ${
-                    activeSection === 'admin' ? 'bg-purple-100 text-purple-600' : 'text-gray-600'
-                  }`}
-                  data-testid="button-admin"
+                  onClick={handleLogout} 
+                  className="hover:bg-red-100 hover:text-red-600 text-gray-600"
+                  data-testid="button-logout"
                 >
-                  <Settings className="h-4 w-4" />
+                  <LogOut className="h-4 w-4" />
                 </Button>
-              )}
-              
-              {/* Mobile Admin Icon */}
-              {isAdmin && (
-                <button 
-                  onClick={() => onSectionChange('admin')}
-                  className={`sm:hidden p-2 rounded transition-colors ${
-                    activeSection === 'admin' ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600'
-                  }`}
-                  data-testid="button-admin-mobile"
-                  title="Admin"
-                >
-                  <Settings className="h-4 w-4" />
-                </button>
-              )}
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout} 
-                className="hover:bg-red-100 hover:text-red-600 text-gray-600 hidden sm:flex"
-                data-testid="button-logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-              
-              {/* Mobile Logout Icon */}
-              <button
-                onClick={handleLogout}
-                className="sm:hidden p-2 rounded text-red-600 hover:bg-red-50 transition-colors"
-                data-testid="button-logout-mobile"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
+              </div>
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Mobile Dropdown Menu */}
+      {showMobileMenu && (
+        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="space-y-3">
+              {/* Navigation Items */}
+              <button 
+                onClick={() => {
+                  onSectionChange('wallet');
+                  setShowMobileMenu(false);
+                }}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                  activeSection === 'wallet' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                data-testid="mobile-nav-wallet"
+              >
+                <Wallet className="h-5 w-5 mr-3" />
+                Wallet
+              </button>
+              
+              <button 
+                onClick={() => {
+                  onSectionChange('news');
+                  setShowMobileMenu(false);
+                }}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                  activeSection === 'news' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                data-testid="mobile-nav-news"
+              >
+                <FileText className="h-5 w-5 mr-3" />
+                News
+              </button>
+              
+              {hasDappsEnabled && (
+                <button 
+                  onClick={() => {
+                    onSectionChange('dapps');
+                    setShowMobileMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                    activeSection === 'dapps' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  data-testid="mobile-nav-dapps"
+                >
+                  <Sparkles className="h-5 w-5 mr-3" />
+                  DApps
+                </button>
+              )}
+              
+              <button 
+                onClick={() => {
+                  onSectionChange('advertisements');
+                  setShowMobileMenu(false);
+                }}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                  activeSection === 'advertisements' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                data-testid="mobile-nav-advertisements"
+              >
+                <Trophy className="h-5 w-5 mr-3" />
+                Board
+              </button>
+              
+              <button 
+                onClick={() => {
+                  onSectionChange('market');
+                  setShowMobileMenu(false);
+                }}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                  activeSection === 'market' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                data-testid="mobile-nav-market"
+              >
+                <TrendingUp className="h-5 w-5 mr-3" />
+                Market
+              </button>
+
+              {/* Documentation Links */}
+              {(settings?.auditReportUrl || settings?.whitepaperUrl) && (
+                <>
+                  <div className="border-t border-gray-200 my-3"></div>
+                  {settings?.whitepaperUrl && (
+                    <a 
+                      href={settings.whitepaperUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center text-gray-700 hover:bg-gray-50"
+                      data-testid="mobile-nav-whitepaper"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      <FileText className="h-5 w-5 mr-3" />
+                      Whitepaper
+                    </a>
+                  )}
+                  {settings?.auditReportUrl && (
+                    <a 
+                      href={settings.auditReportUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center text-gray-700 hover:bg-gray-50"
+                      data-testid="mobile-nav-audit"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      <FileText className="h-5 w-5 mr-3" />
+                      Audit Report
+                    </a>
+                  )}
+                </>
+              )}
+
+              {/* Admin and Logout */}
+              <div className="border-t border-gray-200 my-3"></div>
+              
+              {isAdmin && (
+                <button 
+                  onClick={() => {
+                    onSectionChange('admin');
+                    setShowMobileMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                    activeSection === 'admin' ? 'bg-purple-50 text-purple-600' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  data-testid="mobile-nav-admin"
+                >
+                  <Settings className="h-5 w-5 mr-3" />
+                  Admin Panel
+                </button>
+              )}
+              
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center text-red-600 hover:bg-red-50"
+                data-testid="mobile-nav-logout"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
