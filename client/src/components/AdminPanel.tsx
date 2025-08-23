@@ -50,6 +50,8 @@ const websiteSettingsSchema = z.object({
   description: z.string().optional().or(z.literal("")),
   primaryColor: z.string().min(1, "Primary color is required"),
   secondaryColor: z.string().min(1, "Secondary color is required"),
+  auditReportUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  whitepaperUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   nftCharacterPrompt: z.string().optional().or(z.literal("")),
   maxNfts: z.number().min(1, "Must be at least 1").max(10000, "Cannot exceed 10,000"),
 });
@@ -140,13 +142,17 @@ export default function AdminPanel() {
 
   const websiteForm = useForm({
     resolver: zodResolver(websiteSettingsSchema),
-    defaultValues: {
+    defaultValues: websiteSettings || {
       siteName: "CryptoWallet Pro",
       logoUrl: "",
       faviconUrl: "",
       description: "",
       primaryColor: "#6366f1",
       secondaryColor: "#8b5cf6",
+      auditReportUrl: "",
+      whitepaperUrl: "",
+      nftCharacterPrompt: "Cool man with messy gray hair, thick full beard with curled mustache",
+      maxNfts: 1000,
     },
   });
 
@@ -530,6 +536,56 @@ export default function AdminPanel() {
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  <div className="border-t pt-6 mt-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Documentation Links</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <FormField
+                        control={websiteForm.control}
+                        name="whitepaperUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700">Whitepaper URL</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="https://example.com/whitepaper.pdf"
+                                className="bg-gray-50 border-gray-300 text-gray-900"
+                                data-testid="input-whitepaper-url"
+                              />
+                            </FormControl>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Link to your project whitepaper (will appear in navigation)
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={websiteForm.control}
+                        name="auditReportUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700">Audit Report URL</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="https://example.com/audit-report.pdf"
+                                className="bg-gray-50 border-gray-300 text-gray-900"
+                                data-testid="input-audit-url"
+                              />
+                            </FormControl>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Link to your security audit report (will appear in navigation)
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
 
                   <div className="border-t pt-6 mt-6">

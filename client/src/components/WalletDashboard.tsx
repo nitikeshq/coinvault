@@ -182,26 +182,6 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
           </div>
         </div>
         
-        {/* Wallet Address */}
-        {user?.walletAddress && (
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-4">
-            <p className="text-xs text-blue-100 mb-1">Wallet Address</p>
-            <div className="flex items-center justify-between">
-              <code className="text-sm font-mono text-white break-all" data-testid="text-wallet-address">
-                {user.walletAddress}
-              </code>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={copyAddress}
-                className="ml-2 p-1 hover:bg-white/20 text-yellow-300"
-                data-testid="button-copy-address"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
         
         {/* Action Buttons */}
         <div className={`grid gap-3 ${presaleEnded ? 'grid-cols-3' : 'grid-cols-2'}`}>
