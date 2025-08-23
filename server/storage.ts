@@ -549,6 +549,16 @@ export class DatabaseStorage implements IStorage {
 
   async adjustUserTokenBalance(userId: string, amount: number, reason: string): Promise<void> {
     await db.transaction(async (tx) => {
+      // Get active token config
+      const [activeTokenConfig] = await tx.select()
+        .from(tokenConfig)
+        .where(eq(tokenConfig.isActive, true))
+        .limit(1);
+
+      if (!activeTokenConfig) {
+        throw new Error('No active token configuration found');
+      }
+
       // Get current balance or create if doesn't exist
       const [currentBalance] = await tx.select()
         .from(userBalances)
@@ -566,10 +576,11 @@ export class DatabaseStorage implements IStorage {
           })
           .where(eq(userBalances.userId, userId));
       } else {
-        // Create new balance record
+        // Create new balance record with required token_config_id
         await tx.insert(userBalances)
           .values({
             userId,
+            tokenConfigId: activeTokenConfig.id,
             balance: newAmount,
             usdValue: '0'
           });
