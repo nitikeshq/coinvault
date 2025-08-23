@@ -106,15 +106,6 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               >
                 News
               </button>
-              <button 
-                onClick={() => onSectionChange('deposit')}
-                className={`hover:text-blue-600 transition-colors font-medium ${
-                  activeSection === 'deposit' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
-                }`}
-                data-testid="nav-deposit"
-              >
-                Deposit
-              </button>
               {hasDappsEnabled && (
                 <button 
                   onClick={() => onSectionChange('dapps')}
