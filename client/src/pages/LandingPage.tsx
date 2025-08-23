@@ -342,7 +342,8 @@ export default function LandingPage() {
                   size="lg" 
                   variant="outline"
                   onClick={handleAddToWallet}
-                  className="border-white/30 !text-white hover:bg-white/10 hover:!text-white px-8 py-4 text-lg flex items-center gap-2"
+                  className="border-white/30 text-white bg-transparent hover:bg-white/10 hover:text-white px-8 py-4 text-lg flex items-center gap-2"
+                  style={{ color: 'white' }}
                   data-testid="button-add-to-wallet"
                 >
                   <Wallet className="h-5 w-5" />
@@ -357,7 +358,8 @@ export default function LandingPage() {
                     size="lg" 
                     variant="outline"
                     onClick={() => window.open(websiteSettings.whitepaperUrl, '_blank')}
-                    className="border-white/30 text-white hover:bg-white/10 px-6 py-3 flex items-center gap-2"
+                    className="border-white/30 text-white bg-transparent hover:bg-white/10 hover:text-white px-6 py-3 flex items-center gap-2"
+                    style={{ color: 'white' }}
                     data-testid="button-whitepaper"
                   >
                     <FileText className="h-4 w-4" />
@@ -370,7 +372,8 @@ export default function LandingPage() {
                     size="lg" 
                     variant="outline"
                     onClick={() => window.open(websiteSettings.auditReportUrl, '_blank')}
-                    className="border-white/30 text-white hover:bg-white/10 px-6 py-3 flex items-center gap-2"
+                    className="border-white/30 text-white bg-transparent hover:bg-white/10 hover:text-white px-6 py-3 flex items-center gap-2"
+                    style={{ color: 'white' }}
                     data-testid="button-audit-report"
                   >
                     <Shield className="h-4 w-4" />
@@ -566,7 +569,7 @@ export default function LandingPage() {
                   Start Investing Now
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="border-white/20 text-white bg-transparent hover:bg-white/10 hover:text-white" style={{ color: 'white' }}>
                 Learn More
               </Button>
             </div>
@@ -585,10 +588,11 @@ export default function LandingPage() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="border-white/30 !text-white hover:bg-white/10 hover:!text-white px-6 py-3 flex items-center gap-2"
+                    className="border-white/30 text-white bg-transparent hover:bg-white/10 hover:text-white px-6 py-3 flex items-center gap-2"
+                    style={{ color: 'white' }}
                     data-testid={`social-link-${link.platform}`}
                   >
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-white flex items-center gap-2">
                       {link.platform.toLowerCase() === 'twitter' && <Twitter className="h-5 w-5" />}
                       {link.platform.toLowerCase() === 'telegram' && <MessageSquare className="h-5 w-5" />}
                       {!['twitter', 'telegram'].includes(link.platform.toLowerCase()) && <Globe className="h-5 w-5" />}
