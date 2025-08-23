@@ -16,7 +16,7 @@ const imageManager = new ImageManager();
 // NFT Marketplace Routes
 router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const { nftId, minPrice, auctionEndDate } = req.body;
+    const { nftId, minPrice, auctionEndDate, listingFee } = req.body;
     const userId = req.session?.user?.id;
 
     if (!userId || !nftId || !minPrice) {
@@ -27,6 +27,17 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
       return res.status(400).json({ error: "Auction end date must be in the future" });
     }
 
+    // Check user's token balance for $1 listing fee
+    const userBalance = await storage.getUserBalance(userId);
+    const balance = parseFloat(userBalance?.balance || '0');
+    const requiredFee = 1; // $1 worth of tokens
+    
+    if (balance < requiredFee) {
+      return res.status(400).json({ 
+        error: `Insufficient balance. You need at least $${requiredFee} worth of tokens to list this NFT.` 
+      });
+    }
+
     // Verify user owns the NFT
     const userNfts = await storage.getUserNfts(userId);
     const ownsNFT = userNfts.some(nft => nft.nft.id === nftId);
@@ -35,11 +46,18 @@ router.post("/api/marketplace/nft/list", requireAuth, async (req: AuthRequest, r
       return res.status(403).json({ error: "You don't own this NFT" });
     }
 
+    // Deduct listing fee from user's balance
+    const newBalance = (balance - requiredFee).toString();
+    const usdValue = (parseFloat(newBalance) * 1.0).toFixed(8); // Assuming 1:1 USD rate
+    await storage.updateUserBalance(userId, newBalance, usdValue);
+
+    // Create listing with auction timer
     const listing = await storage.listNFTForSale(userId, nftId, minPrice, auctionEndDate);
     
     res.status(201).json({
       success: true,
-      listing
+      listing,
+      message: `NFT listed successfully! $${requiredFee} listing fee deducted from your balance.`
     });
   } catch (error) {
     console.error("Error listing NFT:", error);

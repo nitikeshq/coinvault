@@ -45,7 +45,11 @@ export default function MarketSection() {
   
   const { data: memes = [] } = useQuery<any[]>({
     queryKey: ['/api/marketplace/meme/feed', memePage],
-    queryFn: () => apiRequest(`/api/marketplace/meme/feed?page=${memePage}&limit=${memesPerPage}`),
+    queryFn: async () => {
+      const response = await fetch(`/api/marketplace/meme/feed?page=${memePage}&limit=${memesPerPage}`);
+      if (!response.ok) throw new Error('Failed to fetch memes');
+      return response.json();
+    },
   });
   
   const { data: allMemesCount = 0 } = useQuery<number>({
@@ -319,10 +323,9 @@ export default function MarketSection() {
                               size="sm" 
                               className="w-full"
                               data-testid={`button-list-${nft?.id || userNft.id}`}
-                              onClick={() => setSelectedNFT(userNft)}
                             >
                               <TrendingUp className="h-4 w-4 mr-2" />
-                              List for Sale
+                              List for Sale ($1 fee)
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
@@ -527,26 +530,35 @@ export default function MarketSection() {
     </div>
   );
 
-  // NFT Listing Mutation
+  // NFT Listing Mutation with $1 fee
   const listNFTMutation = useMutation({
     mutationFn: async ({ nftId, minPrice, auctionEndDate }: { nftId: string, minPrice: string, auctionEndDate?: string }) => {
-      return apiRequest(`/api/marketplace/nft/list`, {
+      const response = await fetch('/api/marketplace/nft/list', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           nftId, 
           minPrice: parseFloat(minPrice),
-          auctionEndDate 
+          auctionEndDate,
+          listingFee: 1 // $1 worth of tokens
         }),
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to list NFT');
+      }
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/listings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/platform-listings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/user-generated-listings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/nfts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/token/balance'] });
       toast({
         title: "Success!",
-        description: "NFT listed for sale successfully",
+        description: data.message || "NFT listed for sale successfully",
       });
     },
     onError: () => {
@@ -561,9 +573,11 @@ export default function MarketSection() {
   // Meme Like Mutation
   const likeMutation = useMutation({
     mutationFn: async (memeId: string) => {
-      return apiRequest(`/api/marketplace/meme/${memeId}/like`, {
+      const response = await fetch(`/api/marketplace/meme/${memeId}/like`, {
         method: 'POST',
       });
+      if (!response.ok) throw new Error('Failed to like meme');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed'] });
@@ -578,9 +592,11 @@ export default function MarketSection() {
   // Meme Dislike Mutation
   const dislikeMutation = useMutation({
     mutationFn: async (memeId: string) => {
-      return apiRequest(`/api/marketplace/meme/${memeId}/dislike`, {
+      const response = await fetch(`/api/marketplace/meme/${memeId}/dislike`, {
         method: 'POST',
       });
+      if (!response.ok) throw new Error('Failed to dislike meme');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed'] });
@@ -626,6 +642,12 @@ export default function MarketSection() {
         return;
       }
 
+      // Check if user has enough balance for $1 listing fee
+      toast({
+        title: "Listing NFT...",
+        description: "Processing your NFT listing with $1 fee",
+      });
+
       listNFTMutation.mutate({ 
         nftId: nft.nftId || nft.id, 
         minPrice: price,
@@ -653,6 +675,16 @@ export default function MarketSection() {
           </div>
         </div>
         <div className="space-y-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <div className="flex items-center space-x-2 text-yellow-800">
+              <Zap className="h-4 w-4" />
+              <span className="font-medium">Listing Fee: $1.00 worth of tokens</span>
+            </div>
+            <p className="text-xs text-yellow-700 mt-1">
+              This fee will be deducted from your balance when you list the NFT
+            </p>
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="price">Minimum Price ($)</Label>
             <Input
@@ -695,10 +727,16 @@ export default function MarketSection() {
   // Bidding Mutation
   const bidMutation = useMutation({
     mutationFn: async ({ listingId, bidAmount }: { listingId: string, bidAmount: string }) => {
-      return apiRequest(`/api/marketplace/nft/bid`, {
+      const response = await fetch('/api/marketplace/nft/bid', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ listingId, bidAmount: parseFloat(bidAmount) }),
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to place bid');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/listings'] });

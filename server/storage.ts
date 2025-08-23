@@ -578,11 +578,18 @@ export class DatabaseStorage implements IStorage {
 
   async getUserMemes(userId: string): Promise<any[]> {
     try {
-      return await db.select().from(memeGenerations)
+      return await db.select({
+        id: memeGenerations.id,
+        prompt: memeGenerations.prompt,
+        overlayText: memeGenerations.overlayText,
+        imageUrl: memeGenerations.imageUrl,
+        status: memeGenerations.status,
+        generatedAt: memeGenerations.generatedAt,
+        userId: memeGenerations.userId
+      }).from(memeGenerations)
         .where(eq(memeGenerations.userId, userId))
-        .orderBy(memeGenerations.generatedAt);
+        .orderBy(desc(memeGenerations.generatedAt));
     } catch (error) {
-      // Handle case where new columns don't exist yet
       console.log('Meme table columns not found, returning empty array:', error);
       return [];
     }
