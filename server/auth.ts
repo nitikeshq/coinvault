@@ -36,6 +36,7 @@ export function setupAuth(app: Express) {
       httpOnly: true,
       secure: false, // Set to true in production with HTTPS
       maxAge: sessionTtl,
+      sameSite: 'lax', // Ensure cookie works across refreshes
     },
   }));
 

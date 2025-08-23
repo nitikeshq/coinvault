@@ -11,7 +11,7 @@ export function useAuth() {
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/user", {
+        const response = await fetch("/api/me", {
           credentials: "include",
         });
         if (response.status === 401) {
@@ -30,7 +30,8 @@ export function useAuth() {
     },
     retry: false,
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 1 * 60 * 1000, // Reduce to 1 minute for better session detection
+    gcTime: 5 * 60 * 1000,
   });
 
   const loginMutation = useMutation({
