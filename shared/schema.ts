@@ -139,7 +139,7 @@ export const transactions = pgTable("transactions", {
 // Website settings (admin managed)
 export const websiteSettings = pgTable("website_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  siteName: varchar("site_name").notNull().default("CryptoWallet Pro"),
+  siteName: varchar("site_name").notNull().default(""),
   logoUrl: varchar("logo_url"),
   faviconUrl: varchar("favicon_url"),
   description: text("description"),

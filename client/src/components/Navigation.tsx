@@ -70,15 +70,19 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               {settings?.logoUrl ? (
                 <img 
                   src={settings.logoUrl} 
-                  alt={`${settings?.siteName || 'Crypto Wallet'} Logo`} 
+                  alt={`${settings?.siteName || 'Logo'}`} 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Wallet className="text-white h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
+                settings?.siteName && (
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Wallet className="text-white h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                )
               )}
-              <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{settings?.siteName || "Crypto Wallet"}</h1>
+              {settings?.siteName && (
+                <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{settings.siteName}</h1>
+              )}
             </div>
             
             {/* Mobile Menu Button - Only visible on mobile */}

@@ -143,7 +143,7 @@ export default function AdminPanel() {
   const websiteForm = useForm({
     resolver: zodResolver(websiteSettingsSchema),
     defaultValues: websiteSettings || {
-      siteName: "CryptoWallet Pro",
+      siteName: "",
       logoUrl: "",
       faviconUrl: "",
       description: "",

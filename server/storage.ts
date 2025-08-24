@@ -388,7 +388,7 @@ export class DatabaseStorage implements IStorage {
       // Return a default settings object if the table doesn't exist or has missing columns
       return {
         id: 'default',
-        siteName: "CryptoWallet Pro",
+        siteName: "",
         logoUrl: null,
         faviconUrl: null,
         description: null,

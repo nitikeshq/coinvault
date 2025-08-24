@@ -397,7 +397,7 @@ export default function Admin() {
                         id="siteName"
                         value={websiteSettings.siteName}
                         onChange={(e) => setWebsiteSettings(prev => ({ ...prev, siteName: e.target.value }))}
-                        placeholder="e.g., CryptoWallet Pro"
+                        placeholder="e.g., Your Site Name"
                         className="bg-crypto-gray border-white/20"
                         data-testid="input-site-name"
                       />

@@ -7,12 +7,12 @@ export function useWebsiteSettings() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Return default values if no settings found (match DB defaults)
+  // Return empty defaults if no settings found - let admin configure
   const defaultSettings = {
-    siteName: "CryptoWallet Pro",
+    siteName: "",
     logoUrl: "",
     faviconUrl: "",
-    description: "Secure BEP-20 cryptocurrency wallet with PancakeSwap integration",
+    description: "",
     primaryColor: "#6366f1",
     secondaryColor: "#8b5cf6",
   };
