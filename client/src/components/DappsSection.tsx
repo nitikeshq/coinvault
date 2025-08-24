@@ -10,7 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTokenInfo } from "@/hooks/useTokenInfo";
-import { Sparkles, Image, Coins, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Sparkles, Image, Coins, Clock, CheckCircle, XCircle, TrendingUp } from "lucide-react";
+import StakingDapp from "@/components/StakingDapp";
 
 // Rarity color mapping
 const rarityColors = {
@@ -153,9 +154,11 @@ export default function DappsSection() {
 
   const isNftMintEnabled = dappSettings.some(d => d.appName === 'nft_mint' && d.isEnabled);
   const isMemeGeneratorEnabled = dappSettings.some(d => d.appName === 'meme_generator' && d.isEnabled);
+  const isStakingEnabled = dappSettings.some(d => d.appName === 'staking' && d.isEnabled);
 
   const nftMintSettings = dappSettings.find(d => d.appName === 'nft_mint');
   const memeGeneratorSettings = dappSettings.find(d => d.appName === 'meme_generator');
+  const stakingSettings = dappSettings.find(d => d.appName === 'staking');
 
   const userBalance = parseFloat(balance?.balance || '0');
   const nftCost = parseFloat(nftMintSettings?.cost || '0');
@@ -202,8 +205,8 @@ export default function DappsSection() {
         </Card>
       </div>
 
-      <Tabs defaultValue={isNftMintEnabled ? "nft-mint" : "meme-generator"} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue={isNftMintEnabled ? "nft-mint" : isMemeGeneratorEnabled ? "meme-generator" : "staking"} className="w-full">
+        <TabsList className={`grid w-full ${[isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 3 ? 'grid-cols-3' : [isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {isNftMintEnabled && (
             <TabsTrigger value="nft-mint" data-testid="tab-nft-mint">
               <Image className="h-4 w-4 mr-2" />
@@ -220,6 +223,12 @@ export default function DappsSection() {
             <TabsTrigger value="meme-generator" data-testid="tab-meme-generator">
               <Sparkles className="h-4 w-4 mr-2" />
               Memes Generator
+            </TabsTrigger>
+          )}
+          {isStakingEnabled && (
+            <TabsTrigger value="staking" data-testid="tab-staking">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Staking
             </TabsTrigger>
           )}
         </TabsList>
@@ -578,6 +587,12 @@ export default function DappsSection() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+        )}
+
+        {isStakingEnabled && (
+          <TabsContent value="staking" className="space-y-6">
+            <StakingDapp />
           </TabsContent>
         )}
       </Tabs>

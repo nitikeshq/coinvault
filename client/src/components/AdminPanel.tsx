@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PresaleAdmin } from "@/components/PresaleAdmin";
 import { useTokenInfo } from "@/hooks/useTokenInfo";
+import StakingAdmin from "@/components/StakingAdmin";
 
 const tokenConfigSchema = z.object({
   contractAddress: z.string().min(1, "Contract address is required"),
@@ -349,7 +350,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-10 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-11 bg-white border border-gray-200">
           <TabsTrigger value="overview" className="flex items-center space-x-2">
             <TrendingUp className="h-4 w-4" />
             <span>Overview</span>
@@ -389,6 +390,10 @@ export default function AdminPanel() {
           <TabsTrigger value="nft-mint" className="flex items-center space-x-2">
             <Image className="h-4 w-4" />
             <span>NFT Mint</span>
+          </TabsTrigger>
+          <TabsTrigger value="staking" className="flex items-center space-x-2">
+            <TrendingUp className="h-4 w-4" />
+            <span>Staking</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1417,6 +1422,11 @@ export default function AdminPanel() {
         <TabsContent value="nft-mint" className="space-y-6">
           <NFTMintingPanel />
         </TabsContent>
+
+        {/* Staking */}
+        <TabsContent value="staking" className="space-y-6">
+          <StakingAdmin />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -1517,7 +1527,9 @@ function DappsManagementPanel() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 mb-1">
-                  {dapp.appName === 'nft_mint' ? 'NFT Mint' : 'Memes Generator'}
+                  {dapp.appName === 'nft_mint' ? 'NFT Mint' : 
+                   dapp.appName === 'meme_generator' ? 'Memes Generator' : 
+                   dapp.appName === 'staking' ? 'Staking' : dapp.displayName}
                 </h3>
                 <p className="text-gray-600 text-sm mb-2">
                   {dapp.description}

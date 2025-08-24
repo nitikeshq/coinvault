@@ -257,13 +257,54 @@ export type InsertPresaleConfig = z.infer<typeof insertPresaleConfigSchema>;
 // Dapp settings table (admin controlled)
 export const dappSettings = pgTable("dapp_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  appName: varchar("app_name").notNull().unique(), // "nft_mint", "meme_generator"
-  displayName: varchar("display_name").notNull(), // "NFT Mint", "Memes Generator"
+  appName: varchar("app_name").notNull().unique(), // "nft_mint", "meme_generator", "staking"
+  displayName: varchar("display_name").notNull(), // "NFT Mint", "Memes Generator", "Staking"
   isEnabled: boolean("is_enabled").default(false),
   cost: decimal("cost", { precision: 18, scale: 8 }).notNull(), // Cost in tokens
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staking configuration
+export const stakingConfig = pgTable("staking_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tokenApr: decimal("token_apr", { precision: 5, scale: 2 }).default("12.00"), // Annual percentage rate for tokens
+  nftApr: decimal("nft_apr", { precision: 5, scale: 2 }).default("15.00"), // Annual percentage rate for NFTs
+  minStakingDays: integer("min_staking_days").default(30), // Minimum staking period in days
+  maxStakingDays: integer("max_staking_days").default(365), // Maximum staking period in days
+  isEnabled: boolean("is_enabled").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User staking records
+export const userStaking = pgTable("user_staking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  stakingType: varchar("staking_type").notNull(), // "token" or "nft"
+  tokenAmount: decimal("token_amount", { precision: 18, scale: 8 }).default("0"), // For token staking
+  nftId: varchar("nft_id").references(() => userNfts.id), // For NFT staking
+  apr: decimal("apr", { precision: 5, scale: 2 }).notNull(), // APR at time of staking
+  stakingDays: integer("staking_days").notNull(), // Duration in days
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  totalInterest: decimal("total_interest", { precision: 18, scale: 8 }).default("0"), // Calculated interest
+  accruedInterest: decimal("accrued_interest", { precision: 18, scale: 8 }).default("0"), // Interest earned so far
+  status: varchar("status").notNull().default("active"), // active, completed, withdrawn
+  lastInterestCalculation: timestamp("last_interest_calculation").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staking interest history
+export const stakingInterestHistory = pgTable("staking_interest_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  stakingId: varchar("staking_id").notNull().references(() => userStaking.id),
+  interestAmount: decimal("interest_amount", { precision: 18, scale: 8 }).notNull(),
+  calculationDate: timestamp("calculation_date").notNull(),
+  daysElapsed: integer("days_elapsed").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // NFT Collection table
@@ -405,6 +446,25 @@ export const insertMemeDislikeSchema = createInsertSchema(memeDislikes).omit({
   createdAt: true,
 });
 
+// Staking schemas
+export const insertStakingConfigSchema = createInsertSchema(stakingConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserStakingSchema = createInsertSchema(userStaking).omit({
+  id: true,
+  lastInterestCalculation: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStakingInterestHistorySchema = createInsertSchema(stakingInterestHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Marketplace types
 export type NftListing = typeof nftListings.$inferSelect;
 export type InsertNftListing = z.infer<typeof insertNftListingSchema>;
@@ -414,3 +474,11 @@ export type MemeLike = typeof memeLikes.$inferSelect;
 export type InsertMemeLike = z.infer<typeof insertMemeLikeSchema>;
 export type MemeDislike = typeof memeDislikes.$inferSelect;
 export type InsertMemeDislike = z.infer<typeof insertMemeDislikeSchema>;
+
+// Staking types
+export type StakingConfig = typeof stakingConfig.$inferSelect;
+export type InsertStakingConfig = z.infer<typeof insertStakingConfigSchema>;
+export type UserStaking = typeof userStaking.$inferSelect;
+export type InsertUserStaking = z.infer<typeof insertUserStakingSchema>;
+export type StakingInterestHistory = typeof stakingInterestHistory.$inferSelect;
+export type InsertStakingInterestHistory = z.infer<typeof insertStakingInterestHistorySchema>;

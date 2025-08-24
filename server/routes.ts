@@ -1580,6 +1580,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Staking Configuration Routes
+  app.get('/api/staking/config', async (req, res) => {
+    try {
+      const config = await storage.getStakingConfig();
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching staking config:", error);
+      res.status(500).json({ message: "Failed to fetch staking configuration" });
+    }
+  });
+
+  app.post('/api/staking/config', requireAdmin, async (req: any, res) => {
+    try {
+      const config = await storage.updateStakingConfig(req.body);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating staking config:", error);
+      res.status(500).json({ message: "Failed to update staking configuration" });
+    }
+  });
+
+  // User Staking Routes
+  app.post('/api/staking/create', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { stakingType, tokenAmount, nftId, stakingDays } = req.body;
+
+      if (!stakingType || !stakingDays) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      if (stakingType === "token" && (!tokenAmount || tokenAmount <= 0)) {
+        return res.status(400).json({ message: "Invalid token amount" });
+      }
+
+      if (stakingType === "nft" && !nftId) {
+        return res.status(400).json({ message: "NFT ID is required for NFT staking" });
+      }
+
+      // Get staking config to validate and get APR
+      const config = await storage.getStakingConfig();
+      if (!config?.isEnabled) {
+        return res.status(400).json({ message: "Staking is currently disabled" });
+      }
+
+      if (stakingDays < config.minStakingDays || stakingDays > config.maxStakingDays) {
+        return res.status(400).json({ 
+          message: `Staking period must be between ${config.minStakingDays} and ${config.maxStakingDays} days` 
+        });
+      }
+
+      // Validate token balance or NFT ownership
+      if (stakingType === "token") {
+        const balance = await storage.getUserTokenBalance(userId);
+        if (parseFloat(balance.balance) < tokenAmount) {
+          return res.status(400).json({ message: "Insufficient token balance" });
+        }
+      } else {
+        const userNft = await storage.getUserNft(userId, nftId);
+        if (!userNft) {
+          return res.status(400).json({ message: "NFT not found or not owned by user" });
+        }
+      }
+
+      const staking = await storage.createStaking({
+        userId,
+        stakingType,
+        tokenAmount: stakingType === "token" ? tokenAmount.toString() : "0",
+        nftId: stakingType === "nft" ? nftId : null,
+        apr: stakingType === "token" ? config.tokenApr : config.nftApr,
+        stakingDays,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + stakingDays * 24 * 60 * 60 * 1000).toISOString(),
+        totalInterest: "0",
+        accruedInterest: "0",
+        status: "active"
+      });
+
+      res.json(staking);
+    } catch (error) {
+      console.error("Error creating staking:", error);
+      res.status(500).json({ message: "Failed to create staking" });
+    }
+  });
+
+  app.get('/api/staking/user', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const stakings = await storage.getUserStakings(userId);
+      res.json(stakings);
+    } catch (error) {
+      console.error("Error fetching user stakings:", error);
+      res.status(500).json({ message: "Failed to fetch user stakings" });
+    }
+  });
+
+  app.post('/api/staking/:id/withdraw', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const stakingId = req.params.id;
+
+      const staking = await storage.getStaking(stakingId);
+      if (!staking) {
+        return res.status(404).json({ message: "Staking not found" });
+      }
+
+      if (staking.userId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      if (staking.status !== "active") {
+        return res.status(400).json({ message: "Staking is not active" });
+      }
+
+      // Check if staking period has ended
+      const endDate = new Date(staking.endDate);
+      const now = new Date();
+      if (now < endDate) {
+        return res.status(400).json({ message: "Staking period has not ended yet" });
+      }
+
+      const result = await storage.withdrawStaking(stakingId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error withdrawing staking:", error);
+      res.status(500).json({ message: "Failed to withdraw staking" });
+    }
+  });
+
+  // Available NFTs for staking (NFTs owned by user that are not currently staked)
+  app.get('/api/user/nfts/available', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const nfts = await storage.getAvailableNftsForStaking(userId);
+      res.json(nfts);
+    } catch (error) {
+      console.error("Error fetching available NFTs:", error);
+      res.status(500).json({ message: "Failed to fetch available NFTs" });
+    }
+  });
+
+  // Admin staking overview
+  app.get('/api/admin/staking/overview', requireAdmin, async (req: any, res) => {
+    try {
+      const overview = await storage.getStakingOverview();
+      res.json(overview);
+    } catch (error) {
+      console.error("Error fetching staking overview:", error);
+      res.status(500).json({ message: "Failed to fetch staking overview" });
+    }
+  });
+
+  // Cron job endpoint to calculate interest (should be called by a scheduler)
+  app.post('/api/cron/calculate-interest', async (req, res) => {
+    try {
+      const result = await storage.calculateStakingInterest();
+      res.json({ message: "Interest calculation completed", result });
+    } catch (error) {
+      console.error("Error calculating interest:", error);
+      res.status(500).json({ message: "Failed to calculate interest" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

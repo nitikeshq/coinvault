@@ -18,6 +18,9 @@ import {
   nftBids,
   memeLikes,
   memeDislikes,
+  stakingConfig,
+  userStaking,
+  stakingInterestHistory,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -37,6 +40,12 @@ import {
   type PresaleConfig,
   type InsertPresaleConfig,
   type ReferralEarnings,
+  type StakingConfig,
+  type InsertStakingConfig,
+  type UserStaking,
+  type InsertUserStaking,
+  type StakingInterestHistory,
+  type InsertStakingInterestHistory,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, lt } from "drizzle-orm";
@@ -107,6 +116,18 @@ export interface IStorage {
   removeDislike(memeId: string, userId: string): Promise<void>;
   getMemeStats(memeId: string): Promise<{likes: number, dislikes: number}>;
   getMemeLeaderboard(): Promise<any[]>;
+  
+  // Staking operations
+  getStakingConfig(): Promise<StakingConfig | undefined>;
+  updateStakingConfig(config: InsertStakingConfig): Promise<StakingConfig>;
+  createStaking(staking: InsertUserStaking): Promise<UserStaking>;
+  getUserStakings(userId: string): Promise<UserStaking[]>;
+  getStaking(stakingId: string): Promise<UserStaking | undefined>;
+  withdrawStaking(stakingId: string): Promise<UserStaking>;
+  getAvailableNftsForStaking(userId: string): Promise<any[]>;
+  getUserNft(userId: string, nftId: string): Promise<any>;
+  getStakingOverview(): Promise<any>;
+  calculateStakingInterest(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1390,6 +1411,275 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(memeDislikes, eq(memeGenerations.id, memeDislikes.memeId))
       .groupBy(memeGenerations.id, users.id)
       .orderBy(desc(sql`COUNT(DISTINCT ${memeLikes.id}) - COUNT(DISTINCT ${memeDislikes.id})`), desc(sql`COUNT(DISTINCT ${memeLikes.id})`));
+  }
+
+  // Staking operations implementation
+  async getStakingConfig(): Promise<StakingConfig | undefined> {
+    try {
+      const [config] = await db.select().from(stakingConfig).limit(1);
+      if (!config) {
+        // Create default staking config
+        const [defaultConfig] = await db
+          .insert(stakingConfig)
+          .values({
+            tokenApr: "12.00",
+            nftApr: "15.00",
+            minStakingDays: 30,
+            maxStakingDays: 365,
+            isEnabled: false,
+          })
+          .returning();
+        return defaultConfig;
+      }
+      return config;
+    } catch (error) {
+      console.error("Error fetching staking config:", error);
+      return undefined;
+    }
+  }
+
+  async updateStakingConfig(configData: InsertStakingConfig): Promise<StakingConfig> {
+    const existingConfig = await this.getStakingConfig();
+    
+    if (existingConfig) {
+      const [updated] = await db
+        .update(stakingConfig)
+        .set({ ...configData, updatedAt: new Date() })
+        .where(eq(stakingConfig.id, existingConfig.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(stakingConfig)
+        .values(configData)
+        .returning();
+      return created;
+    }
+  }
+
+  async createStaking(stakingData: InsertUserStaking): Promise<UserStaking> {
+    const [staking] = await db
+      .insert(userStaking)
+      .values(stakingData)
+      .returning();
+
+    // Update user token balance if token staking
+    if (stakingData.stakingType === "token" && stakingData.tokenAmount) {
+      const currentBalance = await this.getUserTokenBalance(stakingData.userId);
+      const newBalance = (parseFloat(currentBalance.balance) - parseFloat(stakingData.tokenAmount)).toString();
+      await this.updateUserTokenBalance(stakingData.userId, newBalance);
+    }
+
+    return staking;
+  }
+
+  async getUserStakings(userId: string): Promise<UserStaking[]> {
+    return await db
+      .select()
+      .from(userStaking)
+      .where(eq(userStaking.userId, userId))
+      .orderBy(desc(userStaking.createdAt));
+  }
+
+  async getStaking(stakingId: string): Promise<UserStaking | undefined> {
+    const [staking] = await db
+      .select()
+      .from(userStaking)
+      .where(eq(userStaking.id, stakingId));
+    return staking;
+  }
+
+  async withdrawStaking(stakingId: string): Promise<UserStaking> {
+    const staking = await this.getStaking(stakingId);
+    if (!staking) {
+      throw new Error("Staking not found");
+    }
+
+    // Calculate final interest
+    await this.calculateInterestForStaking(stakingId);
+    
+    // Update staking status
+    const [updated] = await db
+      .update(userStaking)
+      .set({ 
+        status: "completed",
+        updatedAt: new Date()
+      })
+      .where(eq(userStaking.id, stakingId))
+      .returning();
+
+    // Return tokens to user balance
+    if (staking.stakingType === "token") {
+      const currentBalance = await this.getUserTokenBalance(staking.userId);
+      const principal = parseFloat(staking.tokenAmount);
+      const interest = parseFloat(updated.accruedInterest);
+      const newBalance = (parseFloat(currentBalance.balance) + principal + interest).toString();
+      await this.updateUserTokenBalance(staking.userId, newBalance);
+    } else {
+      // For NFT staking, just add the interest to token balance
+      const currentBalance = await this.getUserTokenBalance(staking.userId);
+      const interest = parseFloat(updated.accruedInterest);
+      const newBalance = (parseFloat(currentBalance.balance) + interest).toString();
+      await this.updateUserTokenBalance(staking.userId, newBalance);
+    }
+
+    return updated;
+  }
+
+  async getAvailableNftsForStaking(userId: string): Promise<any[]> {
+    // Get user NFTs that are not currently being staked
+    const stakedNftIds = await db
+      .select({ nftId: userStaking.nftId })
+      .from(userStaking)
+      .where(
+        and(
+          eq(userStaking.userId, userId),
+          eq(userStaking.stakingType, "nft"),
+          eq(userStaking.status, "active")
+        )
+      );
+
+    const stakedIds = stakedNftIds.map(s => s.nftId).filter(Boolean);
+
+    let query = db
+      .select({
+        id: userNfts.id,
+        nftId: userNfts.nftId,
+        mintedAt: userNfts.mintedAt,
+        nft: {
+          name: nftCollection.name,
+          imageUrl: nftCollection.imageUrl,
+          rarity: nftCollection.rarity,
+        }
+      })
+      .from(userNfts)
+      .innerJoin(nftCollection, eq(userNfts.nftId, nftCollection.id))
+      .where(eq(userNfts.userId, userId));
+
+    if (stakedIds.length > 0) {
+      query = query.where(
+        and(
+          eq(userNfts.userId, userId),
+          sql`${userNfts.id} NOT IN (${stakedIds.map(() => '?').join(', ')})`,
+        )
+      );
+    }
+
+    return await query;
+  }
+
+  async getUserNft(userId: string, nftId: string): Promise<any> {
+    const [userNft] = await db
+      .select()
+      .from(userNfts)
+      .where(
+        and(
+          eq(userNfts.userId, userId),
+          eq(userNfts.id, nftId)
+        )
+      );
+    return userNft;
+  }
+
+  async getStakingOverview(): Promise<any> {
+    const totalStakings = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userStaking)
+      .where(eq(userStaking.status, "active"));
+
+    const totalTokensStaked = await db
+      .select({ total: sql<string>`COALESCE(SUM(CAST(token_amount AS DECIMAL)), 0)` })
+      .from(userStaking)
+      .where(
+        and(
+          eq(userStaking.stakingType, "token"),
+          eq(userStaking.status, "active")
+        )
+      );
+
+    const totalNftsStaked = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userStaking)
+      .where(
+        and(
+          eq(userStaking.stakingType, "nft"),
+          eq(userStaking.status, "active")
+        )
+      );
+
+    const totalInterestPaid = await db
+      .select({ total: sql<string>`COALESCE(SUM(CAST(accrued_interest AS DECIMAL)), 0)` })
+      .from(userStaking);
+
+    return {
+      totalActiveStakings: totalStakings[0]?.count || 0,
+      totalTokensStaked: totalTokensStaked[0]?.total || "0",
+      totalNftsStaked: totalNftsStaked[0]?.count || 0,
+      totalInterestPaid: totalInterestPaid[0]?.total || "0",
+    };
+  }
+
+  async calculateStakingInterest(): Promise<any> {
+    const activeStakings = await db
+      .select()
+      .from(userStaking)
+      .where(eq(userStaking.status, "active"));
+
+    let processed = 0;
+    for (const staking of activeStakings) {
+      await this.calculateInterestForStaking(staking.id);
+      processed++;
+    }
+
+    return { processed };
+  }
+
+  private async calculateInterestForStaking(stakingId: string): Promise<void> {
+    const staking = await this.getStaking(stakingId);
+    if (!staking || staking.status !== "active") return;
+
+    const now = new Date();
+    const lastCalculation = new Date(staking.lastInterestCalculation);
+    const startDate = new Date(staking.startDate);
+    const endDate = new Date(staking.endDate);
+
+    // Don't calculate if already past end date
+    if (now > endDate) {
+      return;
+    }
+
+    // Calculate days since last calculation
+    const daysSinceLastCalc = Math.floor((now.getTime() - lastCalculation.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysSinceLastCalc < 1) return; // Don't calculate if less than a day
+
+    // Calculate daily interest
+    const principal = staking.stakingType === "token" ? parseFloat(staking.tokenAmount) : 1;
+    const apr = parseFloat(staking.apr) / 100;
+    const dailyRate = apr / 365;
+    const dailyInterest = principal * dailyRate * daysSinceLastCalc;
+
+    // Update accrued interest
+    const newAccruedInterest = (parseFloat(staking.accruedInterest) + dailyInterest).toString();
+
+    await db
+      .update(userStaking)
+      .set({
+        accruedInterest: newAccruedInterest,
+        lastInterestCalculation: now,
+        updatedAt: now,
+      })
+      .where(eq(userStaking.id, stakingId));
+
+    // Record interest history
+    await db
+      .insert(stakingInterestHistory)
+      .values({
+        stakingId,
+        interestAmount: dailyInterest.toString(),
+        calculationDate: now.toISOString(),
+        daysElapsed: daysSinceLastCalc,
+      });
   }
 }
 
