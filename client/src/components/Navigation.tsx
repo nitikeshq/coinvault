@@ -184,22 +184,13 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                   Deposit
                 </button>
                 <button 
-                  onClick={() => onSectionChange('swap')}
+                  onClick={() => onSectionChange('press')}
                   className={`hover:text-blue-600 transition-colors font-medium text-sm ${
-                    activeSection === 'swap' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
+                    activeSection === 'press' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
                   }`}
-                  data-testid="nav-swap"
+                  data-testid="nav-press"
                 >
-                  Swap
-                </button>
-                <button 
-                  onClick={() => onSectionChange('news')}
-                  className={`hover:text-blue-600 transition-colors font-medium text-sm ${
-                    activeSection === 'news' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
-                  }`}
-                  data-testid="nav-news"
-                >
-                  News
+                  Press
                 </button>
                 {hasDappsEnabled && (
                   <button 
@@ -309,26 +300,16 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                 Deposit
               </button>
               
-              <button 
-                onClick={() => handleMobileSectionChange('swap')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
-                  activeSection === 'swap' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                data-testid="mobile-nav-swap"
-              >
-                <TrendingUp className="h-5 w-5 mr-3" />
-                Swap
-              </button>
               
               <button 
-                onClick={() => handleMobileSectionChange('news')}
+                onClick={() => handleMobileSectionChange('press')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
-                  activeSection === 'news' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                  activeSection === 'press' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
-                data-testid="mobile-nav-news"
+                data-testid="mobile-nav-press"
               >
                 <FileText className="h-5 w-5 mr-3" />
-                News
+                Press
               </button>
               
               {hasDappsEnabled && (

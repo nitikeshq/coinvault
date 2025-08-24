@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import WalletDashboard from "@/components/WalletDashboard";
 import DepositSection from "@/components/DepositSection";
-import SwapTrading from "@/components/SwapTrading";
 import NewsSection from "@/components/NewsSection";
 import AdminPanel from "@/components/AdminPanel";
 import Admin from "@/pages/Admin";
@@ -16,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'press' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market'>('wallet');
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAdmin } = useAuth();
   const { settings: websiteSettings } = useWebsiteSettings() as { settings: any };
@@ -41,9 +40,7 @@ export default function Home() {
         );
       case 'deposit':
         return <DepositSection />;
-      case 'swap':
-        return <SwapTrading />;
-      case 'news':
+      case 'press':
         return <NewsSection />;
       case 'dapps':
         return <DappsSection />;
