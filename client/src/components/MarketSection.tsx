@@ -497,10 +497,12 @@ export default function MarketSection() {
         description: data.message || "NFT listed for sale successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('NFT listing error:', error);
+      const errorMessage = error.message || "Failed to list NFT for sale";
       toast({
         title: "Error",
-        description: "Failed to list NFT for sale",
+        description: errorMessage,
         variant: "destructive",
       });
     }

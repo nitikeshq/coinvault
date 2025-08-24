@@ -533,6 +533,7 @@ export class DatabaseStorage implements IStorage {
   async getUserNfts(userId: string): Promise<any[]> {
     return await db.select({
       id: userNfts.id,
+      nftId: userNfts.nftId, // Add the missing nftId field for marketplace listing
       tokenId: nftCollection.tokenId,
       name: nftCollection.name,
       description: nftCollection.description,
