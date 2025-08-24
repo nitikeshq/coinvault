@@ -297,8 +297,8 @@ export default function Admin() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-crypto-navy flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-900">Loading...</div>
       </div>
     );
   }
@@ -436,7 +436,7 @@ export default function Admin() {
                         value={websiteSettings.logoUrl}
                         onChange={(e) => setWebsiteSettings(prev => ({ ...prev, logoUrl: e.target.value }))}
                         placeholder="https://example.com/logo.png"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400"
                         data-testid="input-logo-url"
                       />
                     </div>
@@ -447,7 +447,7 @@ export default function Admin() {
                         value={websiteSettings.faviconUrl}
                         onChange={(e) => setWebsiteSettings(prev => ({ ...prev, faviconUrl: e.target.value }))}
                         placeholder="https://example.com/favicon.ico"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400"
                         data-testid="input-favicon-url"
                       />
                     </div>
@@ -461,7 +461,7 @@ export default function Admin() {
                         type="color"
                         value={websiteSettings.primaryColor}
                         onChange={(e) => setWebsiteSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                        className="bg-crypto-gray border-white/20 h-10"
+                        className="bg-white border-gray-400 h-10"
                         data-testid="input-primary-color"
                       />
                     </div>
@@ -472,14 +472,14 @@ export default function Admin() {
                         type="color"
                         value={websiteSettings.secondaryColor}
                         onChange={(e) => setWebsiteSettings(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                        className="bg-crypto-gray border-white/20 h-10"
+                        className="bg-white border-gray-400 h-10"
                         data-testid="input-secondary-color"
                       />
                     </div>
                   </div>
 
-                  <div className="border-t border-white/10 pt-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">SEO Settings</h3>
+                  <div className="border-t border-gray-300 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h3>
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="seoTitle">SEO Title</Label>
@@ -488,10 +488,10 @@ export default function Admin() {
                           value={websiteSettings.seoTitle}
                           onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoTitle: e.target.value }))}
                           placeholder="CryptoWallet Pro - Secure BEP-20 Token Wallet"
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-seo-title"
                         />
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           The title that appears in search engines and browser tabs
                         </p>
                       </div>
@@ -503,11 +503,11 @@ export default function Admin() {
                           value={websiteSettings.seoDescription}
                           onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoDescription: e.target.value }))}
                           placeholder="Secure cryptocurrency wallet for BEP-20 tokens with NFT marketplace, trading, and DeFi features"
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           rows={3}
                           data-testid="textarea-seo-description"
                         />
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           The description that appears in search engine results (recommended: 150-160 characters)
                         </p>
                       </div>
@@ -519,18 +519,18 @@ export default function Admin() {
                           value={websiteSettings.seoKeywords}
                           onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoKeywords: e.target.value }))}
                           placeholder="cryptocurrency, wallet, BEP-20, NFT, trading, DeFi, blockchain"
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-seo-keywords"
                         />
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           Comma-separated keywords for search engine optimization
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-white/10 pt-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Important Documents</h3>
+                  <div className="border-t border-gray-300 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Important Documents</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="auditReportUrl">Audit Report URL</Label>
@@ -539,10 +539,10 @@ export default function Admin() {
                           value={websiteSettings.auditReportUrl}
                           onChange={(e) => setWebsiteSettings(prev => ({ ...prev, auditReportUrl: e.target.value }))}
                           placeholder="https://example.com/audit-report.pdf"
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-audit-report-url"
                         />
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           Link to your smart contract audit report (appears in header)
                         </p>
                       </div>
@@ -553,10 +553,10 @@ export default function Admin() {
                           value={websiteSettings.whitepaperUrl}
                           onChange={(e) => setWebsiteSettings(prev => ({ ...prev, whitepaperUrl: e.target.value }))}
                           placeholder="https://example.com/whitepaper.pdf"
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-whitepaper-url"
                         />
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           Link to your project whitepaper (appears in header)
                         </p>
                       </div>
@@ -578,7 +578,7 @@ export default function Admin() {
 
           {/* Deposit Management */}
           <TabsContent value="deposits">
-            <Card className="bg-crypto-dark border-white/10">
+            <Card className="bg-white border-gray-300">
               <CardHeader>
                 <CardTitle>Deposit Requests</CardTitle>
               </CardHeader>
@@ -598,7 +598,7 @@ export default function Admin() {
                     }
                     
                     return (
-                      <div key={deposit.id} className="border border-white/20 rounded-lg p-4" data-testid={`deposit-${deposit.id}`}>
+                      <div key={deposit.id} className="border border-gray-400 rounded-lg p-4" data-testid={`deposit-${deposit.id}`}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
@@ -615,20 +615,20 @@ export default function Admin() {
                           </div>
                           
                           <div className="space-y-1">
-                            <p className="font-semibold text-white">
+                            <p className="font-semibold text-gray-900">
                               {originalAmount}${deposit.amount} USD
                             </p>
                             <p className="text-sm text-green-400">
                               → {tokensToCredit} tokens will be credited
                             </p>
-                            <p className="text-sm text-gray-400">User: {deposit.userId}</p>
-                            <p className="text-sm text-gray-400">Date: {new Date(deposit.createdAt).toLocaleDateString()}</p>
+                            <p className="text-sm text-gray-600">User: {deposit.userId}</p>
+                            <p className="text-sm text-gray-600">Date: {new Date(deposit.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
                       </div>
                       
                       {deposit.transactionHash && (
-                        <p className="text-sm text-gray-400 mb-3">Hash: {deposit.transactionHash}</p>
+                        <p className="text-sm text-gray-600 mb-3">Hash: {deposit.transactionHash}</p>
                       )}
                       
                       {deposit.status === 'pending' && (
@@ -657,7 +657,7 @@ export default function Admin() {
                     );
                   })}
                   {deposits.length === 0 && (
-                    <p className="text-gray-400 text-center py-8">No deposit requests found</p>
+                    <p className="text-gray-600 text-center py-8">No deposit requests found</p>
                   )}
                 </div>
               </CardContent>
@@ -667,7 +667,7 @@ export default function Admin() {
           {/* News Management */}
           <TabsContent value="news">
             <div className="grid gap-6">
-              <Card className="bg-crypto-dark border-white/10">
+              <Card className="bg-white border-gray-300">
                 <CardHeader>
                   <CardTitle>Create News Article</CardTitle>
                 </CardHeader>
@@ -679,7 +679,7 @@ export default function Admin() {
                         id="title"
                         value={newsForm.title}
                         onChange={(e) => setNewsForm(prev => ({ ...prev, title: e.target.value }))}
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400"
                         data-testid="input-news-title"
                       />
                     </div>
@@ -689,7 +689,7 @@ export default function Admin() {
                         id="description"
                         value={newsForm.description}
                         onChange={(e) => setNewsForm(prev => ({ ...prev, description: e.target.value }))}
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400"
                         data-testid="textarea-news-description"
                       />
                     </div>
@@ -700,7 +700,7 @@ export default function Admin() {
                           id="imageUrl"
                           value={newsForm.imageUrl}
                           onChange={(e) => setNewsForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-news-image"
                         />
                       </div>
@@ -710,7 +710,7 @@ export default function Admin() {
                           id="externalUrl"
                           value={newsForm.externalUrl}
                           onChange={(e) => setNewsForm(prev => ({ ...prev, externalUrl: e.target.value }))}
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-news-url"
                         />
                       </div>
@@ -722,7 +722,7 @@ export default function Admin() {
                           id="category"
                           value={newsForm.category}
                           onChange={(e) => setNewsForm(prev => ({ ...prev, category: e.target.value }))}
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-news-category"
                         />
                       </div>
@@ -748,19 +748,19 @@ export default function Admin() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-crypto-dark border-white/10">
+              <Card className="bg-white border-gray-300">
                 <CardHeader>
                   <CardTitle>Existing Articles</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {allNews.map((article: any) => (
-                      <div key={article.id} className="border border-white/20 rounded-lg p-4" data-testid={`news-${article.id}`}>
+                      <div key={article.id} className="border border-gray-400 rounded-lg p-4" data-testid={`news-${article.id}`}>
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-semibold">{article.title}</h4>
-                            <p className="text-sm text-gray-400 mb-2">{article.category}</p>
-                            <p className="text-sm text-gray-300">{article.description.substring(0, 100)}...</p>
+                            <p className="text-sm text-gray-600 mb-2">{article.category}</p>
+                            <p className="text-sm text-gray-700">{article.description.substring(0, 100)}...</p>
                           </div>
                           <Badge variant={article.isPublished ? 'default' : 'secondary'}>
                             {article.isPublished ? 'Published' : 'Draft'}
@@ -769,7 +769,7 @@ export default function Admin() {
                       </div>
                     ))}
                     {allNews.length === 0 && (
-                      <p className="text-gray-400 text-center py-8">No news articles found</p>
+                      <p className="text-gray-600 text-center py-8">No news articles found</p>
                     )}
                   </div>
                 </CardContent>
@@ -780,7 +780,7 @@ export default function Admin() {
           {/* Social Links Management */}
           <TabsContent value="social">
             <div className="grid gap-6">
-              <Card className="bg-crypto-dark border-white/10">
+              <Card className="bg-white border-gray-300">
                 <CardHeader>
                   <CardTitle>Add Social Link</CardTitle>
                 </CardHeader>
@@ -794,7 +794,7 @@ export default function Admin() {
                           value={socialForm.platform}
                           onChange={(e) => setSocialForm(prev => ({ ...prev, platform: e.target.value }))}
                           placeholder="e.g., telegram, twitter"
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-social-platform"
                         />
                       </div>
@@ -805,7 +805,7 @@ export default function Admin() {
                           value={socialForm.url}
                           onChange={(e) => setSocialForm(prev => ({ ...prev, url: e.target.value }))}
                           placeholder="https://..."
-                          className="bg-crypto-gray border-white/20"
+                          className="bg-white border-gray-400"
                           data-testid="input-social-url"
                         />
                       </div>
@@ -831,17 +831,17 @@ export default function Admin() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-crypto-dark border-white/10">
+              <Card className="bg-white border-gray-300">
                 <CardHeader>
                   <CardTitle>Current Social Links</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {allSocialLinks.map((link: any) => (
-                      <div key={link.id} className="flex justify-between items-center border border-white/20 rounded-lg p-4" data-testid={`social-${link.id}`}>
+                      <div key={link.id} className="flex justify-between items-center border border-gray-400 rounded-lg p-4" data-testid={`social-${link.id}`}>
                         <div>
                           <p className="font-semibold capitalize">{link.platform}</p>
-                          <p className="text-sm text-gray-400">{link.url}</p>
+                          <p className="text-sm text-gray-600">{link.url}</p>
                         </div>
                         <Badge variant={link.isActive ? 'default' : 'secondary'}>
                           {link.isActive ? 'Active' : 'Inactive'}
@@ -849,7 +849,7 @@ export default function Admin() {
                       </div>
                     ))}
                     {allSocialLinks.length === 0 && (
-                      <p className="text-gray-400 text-center py-8">No social links configured</p>
+                      <p className="text-gray-600 text-center py-8">No social links configured</p>
                     )}
                   </div>
                 </CardContent>
@@ -913,34 +913,34 @@ function DappsAdminPanel() {
 
   if (isLoading) {
     return (
-      <Card className="bg-crypto-dark border-white/10">
+      <Card className="bg-white border-gray-300">
         <CardContent className="flex items-center justify-center py-8">
-          <div className="text-white">Loading dapp settings...</div>
+          <div className="text-gray-900">Loading dapp settings...</div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-crypto-dark border-white/10">
+    <Card className="bg-white border-gray-300">
       <CardHeader>
         <CardTitle>Decentralized Apps Management</CardTitle>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-600 text-sm">
           Enable or disable various dapps available to users. Disabled apps will be hidden from the navigation.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
         {dappSettings.map((dapp: any) => (
-          <div key={dapp.appName} className="bg-crypto-gray rounded-lg p-4 border border-white/10">
+          <div key={dapp.appName} className="bg-white rounded-lg p-4 border border-gray-300">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-white mb-1">
+                <h3 className="font-semibold text-lg text-gray-900 mb-1">
                   {dapp.displayName}
                 </h3>
-                <p className="text-gray-400 text-sm mb-2">
+                <p className="text-gray-600 text-sm mb-2">
                   {dapp.description}
                 </p>
-                <div className="text-sm text-gray-300">
+                <div className="text-sm text-gray-700">
                   <span className="font-medium">Cost:</span> {parseFloat(dapp.cost).toLocaleString()} tokens
                 </div>
               </div>
@@ -967,7 +967,7 @@ function DappsAdminPanel() {
         ))}
         
         {dappSettings.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-8 text-gray-600">
             <Sparkles className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <div>No dapps configured</div>
             <div className="text-sm">Dapp settings will appear here when configured</div>
@@ -1061,9 +1061,9 @@ function UsersManagementPanel() {
 
   if (isLoading) {
     return (
-      <Card className="bg-crypto-dark border-white/10">
+      <Card className="bg-white border-gray-300">
         <CardContent className="flex items-center justify-center py-8">
-          <div className="text-white">Loading users...</div>
+          <div className="text-gray-900">Loading users...</div>
         </CardContent>
       </Card>
     );
@@ -1071,39 +1071,39 @@ function UsersManagementPanel() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-crypto-dark border-white/10">
+      <Card className="bg-white border-gray-300">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Users className="h-5 w-5" />
             <span>User Management</span>
           </CardTitle>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-600 text-sm">
             Manage user accounts and token balances. Users can add their BEP-20 withdrawal address in their profile.
           </p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {users.map((user: any) => (
-              <div key={user.id} className="bg-crypto-gray rounded-lg p-4 border border-white/10">
+              <div key={user.id} className="bg-white rounded-lg p-4 border border-gray-300">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                   <div>
-                    <div className="font-medium text-white">{user.name || user.email}</div>
-                    <div className="text-sm text-gray-400">{user.email}</div>
+                    <div className="font-medium text-gray-900">{user.name || user.email}</div>
+                    <div className="text-sm text-gray-600">{user.email}</div>
                     {user.isAdmin && (
                       <Badge variant="secondary" className="mt-1">Admin</Badge>
                     )}
                   </div>
                   
                   <div className="text-center">
-                    <div className="text-sm text-gray-400">Token Balance</div>
+                    <div className="text-sm text-gray-600">Token Balance</div>
                     <div className="font-bold text-yellow-400">
                       {parseFloat(user.tokenBalance || '0').toLocaleString()} tokens
                     </div>
                   </div>
                   
                   <div className="text-center">
-                    <div className="text-sm text-gray-400">Withdrawal Address</div>
-                    <div className="text-sm text-white">
+                    <div className="text-sm text-gray-600">Withdrawal Address</div>
+                    <div className="text-sm text-gray-900">
                       {user.withdrawalAddress ? (
                         <span className="break-all">{user.withdrawalAddress}</span>
                       ) : (
@@ -1139,7 +1139,7 @@ function UsersManagementPanel() {
             ))}
             
             {users.length === 0 && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-gray-600">
                 <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <div>No users found</div>
               </div>
@@ -1147,7 +1147,7 @@ function UsersManagementPanel() {
           </div>
           
           {/* Token Management Form */}
-          <div className="mt-6 pt-6 border-t border-white/20">
+          <div className="mt-6 pt-6 border-t border-gray-400">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="token-amount">Amount (tokens)</Label>
@@ -1157,7 +1157,7 @@ function UsersManagementPanel() {
                   placeholder="Enter amount"
                   value={tokenAmount}
                   onChange={(e) => setTokenAmount(e.target.value)}
-                  className="bg-crypto-gray border-white/20"
+                  className="bg-white border-gray-400"
                   data-testid="input-token-amount"
                 />
               </div>
@@ -1168,12 +1168,12 @@ function UsersManagementPanel() {
                   placeholder="Optional reason"
                   value={tokenReason}
                   onChange={(e) => setTokenReason(e.target.value)}
-                  className="bg-crypto-gray border-white/20"
+                  className="bg-white border-gray-400"
                   data-testid="input-token-reason"
                 />
               </div>
               <div className="flex items-end">
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-gray-600">
                   Fill in amount and reason, then click Send or Deduct for any user above
                 </div>
               </div>
@@ -1278,13 +1278,13 @@ function NFTMintingPanel() {
   };
 
   return (
-    <Card className="bg-crypto-dark border-white/10">
+    <Card className="bg-white border-gray-300">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Image className="h-5 w-5" />
           <span>Admin NFT Minting</span>
         </CardTitle>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-600 text-sm">
           Mint NFTs with AI-generated descriptions. These will be stored in the database and can be moved to blockchain post-presale.
         </p>
       </CardHeader>
@@ -1298,10 +1298,10 @@ function NFTMintingPanel() {
                 placeholder="e.g., Mystical Dragons, Cyber Punks, Abstract Art..."
                 value={nftTheme}
                 onChange={(e) => setNftTheme(e.target.value)}
-                className="bg-crypto-gray border-white/20"
+                className="bg-white border-gray-400"
                 data-testid="input-nft-theme"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 mt-1">
                 AI will generate unique descriptions based on this theme
               </p>
             </div>
@@ -1309,7 +1309,7 @@ function NFTMintingPanel() {
             <div>
               <Label htmlFor="nft-rarity">Rarity</Label>
               <Select value={nftRarity} onValueChange={setNftRarity}>
-                <SelectTrigger className="bg-crypto-gray border-white/20" data-testid="select-nft-rarity">
+                <SelectTrigger className="bg-white border-gray-400" data-testid="select-nft-rarity">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1330,10 +1330,10 @@ function NFTMintingPanel() {
                 max="100"
                 value={nftQuantity}
                 onChange={(e) => setNftQuantity(parseInt(e.target.value) || 1)}
-                className="bg-crypto-gray border-white/20"
+                className="bg-white border-gray-400"
                 data-testid="input-nft-quantity"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 mt-1">
                 Generate multiple NFTs with the same theme (max 100)
               </p>
             </div>
@@ -1346,15 +1346,15 @@ function NFTMintingPanel() {
                 onFileSelected={handleReferenceImageUpload}
                 isUploading={isUploadingReference}
                 acceptedFileTypes="image/*"
-                buttonClassName="bg-crypto-gray border-white/20 hover:bg-gray-600"
+                buttonClassName="bg-white border-gray-400 hover:bg-gray-600"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 mt-1">
                 Upload a reference image for AI to generate similar styled NFTs
               </p>
             </div>
             
             {referenceImageUrl && (
-              <div className="border border-white/20 rounded-lg p-2">
+              <div className="border border-gray-400 rounded-lg p-2">
                 <img 
                   src={referenceImageUrl} 
                   alt="Reference" 
@@ -1365,24 +1365,24 @@ function NFTMintingPanel() {
             )}
           </div>
           
-          <div className="bg-crypto-gray rounded-lg p-4 border border-white/10">
-            <h4 className="font-medium text-white mb-2">Preview</h4>
+          <div className="bg-white rounded-lg p-4 border border-gray-300">
+            <h4 className="font-medium text-gray-900 mb-2">Preview</h4>
             <div className="space-y-2 text-sm">
-              <div><span className="text-gray-400">Theme:</span> {nftTheme || "Not set"}</div>
-              <div><span className="text-gray-400">Rarity:</span> {nftRarity}</div>
-              <div><span className="text-gray-400">Quantity:</span> {nftQuantity}</div>
-              <div><span className="text-gray-400">Collection:</span> NFTs</div>
+              <div><span className="text-gray-600">Theme:</span> {nftTheme || "Not set"}</div>
+              <div><span className="text-gray-600">Rarity:</span> {nftRarity}</div>
+              <div><span className="text-gray-600">Quantity:</span> {nftQuantity}</div>
+              <div><span className="text-gray-600">Collection:</span> NFTs</div>
             </div>
             <div className="mt-4 p-3 bg-blue-900/20 rounded border border-blue-500/30">
               <div className="text-xs text-blue-400 mb-1">ℹ️ AI Generation</div>
-              <div className="text-xs text-gray-300">
+              <div className="text-xs text-gray-700">
                 Each NFT will get a unique AI-generated description based on the theme and rarity.
               </div>
             </div>
           </div>
         </div>
         
-        <div className="pt-4 border-t border-white/20">
+        <div className="pt-4 border-t border-gray-400">
           <Button 
             onClick={handleMintNft}
             disabled={mintNftMutation.isPending || !nftTheme.trim()}
@@ -1392,7 +1392,7 @@ function NFTMintingPanel() {
             {mintNftMutation.isPending ? "Minting..." : `Mint ${nftQuantity} NFT${nftQuantity > 1 ? 's' : ''} with AI`}
           </Button>
           
-          <div className="mt-2 text-xs text-gray-400">
+          <div className="mt-2 text-xs text-gray-600">
             NFTs will be stored in database for the presale. After presale ends, they can be deployed to blockchain.
           </div>
         </div>
