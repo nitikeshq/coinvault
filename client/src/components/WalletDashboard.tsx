@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { NFTModal } from "@/components/NFTModal";
 
-interface WalletDashboardProps {}
+interface WalletDashboardProps {
+  onSectionChange?: (section: 'deposit') => void;
+}
 
-export default function WalletDashboard({}: WalletDashboardProps) {
+export default function WalletDashboard({ onSectionChange }: WalletDashboardProps = {}) {
   const { toast } = useToast();
 
   const { data: tokenConfig } = useQuery<any>({
@@ -168,7 +170,17 @@ export default function WalletDashboard({}: WalletDashboardProps) {
         
         
         {/* Action Buttons */}
-        <div className={`grid gap-3 ${presaleEnded ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-3 ${presaleEnded ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <Button 
+            onClick={() => onSectionChange?.('deposit')}
+            className="bg-green-500 hover:bg-green-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-white"
+            data-testid="button-deposit"
+            title="Add tokens to your wallet"
+          >
+            <ArrowDown className="h-4 w-4" />
+            <span>Deposit</span>
+          </Button>
+          
           <Button 
             disabled={isPresaleActive}
             className={`py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors ${
