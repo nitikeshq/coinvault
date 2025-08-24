@@ -4,7 +4,7 @@ import WalletDashboard from "@/components/WalletDashboard";
 import DepositSection from "@/components/DepositSection";
 import SwapTrading from "@/components/SwapTrading";
 import NewsSection from "@/components/NewsSection";
-import AdminPanel from "@/components/AdminPanel";
+import Admin from "@/pages/Admin";
 import DappsSection from "@/components/DappsSection";
 import AdvertisementsPage from "@/pages/Advertisements";
 import MarketSection from "@/components/MarketSection";
@@ -51,7 +51,7 @@ export default function Home() {
       case 'market':
         return <MarketSection />;
       case 'admin':
-        return isAdmin ? <AdminPanel /> : (
+        return isAdmin ? <Admin /> : (
           <div className="container mx-auto px-4 space-y-6">
             <WalletDashboard onSectionChange={setActiveSection} />
             <PresaleCountdown />
