@@ -11,6 +11,7 @@ import { Heart, ThumbsDown, TrendingUp, Trophy, Zap, Clock, Star, Eye } from "lu
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTokenInfo } from "@/hooks/useTokenInfo";
+import { AuctionTimer } from "./AuctionTimer";
 
 export default function MarketSection() {
   const [activeMarket, setActiveMarket] = useState<'nfts' | 'memes'>('nfts');
@@ -140,6 +141,19 @@ export default function MarketSection() {
                           ${formatBalance(listing.listing.currentHighestBid || "0")}
                         </span>
                       </div>
+                      {listing.listing.auctionEndDate && (
+                        <div className="py-2">
+                          <AuctionTimer 
+                            endDate={listing.listing.auctionEndDate} 
+                            variant="card"
+                            onExpiry={() => {
+                              // Refresh listings when auction expires
+                              queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/platform-listings'] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/user-generated-listings'] });
+                            }}
+                          />
+                        </div>
+                      )}
                       <div className="flex space-x-2">
                         <Dialog>
                           <DialogTrigger asChild>
@@ -239,6 +253,19 @@ export default function MarketSection() {
                           ${formatBalance(listing.listing.currentHighestBid || "0")}
                         </span>
                       </div>
+                      {listing.listing.auctionEndDate && (
+                        <div className="py-2">
+                          <AuctionTimer 
+                            endDate={listing.listing.auctionEndDate} 
+                            variant="card"
+                            onExpiry={() => {
+                              // Refresh listings when auction expires
+                              queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/platform-listings'] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/marketplace/nft/user-generated-listings'] });
+                            }}
+                          />
+                        </div>
+                      )}
                       <div className="flex space-x-2">
                         <Dialog>
                           <DialogTrigger asChild>

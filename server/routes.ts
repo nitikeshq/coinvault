@@ -405,6 +405,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auction cleanup endpoint
+  app.post('/api/marketplace/auction/cleanup', async (req, res) => {
+    try {
+      const expiredAuctions = await storage.getExpiredAuctions();
+      console.log(`Found ${expiredAuctions.length} expired auctions to process`);
+      
+      let processedCount = 0;
+      
+      for (const auction of expiredAuctions) {
+        const { listing, nft, seller } = auction;
+        
+        // Check if there are any bids and get the highest one
+        const bids = await storage.getNFTBids(listing.id);
+        const hasWinningBid = bids && bids.length > 0 && parseFloat(listing.currentHighestBid || "0") > 0;
+        
+        if (hasWinningBid && listing.highestBidderId) {
+          // Transfer NFT to highest bidder
+          console.log(`Transferring NFT ${nft.name} to highest bidder ${listing.highestBidderId}`);
+          await storage.transferNFTOwnership(
+            nft.id, 
+            seller.id, 
+            listing.highestBidderId, 
+            listing.id
+          );
+        } else {
+          // No bids, just mark as inactive (NFT stays with owner)
+          console.log(`No bids on NFT ${nft.name}, returning to owner ${seller.name}`);
+          await storage.returnNFTToOwner(listing.id);
+        }
+        
+        processedCount++;
+      }
+      
+      res.json({ 
+        message: `Processed ${processedCount} expired auctions`,
+        processedCount,
+        totalExpired: expiredAuctions.length 
+      });
+    } catch (error) {
+      console.error("Error processing expired auctions:", error);
+      res.status(500).json({ message: "Failed to process expired auctions" });
+    }
+  });
+
   // Website settings routes
   app.get('/api/website/settings', async (req, res) => {
     try {

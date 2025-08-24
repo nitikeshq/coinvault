@@ -39,7 +39,7 @@ import {
   type ReferralEarnings,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, lt } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -950,6 +950,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlatformNFTListings() {
+    const now = new Date();
     return await db
       .select({
         listing: nftListings,
@@ -962,13 +963,16 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(nftListings.isActive, true),
-          eq(nftCollection.isUserGenerated, false)
+          eq(nftCollection.isUserGenerated, false),
+          // Exclude expired auctions - if auctionEndDate is null (no auction) or greater than now
+          sql`(${nftListings.auctionEndDate} IS NULL OR ${nftListings.auctionEndDate} > ${now})`
         )
       )
       .orderBy(desc(nftListings.createdAt));
   }
 
   async getUserGeneratedNFTListings() {
+    const now = new Date();
     return await db
       .select({
         listing: nftListings,
@@ -981,7 +985,9 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(nftListings.isActive, true),
-          eq(nftCollection.isUserGenerated, true)
+          eq(nftCollection.isUserGenerated, true),
+          // Exclude expired auctions - if auctionEndDate is null (no auction) or greater than now
+          sql`(${nftListings.auctionEndDate} IS NULL OR ${nftListings.auctionEndDate} > ${now})`
         )
       )
       .orderBy(desc(nftListings.createdAt));
@@ -997,6 +1003,75 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
       .where(eq(nftListings.sellerId, userId))
       .orderBy(desc(nftListings.createdAt));
+  }
+
+  // Auction expiry handling methods
+  async getExpiredAuctions() {
+    const now = new Date();
+    return await db
+      .select({
+        listing: nftListings,
+        nft: nftCollection,
+        seller: users,
+      })
+      .from(nftListings)
+      .innerJoin(nftCollection, eq(nftListings.nftId, nftCollection.id))
+      .innerJoin(users, eq(nftListings.sellerId, users.id))
+      .where(
+        and(
+          eq(nftListings.isActive, true),
+          lt(nftListings.auctionEndDate, now)
+        )
+      );
+  }
+
+  async transferNFTOwnership(nftId: string, fromUserId: string, toUserId: string, listingId: string) {
+    return await db.transaction(async (tx) => {
+      // Remove NFT from current owner's collection
+      await tx.delete(userNfts)
+        .where(
+          and(
+            eq(userNfts.nftId, nftId),
+            eq(userNfts.userId, fromUserId)
+          )
+        );
+
+      // Add NFT to new owner's collection
+      await tx.insert(userNfts).values({
+        userId: toUserId,
+        nftId: nftId,
+        mintedAt: new Date(),
+      });
+
+      // Mark listing as sold and inactive
+      await tx.update(nftListings)
+        .set({
+          isActive: false,
+          soldAt: new Date(),
+        })
+        .where(eq(nftListings.id, listingId));
+    });
+  }
+
+  async returnNFTToOwner(listingId: string) {
+    return await db.update(nftListings)
+      .set({
+        isActive: false,
+        soldAt: new Date(),
+      })
+      .where(eq(nftListings.id, listingId));
+  }
+
+  async processExpiredAuction(listingId: string, hasWinningBid: boolean, sellerId: string, winnerId?: string, nftId?: string) {
+    return await db.transaction(async (tx) => {
+      if (hasWinningBid && winnerId && nftId) {
+        // Transfer NFT to highest bidder
+        await this.transferNFTOwnership(nftId, sellerId, winnerId, listingId);
+      } else {
+        // Just mark listing as inactive (NFT stays with original owner)
+        await this.returnNFTToOwner(listingId);
+      }
+    });
   }
 
   async getNFTBids(listingId: string) {
