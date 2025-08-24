@@ -7,11 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { NFTModal } from "@/components/NFTModal";
 
-interface WalletDashboardProps {
-  onSectionChange?: (section: string) => void;
-}
+interface WalletDashboardProps {}
 
-export default function WalletDashboard({ onSectionChange }: WalletDashboardProps) {
+export default function WalletDashboard({}: WalletDashboardProps) {
   const { toast } = useToast();
 
   const { data: tokenConfig } = useQuery<any>({
@@ -79,11 +77,6 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     return formatBalance(usdValue.toString());
   };
 
-  const handleDepositClick = () => {
-    if (onSectionChange) {
-      onSectionChange('deposit');
-    }
-  };
 
   const handleSwapClick = () => {
     // Open PancakeSwap with your token/USDT pair when presale ends
@@ -175,15 +168,7 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
         
         
         {/* Action Buttons */}
-        <div className={`grid gap-3 ${presaleEnded ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          <Button 
-            onClick={handleDepositClick}
-            className="bg-green-500 hover:bg-green-600 py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors text-white" 
-            data-testid="button-deposit"
-          >
-            <ArrowDown className="h-4 w-4" />
-            <span>Deposit</span>
-          </Button>
+        <div className={`grid gap-3 ${presaleEnded ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <Button 
             disabled={isPresaleActive}
             className={`py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors ${

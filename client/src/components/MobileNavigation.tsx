@@ -18,14 +18,14 @@ import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { useQuery } from "@tanstack/react-query";
 
 interface MobileNavigationProps {
-  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market';
-  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => void;
+  activeSection: 'wallet' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market';
+  onSectionChange: (section: 'wallet' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => void;
   user?: any;
   isAdmin?: boolean;
 }
 
 export default function MobileNavigation({ activeSection, onSectionChange, user, isAdmin }: MobileNavigationProps) {
-  const { settings } = useWebsiteSettings();
+  const { settings, isLoading } = useWebsiteSettings();
   const [showExpandedMenu, setShowExpandedMenu] = useState(false);
   const [showDocMenu, setShowDocMenu] = useState(false);
 
@@ -87,7 +87,7 @@ export default function MobileNavigation({ activeSection, onSectionChange, user,
                     <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-32 z-50">
                       {settings?.whitepaperUrl && (
                         <a 
-                          href={settings.whitepaperUrl}
+                          href={settings?.whitepaperUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
@@ -99,7 +99,7 @@ export default function MobileNavigation({ activeSection, onSectionChange, user,
                       )}
                       {settings?.auditReportUrl && (
                         <a 
-                          href={settings.auditReportUrl}
+                          href={settings?.auditReportUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"

@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market'>('wallet');
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAdmin } = useAuth();
   const { settings: websiteSettings } = useWebsiteSettings() as { settings: any };
@@ -34,12 +34,10 @@ export default function Home() {
       case 'wallet':
         return (
           <div className="container mx-auto px-4 space-y-6">
-            <WalletDashboard onSectionChange={(section: any) => setActiveSection(section)} />
+            <WalletDashboard />
             <PresaleCountdown />
           </div>
         );
-      case 'deposit':
-        return <DepositSection />;
       case 'swap':
         return <SwapTrading />;
       case 'news':
@@ -53,14 +51,14 @@ export default function Home() {
       case 'admin':
         return isAdmin ? <AdminPanel /> : (
           <div className="container mx-auto px-4 space-y-6">
-            <WalletDashboard onSectionChange={(section: any) => setActiveSection(section)} />
+            <WalletDashboard />
             <PresaleCountdown />
           </div>
         );
       default:
         return (
           <div className="container mx-auto px-4 space-y-6">
-            <WalletDashboard onSectionChange={(section: any) => setActiveSection(section)} />
+            <WalletDashboard />
             <PresaleCountdown />
           </div>
         );
