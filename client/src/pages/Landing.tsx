@@ -168,15 +168,19 @@ export default function Landing() {
       {/* Footer */}
       <footer className="bg-crypto-gray/30 border-t border-white/10 py-8">
         <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-8 h-8 crypto-gradient rounded-lg flex items-center justify-center">
-              <Wallet className="text-white h-4 w-4" />
-            </div>
-            <span className="font-semibold">{siteName}</span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            &copy; 2024 {siteName}. All rights reserved.
-          </p>
+          {siteName && (
+            <>
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <div className="w-8 h-8 crypto-gradient rounded-lg flex items-center justify-center">
+                  <Wallet className="text-white h-4 w-4" />
+                </div>
+                <span className="font-semibold">{siteName}</span>
+              </div>
+              <p className="text-gray-400 text-sm">
+                &copy; 2024 {siteName}. All rights reserved.
+              </p>
+            </>
+          )}
         </div>
       </footer>
     </div>
