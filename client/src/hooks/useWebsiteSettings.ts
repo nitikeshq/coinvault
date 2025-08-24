@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 export function useWebsiteSettings() {
   const { data: settings, isLoading, error } = useQuery({
     queryKey: ["/api/website/settings"],
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // Return empty defaults if no settings found - let admin configure

@@ -29,9 +29,9 @@ export function useAuth() {
       }
     },
     retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 1 * 60 * 1000, // Reduce to 1 minute for better session detection
-    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const loginMutation = useMutation({
