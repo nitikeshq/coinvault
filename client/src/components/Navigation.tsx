@@ -14,9 +14,17 @@ interface NavigationProps {
 }
 
 export default function Navigation({ activeSection, onSectionChange, user, isAdmin }: NavigationProps) {
-  const { settings } = useWebsiteSettings();
+  const { settings, isLoading } = useWebsiteSettings();
   const { toast } = useToast();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  
+  // Track when settings have loaded to prevent menu closing
+  useEffect(() => {
+    if (!isLoading && !settingsLoaded) {
+      setSettingsLoaded(true);
+    }
+  }, [isLoading, settingsLoaded]);
   
   // Fetch enabled dapps to show/hide the Dapps menu
   const { data: enabledDapps = [] } = useQuery<any[]>({
@@ -26,7 +34,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
 
   const hasDappsEnabled = enabledDapps.length > 0;
   
-  // Close mobile menu when section changes (prevents state conflicts)
+  // Close mobile menu only when section changes, not when settings load
   useEffect(() => {
     setShowMobileMenu(false);
   }, [activeSection]);

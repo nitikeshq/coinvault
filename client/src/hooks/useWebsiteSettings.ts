@@ -7,9 +7,9 @@ export function useWebsiteSettings() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Return default values if no settings found
+  // Return default values if no settings found (match DB defaults)
   const defaultSettings = {
-    siteName: "Crypto Wallet",
+    siteName: "CryptoWallet Pro",
     logoUrl: "",
     faviconUrl: "",
     description: "Secure BEP-20 cryptocurrency wallet with PancakeSwap integration",
