@@ -99,15 +99,20 @@ export default function Home() {
                       <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800">{websiteSettings?.siteName || "Crypto Wallet"}</h3>
-                    <p className="text-sm text-purple-600">Professional Edition</p>
-                  </div>
+                  {websiteSettings?.siteName && (
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">{websiteSettings.siteName}</h3>
+                      {websiteSettings?.description && (
+                        <p className="text-sm text-purple-600">{websiteSettings.description}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  The most secure and user-friendly BEP-20 token wallet with integrated trading, 
-                  real-time analytics, and enterprise-grade security.
-                </p>
+                {websiteSettings?.description && (
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {websiteSettings.description}
+                  </p>
+                )}
               </div>
               
               <div>
@@ -180,7 +185,9 @@ export default function Home() {
             
             <div className="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
               <div className="flex items-center space-x-6">
-                <p className="text-sm text-gray-500">&copy; 2024 {websiteSettings?.siteName || "Crypto Wallet"}. All rights reserved.</p>
+                {websiteSettings?.siteName && (
+                  <p className="text-sm text-gray-500">&copy; 2024 {websiteSettings.siteName}. All rights reserved.</p>
+                )}
                 <div className="hidden md:flex items-center space-x-4">
                   <span className="px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full border border-green-200">
                     Secure & Encrypted
