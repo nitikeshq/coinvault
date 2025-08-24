@@ -598,7 +598,7 @@ export default function Admin() {
                     }
                     
                     return (
-                    <div key={deposit.id} className="border border-white/20 rounded-lg p-4" data-testid={`deposit-${deposit.id}`}>
+                      <div key={deposit.id} className="border border-white/20 rounded-lg p-4" data-testid={`deposit-${deposit.id}`}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
@@ -653,8 +653,9 @@ export default function Admin() {
                           </Button>
                         </div>
                       )}
-                    </div>
-                  )})
+                      </div>
+                    );
+                  })}
                   {deposits.length === 0 && (
                     <p className="text-gray-400 text-center py-8">No deposit requests found</p>
                   )}
