@@ -55,17 +55,26 @@ export function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    // Show again in 24 hours
+    // Show again in 3 days instead of 24 hours
     localStorage.setItem('pwa-dismissed', Date.now().toString());
   };
 
-  // Don't show if dismissed recently
+  // Don't show if dismissed recently or already installed
   useEffect(() => {
+    // Check if already installed (in standalone mode)
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
+                       (window.navigator as any).standalone === true;
+    
+    if (isInstalled) {
+      setShowPrompt(false);
+      return;
+    }
+    
     const dismissed = localStorage.getItem('pwa-dismissed');
     if (dismissed) {
       const dismissedTime = parseInt(dismissed);
-      const dayInMs = 24 * 60 * 60 * 1000;
-      if (Date.now() - dismissedTime < dayInMs) {
+      const threeDaysInMs = 3 * 24 * 60 * 60 * 1000; // Changed from 1 day to 3 days
+      if (Date.now() - dismissedTime < threeDaysInMs) {
         setShowPrompt(false);
       }
     }

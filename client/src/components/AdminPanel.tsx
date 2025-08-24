@@ -226,15 +226,32 @@ export default function AdminPanel() {
 
   const updateDepositMutation = useMutation({
     mutationFn: async ({ id, status, adminNotes }: { id: string; status: string; adminNotes?: string }) => {
-      const response = await apiRequest("PUT", `/api/admin/deposits/${id}`, { status, adminNotes });
-      return response.json();
+      await apiRequest('PUT', `/api/admin/deposits/${id}`, { status, adminNotes });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/deposits"] });
-      toast({ title: "Deposit status updated successfully" });
+      toast({ title: "Success", description: "Deposit status updated successfully" });
+      // Invalidate admin deposits cache
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/deposits'] });
+      // Invalidate user balance caches to reflect credited tokens
+      queryClient.invalidateQueries({ queryKey: ['/api/user/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/token/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      // Invalidate presale progress (affected by approved deposits)
+      queryClient.invalidateQueries({ queryKey: ['/api/presale/progress'] });
     },
-    onError: (error: any) => {
-      toast({ title: "Failed to update deposit status", description: error.message, variant: "destructive" });
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({ title: "Error", description: "Failed to update deposit status", variant: "destructive" });
     },
   });
 
@@ -311,6 +328,10 @@ export default function AdminPanel() {
   const handleCancelEdit = () => {
     setEditingItem(null);
     newsForm.reset();
+  };
+
+  const handleDepositAction = (id: string, status: string, adminNotes?: string) => {
+    updateDepositMutation.mutate({ id, status, adminNotes });
   };
 
   return (
@@ -923,72 +944,87 @@ export default function AdminPanel() {
             <CardHeader>
               <CardTitle className="text-gray-900 text-xl font-bold">Deposit Requests</CardTitle>
               <CardDescription className="text-gray-700">
-                Review and manage user deposit requests
+                Review and approve user deposit requests
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-gray-300 bg-gray-50">
-                    <TableHead className="text-gray-900 font-semibold">User</TableHead>
-                    <TableHead className="text-gray-900 font-semibold">Amount</TableHead>
-                    <TableHead className="text-gray-900 font-semibold">Transaction Hash</TableHead>
-                    <TableHead className="text-gray-900 font-semibold">Status</TableHead>
-                    <TableHead className="text-gray-900 font-semibold">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {deposits.map((deposit: any) => (
-                    <TableRow key={deposit.id} className="border-gray-300 hover:bg-gray-50">
-                      <TableCell className="text-gray-900 font-medium">{deposit.userId}</TableCell>
-                      <TableCell className="text-gray-900 font-medium">
-                        {deposit.amount} YHT 
-                        <span className="text-gray-700 text-sm block">
-                          ({deposit.originalAmount} {deposit.currency})
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-gray-900 font-mono text-sm">{deposit.transactionHash}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={deposit.status === 'approved' ? 'default' : deposit.status === 'pending' ? 'secondary' : 'destructive'}
-                          className={
-                            deposit.status === 'approved' ? 'bg-green-100 text-green-700 border-green-200' :
-                            deposit.status === 'pending' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                            'bg-red-100 text-red-700 border-red-200'
-                          }
-                          data-testid={`badge-status-${deposit.id}`}
-                        >
-                          {deposit.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
+              <div className="space-y-4">
+                {deposits.map((deposit: any) => {
+                  // Calculate token amount and USD equivalent
+                  const isUpiPayment = deposit.paymentMethod === 'upi';
+                  const usdAmount = parseFloat(deposit.amount); // Amount is already in USD (converted by backend)
+                  const tokenPrice = currentTokenConfig?.defaultPriceUsd ? parseFloat(currentTokenConfig.defaultPriceUsd.toString()) : 0.99999900;
+                  const tokensToCredit = (usdAmount / tokenPrice).toFixed(6);
+                  
+                  // For UPI payments, show original INR amount
+                  let originalAmount = '';
+                  if (isUpiPayment && deposit.originalAmount) {
+                    originalAmount = `₹${deposit.originalAmount} INR → `;
+                  }
+                  
+                  return (
+                    <div key={deposit.id} className="border border-gray-300 rounded-lg p-4" data-testid={`deposit-${deposit.id}`}>
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline" className="text-xs">
+                              {deposit.paymentMethod?.toUpperCase() || 'BSC'}
+                            </Badge>
+                            <Badge 
+                              variant={deposit.status === 'approved' ? 'default' : 
+                                      deposit.status === 'rejected' ? 'destructive' : 'secondary'}
+                              data-testid={`badge-status-${deposit.id}`}
+                            >
+                              {deposit.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <p className="font-semibold text-gray-900">
+                              {originalAmount}${deposit.amount} USD
+                            </p>
+                            <p className="text-sm text-green-600">
+                              → {tokensToCredit} tokens will be credited
+                            </p>
+                            <p className="text-sm text-gray-600">User: {deposit.userId}</p>
+                            <p className="text-sm text-gray-600">Date: {new Date(deposit.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {deposit.transactionHash && (
+                        <p className="text-sm text-gray-600 mb-3">Hash: {deposit.transactionHash}</p>
+                      )}
+                      
+                      {deposit.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleDepositAction(deposit.id, 'approved')}
                             className="bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => updateDepositMutation.mutate({ id: deposit.id, status: 'approved' })}
-                            data-testid={`button-approve-${deposit.id}`}
                             disabled={updateDepositMutation.isPending}
+                            data-testid={`button-approve-${deposit.id}`}
                           >
-                            <Check className="h-4 w-4" />
                             {updateDepositMutation.isPending ? 'Processing...' : 'Approve'}
                           </Button>
-                          <Button
-                            size="sm"
+                          <Button 
+                            size="sm" 
                             variant="destructive"
-                            onClick={() => updateDepositMutation.mutate({ id: deposit.id, status: 'rejected' })}
-                            data-testid={`button-reject-${deposit.id}`}
+                            onClick={() => handleDepositAction(deposit.id, 'rejected')}
                             disabled={updateDepositMutation.isPending}
+                            data-testid={`button-reject-${deposit.id}`}
                           >
-                            <X className="h-4 w-4" />
                             {updateDepositMutation.isPending ? 'Processing...' : 'Reject'}
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      )}
+                    </div>
+                  );
+                })}
+                {deposits.length === 0 && (
+                  <p className="text-gray-600 text-center py-8">No deposit requests found</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

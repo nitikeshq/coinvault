@@ -42,9 +42,27 @@ export function CacheClearButton() {
         description: "All app data cleared. Page will refresh in 2 seconds...",
       });
       
-      // 6. Force complete page reload after 2 seconds
+      // 6. Force complete page reload with stronger cache busting after 2 seconds
       setTimeout(() => {
-        window.location.href = window.location.href + '?cache_cleared=' + Date.now();
+        // Clear all possible browser caches more aggressively
+        if ('caches' in window) {
+          caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => caches.delete(cacheName));
+          });
+        }
+        
+        // Multiple cache-busting strategies
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(7);
+        
+        // Use location.replace to avoid back button issues
+        window.location.replace(
+          window.location.origin + 
+          window.location.pathname + 
+          '?cache_clear=' + timestamp + 
+          '&bust=' + random + 
+          '#cache_cleared'
+        );
       }, 2000);
       
     } catch (error) {
