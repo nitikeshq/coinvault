@@ -189,9 +189,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/deposits', requireAuth, upload.single('screenshot'), async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const data = { ...req.body };
       
-      console.log('Deposit request data:', data); // Debug log
+      // Extract form data manually for debugging
+      const data = {
+        amount: req.body.amount,
+        transactionHash: req.body.transactionHash,
+        paymentMethod: req.body.paymentMethod,
+      };
+      
+      console.log('Deposit request data:', data);
       
       if (req.file) {
         data.screenshot = req.file.path;
@@ -199,6 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Ensure amount is provided
       if (!data.amount) {
+        console.log('Amount not provided, request body:', req.body);
         return res.status(400).json({ message: "Deposit amount is required" });
       }
       

@@ -6,7 +6,7 @@ import type { Request, Response } from "express";
 
 interface AuthRequest extends Request {
   user?: { id: string; email: string; name?: string };
-  session?: any & {
+  session: any & {
     user?: { id: string; email: string; name?: string };
   };
 }
@@ -278,7 +278,7 @@ router.post("/api/marketplace/meme/:memeId/like", requireAuth, async (req: AuthR
     });
   } catch (error) {
     console.error("Error liking meme:", error);
-    res.status(500).json({ error: "Failed to like meme" });
+    res.status(500).json({ error: (error as Error).message || "Failed to like meme" });
   }
 });
 
@@ -300,7 +300,33 @@ router.post("/api/marketplace/meme/:memeId/dislike", requireAuth, async (req: Au
     });
   } catch (error) {
     console.error("Error disliking meme:", error);
-    res.status(500).json({ error: "Failed to dislike meme" });
+    res.status(500).json({ error: (error as Error).message || "Failed to dislike meme" });
+  }
+});
+
+router.post("/api/marketplace/meme/:memeId/gift", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { memeId } = req.params;
+    const { amount } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      return res.status(400).json({ error: "Invalid gift amount" });
+    }
+
+    await storage.giftTokensToMeme(memeId, userId, amount);
+    
+    res.json({
+      success: true,
+      message: `Successfully gifted ${amount} tokens to meme creator`
+    });
+  } catch (error) {
+    console.error("Error gifting tokens to meme:", error);
+    res.status(500).json({ error: (error as Error).message || "Failed to gift tokens" });
   }
 });
 
@@ -380,6 +406,38 @@ router.get("/api/marketplace/meme/feed", async (req: Request, res: Response) => 
     res.json(memes);
   } catch (error) {
     console.error("Error fetching meme feed:", error);
+    res.status(500).json({ error: "Failed to fetch meme feed" });
+  }
+});
+
+// Authenticated meme feed with user vote status
+router.get("/api/marketplace/meme/feed-with-votes", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 6;
+    const offset = (page - 1) * limit;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    const memes = await storage.getAllMemesWithUserInfo(limit, offset);
+    
+    // Add user vote status to each meme
+    const memesWithVotes = await Promise.all(
+      memes.map(async (meme) => {
+        const userVote = await storage.getUserMemeVote(meme.id, userId);
+        return {
+          ...meme,
+          userVote
+        };
+      })
+    );
+    
+    res.json(memesWithVotes);
+  } catch (error) {
+    console.error("Error fetching meme feed with votes:", error);
     res.status(500).json({ error: "Failed to fetch meme feed" });
   }
 });

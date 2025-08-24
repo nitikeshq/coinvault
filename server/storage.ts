@@ -1123,37 +1123,47 @@ export class DatabaseStorage implements IStorage {
 
   // Marketplace methods (Memes)
   async likeMeme(memeId: string, userId: string): Promise<void> {
-    // Remove dislike if exists
-    await db
-      .delete(memeDislikes)
+    // Check if user has already voted (like or dislike)
+    const [existingLike] = await db
+      .select()
+      .from(memeLikes)
+      .where(and(eq(memeLikes.memeId, memeId), eq(memeLikes.userId, userId)));
+      
+    const [existingDislike] = await db
+      .select()
+      .from(memeDislikes)
       .where(and(eq(memeDislikes.memeId, memeId), eq(memeDislikes.userId, userId)));
-
-    // Add like if not already liked
-    try {
-      await db
-        .insert(memeLikes)
-        .values({ memeId, userId })
-        .onConflictDoNothing();
-    } catch {
-      // Ignore if already liked
+    
+    if (existingLike || existingDislike) {
+      throw new Error('You have already voted on this meme');
     }
+
+    // Add like
+    await db
+      .insert(memeLikes)
+      .values({ memeId, userId });
   }
 
   async dislikeMeme(memeId: string, userId: string): Promise<void> {
-    // Remove like if exists
-    await db
-      .delete(memeLikes)
+    // Check if user has already voted (like or dislike)
+    const [existingLike] = await db
+      .select()
+      .from(memeLikes)
       .where(and(eq(memeLikes.memeId, memeId), eq(memeLikes.userId, userId)));
-
-    // Add dislike if not already disliked
-    try {
-      await db
-        .insert(memeDislikes)
-        .values({ memeId, userId })
-        .onConflictDoNothing();
-    } catch {
-      // Ignore if already disliked
+      
+    const [existingDislike] = await db
+      .select()
+      .from(memeDislikes)
+      .where(and(eq(memeDislikes.memeId, memeId), eq(memeDislikes.userId, userId)));
+    
+    if (existingLike || existingDislike) {
+      throw new Error('You have already voted on this meme');
     }
+
+    // Add dislike
+    await db
+      .insert(memeDislikes)
+      .values({ memeId, userId });
   }
 
   async removeLike(memeId: string, userId: string): Promise<void> {
@@ -1183,6 +1193,115 @@ export class DatabaseStorage implements IStorage {
       likes: Number(likesResult?.count) || 0,
       dislikes: Number(dislikesResult?.count) || 0,
     };
+  }
+
+  async getUserMemeVote(memeId: string, userId: string): Promise<'like' | 'dislike' | null> {
+    const [existingLike] = await db
+      .select()
+      .from(memeLikes)
+      .where(and(eq(memeLikes.memeId, memeId), eq(memeLikes.userId, userId)));
+      
+    if (existingLike) return 'like';
+    
+    const [existingDislike] = await db
+      .select()
+      .from(memeDislikes)
+      .where(and(eq(memeDislikes.memeId, memeId), eq(memeDislikes.userId, userId)));
+      
+    if (existingDislike) return 'dislike';
+    
+    return null;
+  }
+
+  async giftTokensToMeme(memeId: string, gifterId: string, amount: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Get meme owner
+      const [meme] = await tx
+        .select({ userId: memeGenerations.userId })
+        .from(memeGenerations)
+        .where(eq(memeGenerations.id, memeId));
+      
+      if (!meme) {
+        throw new Error('Meme not found');
+      }
+      
+      if (meme.userId === gifterId) {
+        throw new Error('You cannot gift tokens to your own meme');
+      }
+
+      // Check gifter's balance
+      const gifterBalance = await tx
+        .select()
+        .from(userBalances)
+        .where(eq(userBalances.userId, gifterId));
+      
+      const currentBalance = parseFloat(gifterBalance[0]?.balance || '0');
+      const giftAmount = parseFloat(amount);
+      
+      if (currentBalance < giftAmount) {
+        throw new Error('Insufficient balance');
+      }
+
+      // Deduct from gifter
+      const newGifterBalance = (currentBalance - giftAmount).toString();
+      const newGifterUsdValue = (parseFloat(newGifterBalance) * 1.0).toFixed(8);
+      
+      await tx
+        .update(userBalances)
+        .set({
+          balance: newGifterBalance,
+          usdValue: newGifterUsdValue
+        })
+        .where(eq(userBalances.userId, gifterId));
+
+      // Add to meme owner
+      const [ownerBalance] = await tx
+        .select()
+        .from(userBalances)
+        .where(eq(userBalances.userId, meme.userId));
+      
+      const currentOwnerBalance = parseFloat(ownerBalance?.balance || '0');
+      const newOwnerBalance = (currentOwnerBalance + giftAmount).toString();
+      const newOwnerUsdValue = (parseFloat(newOwnerBalance) * 1.0).toFixed(8);
+      
+      if (ownerBalance) {
+        await tx
+          .update(userBalances)
+          .set({
+            balance: newOwnerBalance,
+            usdValue: newOwnerUsdValue
+          })
+          .where(eq(userBalances.userId, meme.userId));
+      } else {
+        await tx
+          .insert(userBalances)
+          .values({
+            userId: meme.userId,
+            balance: newOwnerBalance,
+            usdValue: newOwnerUsdValue
+          });
+      }
+
+      // Record transactions
+      await tx.insert(transactions).values([
+        {
+          userId: gifterId,
+          type: 'meme_gift_sent',
+          amount: `-${giftAmount}`,
+          description: `Gift sent to meme creator`,
+          status: 'completed',
+          createdAt: new Date()
+        },
+        {
+          userId: meme.userId,
+          type: 'meme_gift_received',
+          amount: giftAmount.toString(),
+          description: `Gift received for meme`,
+          status: 'completed',
+          createdAt: new Date()
+        }
+      ]);
+    });
   }
 
   async getAllMemesWithUserInfo(limit: number = 6, offset: number = 0): Promise<any[]> {

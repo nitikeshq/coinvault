@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Heart, ThumbsDown, TrendingUp, Trophy, Zap, Clock, Star, Eye } from "lucide-react";
+import { Heart, ThumbsDown, TrendingUp, Trophy, Zap, Clock, Star, Eye, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTokenInfo } from "@/hooks/useTokenInfo";
@@ -45,11 +45,13 @@ export default function MarketSection() {
   // Meme Data Queries with pagination
   const [memePage, setMemePage] = useState(1);
   const memesPerPage = 6;
+  const [selectedMemeForGift, setSelectedMemeForGift] = useState<any>(null);
+  const [giftAmount, setGiftAmount] = useState('');
   
   const { data: memes = [] } = useQuery<any[]>({
-    queryKey: ['/api/marketplace/meme/feed', memePage],
+    queryKey: ['/api/marketplace/meme/feed-with-votes', memePage],
     queryFn: async () => {
-      const response = await fetch(`/api/marketplace/meme/feed?page=${memePage}&limit=${memesPerPage}`);
+      const response = await fetch(`/api/marketplace/meme/feed-with-votes?page=${memePage}&limit=${memesPerPage}`);
       if (!response.ok) throw new Error('Failed to fetch memes');
       return response.json();
     },
@@ -493,6 +495,32 @@ export default function MarketSection() {
     </div>
   );
 
+  // Meme Gift Mutation
+  const giftMutation = useMutation({
+    mutationFn: async ({ memeId, amount }: { memeId: string, amount: string }) => {
+      const response = await fetch(`/api/marketplace/meme/${memeId}/gift`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to gift tokens');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/token/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      setSelectedMemeForGift(null);
+      setGiftAmount('');
+      toast({
+        title: "Gift Sent!",
+        description: data.message,
+      });
+    },
+  });
+
   // NFT Listing Mutation with $1 fee
   const listNFTMutation = useMutation({
     mutationFn: async ({ nftId, minPrice, auctionEndDate }: { nftId: string, minPrice: string, auctionEndDate?: string }) => {
@@ -545,7 +573,7 @@ export default function MarketSection() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed-with-votes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/leaderboard'] });
       toast({
         title: "Liked!",
@@ -564,7 +592,7 @@ export default function MarketSection() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/feed-with-votes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/marketplace/meme/leaderboard'] });
       toast({
         title: "Disliked!",
@@ -924,27 +952,44 @@ export default function MarketSection() {
 
   // Meme Vote Buttons Component
   const MemeVoteButtons = ({ meme }: { meme: any }) => {
+    const hasLiked = meme.userVote === 'like';
+    const hasDisliked = meme.userVote === 'dislike';
+    const hasVoted = hasLiked || hasDisliked;
+
     return (
       <>
         <Button 
           size="sm" 
           variant="outline"
           data-testid={`button-like-${meme.id}`}
-          onClick={() => likeMutation.mutate(meme.id)}
-          disabled={likeMutation.isPending}
+          onClick={() => !hasVoted && likeMutation.mutate(meme.id)}
+          disabled={likeMutation.isPending || hasVoted}
+          className={hasLiked ? "border-green-500 bg-green-50 text-green-600" : ""}
         >
-          <Heart className="h-4 w-4 mr-1" />
+          <Heart className={`h-4 w-4 mr-1 ${hasLiked ? 'text-green-600 fill-green-600' : ''}`} />
           {meme.likeCount || 0}
         </Button>
         <Button 
           size="sm" 
           variant="outline"
           data-testid={`button-dislike-${meme.id}`}
-          onClick={() => dislikeMutation.mutate(meme.id)}
-          disabled={dislikeMutation.isPending}
+          onClick={() => !hasVoted && dislikeMutation.mutate(meme.id)}
+          disabled={dislikeMutation.isPending || hasVoted}
+          className={hasDisliked ? "border-red-500 bg-red-50 text-red-600" : ""}
         >
-          <ThumbsDown className="h-4 w-4 mr-1" />
+          <ThumbsDown className={`h-4 w-4 mr-1 ${hasDisliked ? 'text-red-600 fill-red-600' : ''}`} />
           {meme.dislikeCount || 0}
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline"
+          data-testid={`button-gift-${meme.id}`}
+          onClick={() => setSelectedMemeForGift(meme)}
+          disabled={giftMutation.isPending}
+          className="text-yellow-600 border-yellow-500 hover:bg-yellow-50"
+        >
+          <Gift className="h-4 w-4 mr-1" />
+          Gift
         </Button>
       </>
     );
@@ -975,6 +1020,60 @@ export default function MarketSection() {
       </div>
 
       {activeMarket === 'nfts' ? <NFTMarketplace /> : <MemeMarketplace />}
+
+      {/* Gift Dialog */}
+      {selectedMemeForGift && (
+        <Dialog open={!!selectedMemeForGift} onOpenChange={() => setSelectedMemeForGift(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Gift Tokens to Meme Creator</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="gift-amount">Amount to Gift</Label>
+                <Input
+                  id="gift-amount"
+                  type="number"
+                  value={giftAmount}
+                  onChange={(e) => setGiftAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  min="0"
+                  step="0.01"
+                  data-testid="input-gift-amount"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Send tokens as a gift to the meme creator
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => setSelectedMemeForGift(null)}
+                  variant="outline"
+                  className="flex-1"
+                  data-testid="button-cancel-gift"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (giftAmount && parseFloat(giftAmount) > 0) {
+                      giftMutation.mutate({ 
+                        memeId: selectedMemeForGift.id, 
+                        amount: giftAmount 
+                      });
+                    }
+                  }}
+                  disabled={giftMutation.isPending || !giftAmount || parseFloat(giftAmount) <= 0}
+                  className="flex-1"
+                  data-testid="button-send-gift"
+                >
+                  {giftMutation.isPending ? "Sending..." : "Send Gift"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
