@@ -190,34 +190,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       
-      // Extract form data manually for debugging
+      // Extract form data - now receiving token amounts directly
       const data: any = {
-        amount: req.body.amount,
+        amount: req.body.tokenAmount, // This is now the token amount
+        originalAmount: req.body.originalAmount, // Original INR/USD amount
+        currency: req.body.currency, // INR or USD
         transactionHash: req.body.transactionHash,
         paymentMethod: req.body.paymentMethod,
       };
       
-      console.log('Deposit request data:', data);
+      console.log('💰 Deposit request (token-based):', data);
       
       if (req.file) {
         data.screenshot = req.file.path;
       }
       
-      // Ensure amount is provided
+      // Ensure token amount is provided
       if (!data.amount) {
-        console.log('Amount not provided, request body:', req.body);
-        return res.status(400).json({ message: "Deposit amount is required" });
+        console.log('Token amount not provided, request body:', req.body);
+        return res.status(400).json({ message: "Token amount is required" });
       }
       
-      // Convert INR to USD for UPI deposits (approximately 83 INR = 1 USD)
-      if (data.paymentMethod === 'upi' && data.amount) {
-        const inrAmount = parseFloat(data.amount);
-        const usdAmount = inrAmount / 83; // Convert INR to USD
-        data.amount = usdAmount.toString();
-        data.originalAmount = inrAmount.toString(); // Store original INR amount
-        data.currency = 'INR'; // Mark original currency
-      } else {
-        data.currency = 'USD'; // BSC deposits are in USD
+      // Ensure original amount is provided for reference
+      if (!data.originalAmount) {
+        return res.status(400).json({ message: "Original deposit amount is required" });
       }
       
       const validatedData = insertDepositRequestSchema.parse(data);
@@ -258,50 +254,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (status === 'approved' && depositRequest.status !== 'approved') {
       const depositAmount = parseFloat(depositRequest.amount);
       
-      // Get user details to check for referrer
+      // Credit user's token balance directly (amount is already in tokens)
+      const tokensToAdd = parseFloat(depositRequest.amount); // Amount is now token amount
+      
+      // Get current balance and add new tokens
+      const currentBalance = await storage.getUserBalance(depositRequest.userId);
+      const currentTokens = parseFloat(currentBalance?.balance || '0');
+      const newBalance = (currentTokens + tokensToAdd).toString();
+      
+      // Calculate USD value for the new balance
+      const tokenConfig = await storage.getActiveTokenConfig();
+      const tokenPrice = tokenConfig?.defaultPriceUsd ? parseFloat(tokenConfig.defaultPriceUsd.toString()) : 1;
+      const newUsdValue = (parseFloat(newBalance) * tokenPrice).toString();
+      
+      await storage.updateUserBalance(depositRequest.userId, newBalance, newUsdValue);
+      
+      // Create transaction record for the deposit credit
+      await storage.createTransaction({
+        userId: depositRequest.userId,
+        type: 'deposit',
+        amount: tokensToAdd.toString(),
+        description: `Deposit approved - ${depositRequest.paymentMethod} ${depositRequest.originalAmount} ${depositRequest.currency} → ${tokensToAdd} tokens`,
+        status: 'completed',
+        transactionHash: depositRequest.transactionHash,
+        fromAddress: null,
+        toAddress: null
+      });
+      
+      console.log(`🎉 Credited ${tokensToAdd.toFixed(6)} tokens to user ${depositRequest.userId} (${depositRequest.originalAmount} ${depositRequest.currency})`);
+      
+      // Handle referral earnings based on original currency amount
       const user = await storage.getUser(depositRequest.userId);
-      if (user?.referredBy) {
-        // Calculate 5% referral earnings
-        const earningsAmount = depositAmount * 0.05;
+      if (user?.referredBy && depositRequest.originalAmount) {
+        const originalAmount = parseFloat(depositRequest.originalAmount);
+        let usdEquivalent = originalAmount;
         
-        // Record referral earnings
+        // Convert to USD if needed for referral calculation
+        if (depositRequest.currency === 'INR') {
+          usdEquivalent = originalAmount / 83; // Convert INR to USD
+        }
+        
+        const earningsAmount = usdEquivalent * 0.05; // 5% referral earnings
+        
         await storage.recordReferralEarning({
           referrerId: user.referredBy,
           referredUserId: user.id,
-          depositAmount,
+          depositAmount: usdEquivalent,
           earningsAmount,
         });
         
         console.log(`💰 Recorded referral earning: $${earningsAmount.toFixed(2)} for referrer ${user.referredBy}`);
-      }
-      
-      // Update user's token balance (convert USD to tokens)
-      const tokenConfig = await storage.getActiveTokenConfig();
-      if (tokenConfig && tokenConfig.defaultPriceUsd) {
-        const tokenPrice = parseFloat(tokenConfig.defaultPriceUsd.toString());
-        const tokensToAdd = depositAmount / tokenPrice;
-        
-        // Get current balance and add new tokens
-        const currentBalance = await storage.getUserBalance(depositRequest.userId);
-        const currentTokens = parseFloat(currentBalance?.balance || '0');
-        const newBalance = (currentTokens + tokensToAdd).toString();
-        const newUsdValue = (parseFloat(newBalance) * tokenPrice).toString();
-        
-        await storage.updateUserBalance(depositRequest.userId, newBalance, newUsdValue);
-        
-        // Create transaction record for the deposit credit
-        await storage.createTransaction({
-          userId: depositRequest.userId,
-          type: 'deposit',
-          amount: tokensToAdd.toString(),
-          description: `Deposit approved - ${depositRequest.paymentMethod} ${depositRequest.amount} USD`,
-          status: 'completed',
-          transactionHash: depositRequest.transactionHash,
-          fromAddress: null,
-          toAddress: null
-        });
-        
-        console.log(`🎉 Credited ${tokensToAdd.toFixed(6)} tokens to user ${depositRequest.userId} for deposit approval`);
       }
     }
   };

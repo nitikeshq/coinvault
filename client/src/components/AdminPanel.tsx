@@ -868,7 +868,12 @@ export default function AdminPanel() {
                   {deposits.map((deposit: any) => (
                     <TableRow key={deposit.id} className="border-gray-200">
                       <TableCell className="text-gray-900">{deposit.userId}</TableCell>
-                      <TableCell className="text-gray-900">{deposit.amount} {deposit.currency}</TableCell>
+                      <TableCell className="text-gray-900">
+                        {deposit.amount} YHT 
+                        <span className="text-gray-500 text-sm block">
+                          ({deposit.originalAmount} {deposit.currency})
+                        </span>
+                      </TableCell>
                       <TableCell className="text-gray-900 font-mono text-sm">{deposit.transactionHash}</TableCell>
                       <TableCell>
                         <Badge 

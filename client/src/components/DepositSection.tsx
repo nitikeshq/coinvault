@@ -173,8 +173,13 @@ export default function DepositSection() {
       return;
     }
 
+    // Calculate token amount from INR
+    const tokensToReceive = calculateTokensFromINR(upiForm.amount);
+    
     const formData = new FormData();
-    formData.append('amount', upiForm.amount);
+    formData.append('tokenAmount', tokensToReceive); // Send tokens instead of INR
+    formData.append('originalAmount', upiForm.amount); // Keep original INR for reference
+    formData.append('currency', 'INR'); // Track original currency
     formData.append('transactionHash', upiForm.utrId);
     formData.append('paymentMethod', 'upi');
     if (upiForm.screenshot) {
@@ -196,8 +201,13 @@ export default function DepositSection() {
       return;
     }
 
+    // Calculate token amount from USD
+    const tokensToReceive = calculateTokens(bscForm.amount);
+    
     const formData = new FormData();
-    formData.append('amount', bscForm.amount);
+    formData.append('tokenAmount', tokensToReceive); // Send tokens instead of USD
+    formData.append('originalAmount', bscForm.amount); // Keep original USD for reference  
+    formData.append('currency', 'USD'); // Track original currency
     formData.append('transactionHash', bscForm.transactionHash);
     formData.append('paymentMethod', 'bsc');
     if (bscForm.screenshot) {
