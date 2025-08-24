@@ -641,6 +641,79 @@ export default function AdminPanel() {
                     />
                   </div>
 
+                  <div className="border-t pt-6 mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h3>
+                    
+                    <div className="space-y-4">
+                      <FormField
+                        control={websiteForm.control}
+                        name="seoTitle"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-900 font-semibold">SEO Title</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="CryptoWallet Pro - Secure BEP-20 Token Wallet"
+                                className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                data-testid="input-seo-title"
+                              />
+                            </FormControl>
+                            <div className="text-xs text-gray-600 mt-1">
+                              The title that appears in search engines and browser tabs
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={websiteForm.control}
+                        name="seoDescription"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-900 font-semibold">SEO Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="Secure cryptocurrency wallet for BEP-20 tokens with NFT marketplace, trading, and DeFi features"
+                                className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                rows={3}
+                                data-testid="textarea-seo-description"
+                              />
+                            </FormControl>
+                            <div className="text-xs text-gray-600 mt-1">
+                              The description that appears in search engine results (recommended: 150-160 characters)
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={websiteForm.control}
+                        name="seoKeywords"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-900 font-semibold">SEO Keywords</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="cryptocurrency, wallet, BEP-20, NFT, trading, DeFi, blockchain"
+                                className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                data-testid="input-seo-keywords"
+                              />
+                            </FormControl>
+                            <div className="text-xs text-gray-600 mt-1">
+                              Comma-separated keywords for search engine optimization
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
                   <Button 
                     type="submit" 
                     className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white"

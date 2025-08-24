@@ -313,268 +313,12 @@ export default function Admin() {
           </Button>
         </div>
 
-        <Tabs defaultValue="token" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 bg-gray-100 border border-gray-300">
-            <TabsTrigger value="token" data-testid="tab-token" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Token Config</TabsTrigger>
-            <TabsTrigger value="website" data-testid="tab-website" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Website</TabsTrigger>
+        <Tabs defaultValue="deposits" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100 border border-gray-300">
             <TabsTrigger value="deposits" data-testid="tab-deposits" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Deposits</TabsTrigger>
-            <TabsTrigger value="news" data-testid="tab-news" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">News</TabsTrigger>
-            <TabsTrigger value="social" data-testid="tab-social" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Social Links</TabsTrigger>
-            <TabsTrigger value="dapps" data-testid="tab-dapps" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Dapps</TabsTrigger>
             <TabsTrigger value="users" data-testid="tab-users" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Users</TabsTrigger>
             <TabsTrigger value="nft-mint" data-testid="tab-nft-mint" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">NFT Mint</TabsTrigger>
           </TabsList>
-
-          {/* Token Configuration */}
-          <TabsContent value="token">
-            <Card className="bg-white border-gray-300 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-gray-900 text-xl font-bold">Token Configuration</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleConfigSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="contractAddress" className="text-gray-900 font-semibold">Contract Address</Label>
-                    <Input
-                      id="contractAddress"
-                      value={tokenConfig.contractAddress}
-                      onChange={(e) => setTokenConfig(prev => ({ ...prev, contractAddress: e.target.value }))}
-                      placeholder="0x..."
-                      className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                      data-testid="input-contract-address"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="tokenName" className="text-gray-900 font-semibold">Token Name</Label>
-                      <Input
-                        id="tokenName"
-                        value={tokenConfig.tokenName}
-                        onChange={(e) => setTokenConfig(prev => ({ ...prev, tokenName: e.target.value }))}
-                        placeholder="e.g., CryptoToken"
-                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        data-testid="input-token-name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="tokenSymbol" className="text-gray-900 font-semibold">Token Symbol</Label>
-                      <Input
-                        id="tokenSymbol"
-                        value={tokenConfig.tokenSymbol}
-                        onChange={(e) => setTokenConfig(prev => ({ ...prev, tokenSymbol: e.target.value }))}
-                        placeholder="e.g., CRYPTO"
-                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        data-testid="input-token-symbol"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="decimals" className="text-gray-900 font-semibold">Decimals</Label>
-                    <Input
-                      id="decimals"
-                      type="number"
-                      value={tokenConfig.decimals}
-                      onChange={(e) => setTokenConfig(prev => ({ ...prev, decimals: parseInt(e.target.value) }))}
-                      className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                      data-testid="input-decimals"
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={updateConfigMutation.isPending}
-                    data-testid="button-update-config"
-                  >
-                    {updateConfigMutation.isPending ? "Updating..." : "Update Configuration"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Website Settings */}
-          <TabsContent value="website">
-            <Card className="bg-white border-gray-300 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-gray-900 text-xl font-bold">Website Settings</CardTitle>
-                <p className="text-gray-700 text-sm">
-                  Configure your website branding, colors, and important document links.
-                </p>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleWebsiteSettingsSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="siteName" className="text-gray-900 font-semibold">Site Name</Label>
-                      <Input
-                        id="siteName"
-                        value={websiteSettings.siteName}
-                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, siteName: e.target.value }))}
-                        placeholder="e.g., Your Site Name"
-                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        data-testid="input-site-name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="description" className="text-gray-900 font-semibold">Description</Label>
-                      <Input
-                        id="description"
-                        value={websiteSettings.description}
-                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Brief description of your platform"
-                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        data-testid="input-description"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="logoUrl">Logo URL</Label>
-                      <Input
-                        id="logoUrl"
-                        value={websiteSettings.logoUrl}
-                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, logoUrl: e.target.value }))}
-                        placeholder="https://example.com/logo.png"
-                        className="bg-white border-gray-400"
-                        data-testid="input-logo-url"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="faviconUrl">Favicon URL</Label>
-                      <Input
-                        id="faviconUrl"
-                        value={websiteSettings.faviconUrl}
-                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, faviconUrl: e.target.value }))}
-                        placeholder="https://example.com/favicon.ico"
-                        className="bg-white border-gray-400"
-                        data-testid="input-favicon-url"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="primaryColor">Primary Color</Label>
-                      <Input
-                        id="primaryColor"
-                        type="color"
-                        value={websiteSettings.primaryColor}
-                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                        className="bg-white border-gray-400 h-10"
-                        data-testid="input-primary-color"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="secondaryColor">Secondary Color</Label>
-                      <Input
-                        id="secondaryColor"
-                        type="color"
-                        value={websiteSettings.secondaryColor}
-                        onChange={(e) => setWebsiteSettings(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                        className="bg-white border-gray-400 h-10"
-                        data-testid="input-secondary-color"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-300 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="seoTitle">SEO Title</Label>
-                        <Input
-                          id="seoTitle"
-                          value={websiteSettings.seoTitle}
-                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoTitle: e.target.value }))}
-                          placeholder="CryptoWallet Pro - Secure BEP-20 Token Wallet"
-                          className="bg-white border-gray-400"
-                          data-testid="input-seo-title"
-                        />
-                        <p className="text-xs text-gray-600 mt-1">
-                          The title that appears in search engines and browser tabs
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="seoDescription">SEO Description</Label>
-                        <Textarea
-                          id="seoDescription"
-                          value={websiteSettings.seoDescription}
-                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoDescription: e.target.value }))}
-                          placeholder="Secure cryptocurrency wallet for BEP-20 tokens with NFT marketplace, trading, and DeFi features"
-                          className="bg-white border-gray-400"
-                          rows={3}
-                          data-testid="textarea-seo-description"
-                        />
-                        <p className="text-xs text-gray-600 mt-1">
-                          The description that appears in search engine results (recommended: 150-160 characters)
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="seoKeywords">SEO Keywords</Label>
-                        <Input
-                          id="seoKeywords"
-                          value={websiteSettings.seoKeywords}
-                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoKeywords: e.target.value }))}
-                          placeholder="cryptocurrency, wallet, BEP-20, NFT, trading, DeFi, blockchain"
-                          className="bg-white border-gray-400"
-                          data-testid="input-seo-keywords"
-                        />
-                        <p className="text-xs text-gray-600 mt-1">
-                          Comma-separated keywords for search engine optimization
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-300 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Important Documents</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="auditReportUrl">Audit Report URL</Label>
-                        <Input
-                          id="auditReportUrl"
-                          value={websiteSettings.auditReportUrl}
-                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, auditReportUrl: e.target.value }))}
-                          placeholder="https://example.com/audit-report.pdf"
-                          className="bg-white border-gray-400"
-                          data-testid="input-audit-report-url"
-                        />
-                        <p className="text-xs text-gray-600 mt-1">
-                          Link to your smart contract audit report (appears in header)
-                        </p>
-                      </div>
-                      <div>
-                        <Label htmlFor="whitepaperUrl">Whitepaper URL</Label>
-                        <Input
-                          id="whitepaperUrl"
-                          value={websiteSettings.whitepaperUrl}
-                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, whitepaperUrl: e.target.value }))}
-                          placeholder="https://example.com/whitepaper.pdf"
-                          className="bg-white border-gray-400"
-                          data-testid="input-whitepaper-url"
-                        />
-                        <p className="text-xs text-gray-600 mt-1">
-                          Link to your project whitepaper (appears in header)
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={updateWebsiteSettingsMutation.isPending}
-                    data-testid="button-update-website-settings"
-                  >
-                    {updateWebsiteSettingsMutation.isPending ? "Updating..." : "Update Website Settings"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Deposit Management */}
           <TabsContent value="deposits">
@@ -664,204 +408,6 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
-          {/* News Management */}
-          <TabsContent value="news">
-            <div className="grid gap-6">
-              <Card className="bg-white border-gray-300">
-                <CardHeader>
-                  <CardTitle>Create News Article</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleNewsSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">Title</Label>
-                      <Input
-                        id="title"
-                        value={newsForm.title}
-                        onChange={(e) => setNewsForm(prev => ({ ...prev, title: e.target.value }))}
-                        className="bg-white border-gray-400"
-                        data-testid="input-news-title"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={newsForm.description}
-                        onChange={(e) => setNewsForm(prev => ({ ...prev, description: e.target.value }))}
-                        className="bg-white border-gray-400"
-                        data-testid="textarea-news-description"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="imageUrl">Image URL</Label>
-                        <Input
-                          id="imageUrl"
-                          value={newsForm.imageUrl}
-                          onChange={(e) => setNewsForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                          className="bg-white border-gray-400"
-                          data-testid="input-news-image"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="externalUrl">External URL</Label>
-                        <Input
-                          id="externalUrl"
-                          value={newsForm.externalUrl}
-                          onChange={(e) => setNewsForm(prev => ({ ...prev, externalUrl: e.target.value }))}
-                          className="bg-white border-gray-400"
-                          data-testid="input-news-url"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="category">Category</Label>
-                        <Input
-                          id="category"
-                          value={newsForm.category}
-                          onChange={(e) => setNewsForm(prev => ({ ...prev, category: e.target.value }))}
-                          className="bg-white border-gray-400"
-                          data-testid="input-news-category"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="isPublished"
-                          checked={newsForm.isPublished}
-                          onCheckedChange={(checked) => setNewsForm(prev => ({ ...prev, isPublished: checked }))}
-                          data-testid="switch-news-published"
-                        />
-                        <Label htmlFor="isPublished">Published</Label>
-                      </div>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      disabled={createNewsMutation.isPending}
-                      data-testid="button-create-news"
-                    >
-                      {createNewsMutation.isPending ? "Creating..." : "Create Article"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border-gray-300">
-                <CardHeader>
-                  <CardTitle>Existing Articles</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {allNews.map((article: any) => (
-                      <div key={article.id} className="border border-gray-400 rounded-lg p-4" data-testid={`news-${article.id}`}>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-semibold">{article.title}</h4>
-                            <p className="text-sm text-gray-600 mb-2">{article.category}</p>
-                            <p className="text-sm text-gray-700">{article.description.substring(0, 100)}...</p>
-                          </div>
-                          <Badge variant={article.isPublished ? 'default' : 'secondary'}>
-                            {article.isPublished ? 'Published' : 'Draft'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                    {allNews.length === 0 && (
-                      <p className="text-gray-600 text-center py-8">No news articles found</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Social Links Management */}
-          <TabsContent value="social">
-            <div className="grid gap-6">
-              <Card className="bg-white border-gray-300">
-                <CardHeader>
-                  <CardTitle>Add Social Link</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSocialSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="platform">Platform</Label>
-                        <Input
-                          id="platform"
-                          value={socialForm.platform}
-                          onChange={(e) => setSocialForm(prev => ({ ...prev, platform: e.target.value }))}
-                          placeholder="e.g., telegram, twitter"
-                          className="bg-white border-gray-400"
-                          data-testid="input-social-platform"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="url">URL</Label>
-                        <Input
-                          id="url"
-                          value={socialForm.url}
-                          onChange={(e) => setSocialForm(prev => ({ ...prev, url: e.target.value }))}
-                          placeholder="https://..."
-                          className="bg-white border-gray-400"
-                          data-testid="input-social-url"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="isActive"
-                        checked={socialForm.isActive}
-                        onCheckedChange={(checked) => setSocialForm(prev => ({ ...prev, isActive: checked }))}
-                        data-testid="switch-social-active"
-                      />
-                      <Label htmlFor="isActive">Active</Label>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      disabled={saveSocialLinkMutation.isPending}
-                      data-testid="button-save-social"
-                    >
-                      {saveSocialLinkMutation.isPending ? "Saving..." : "Save Link"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border-gray-300">
-                <CardHeader>
-                  <CardTitle>Current Social Links</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {allSocialLinks.map((link: any) => (
-                      <div key={link.id} className="flex justify-between items-center border border-gray-400 rounded-lg p-4" data-testid={`social-${link.id}`}>
-                        <div>
-                          <p className="font-semibold capitalize">{link.platform}</p>
-                          <p className="text-sm text-gray-600">{link.url}</p>
-                        </div>
-                        <Badge variant={link.isActive ? 'default' : 'secondary'}>
-                          {link.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </div>
-                    ))}
-                    {allSocialLinks.length === 0 && (
-                      <p className="text-gray-600 text-center py-8">No social links configured</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Dapps Configuration */}
-          <TabsContent value="dapps">
-            <DappsAdminPanel />
-          </TabsContent>
-
           {/* Users Management */}
           <TabsContent value="users">
             <UsersManagementPanel />
@@ -877,130 +423,30 @@ export default function Admin() {
   );
 }
 
-// Dapps Admin Panel Component
-function DappsAdminPanel() {
-  const { toast } = useToast();
-
-  // Fetch dapp settings
-  const { data: dappSettings = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/admin/dapps"],
-  });
-
-  const updateDappMutation = useMutation({
-    mutationFn: async ({ appName, isEnabled }: { appName: string; isEnabled: boolean }) => {
-      return apiRequest("PUT", `/api/admin/dapps/${appName}`, { isEnabled });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/dapps"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dapps/settings"] });
-      toast({
-        title: "Success",
-        description: "Dapp setting updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleToggleDapp = (appName: string, isEnabled: boolean) => {
-    updateDappMutation.mutate({ appName, isEnabled });
-  };
-
-  if (isLoading) {
-    return (
-      <Card className="bg-white border-gray-300">
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="text-gray-900">Loading dapp settings...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="bg-white border-gray-300">
-      <CardHeader>
-        <CardTitle>Decentralized Apps Management</CardTitle>
-        <p className="text-gray-600 text-sm">
-          Enable or disable various dapps available to users. Disabled apps will be hidden from the navigation.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {dappSettings.map((dapp: any) => (
-          <div key={dapp.appName} className="bg-white rounded-lg p-4 border border-gray-300">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">
-                  {dapp.displayName}
-                </h3>
-                <p className="text-gray-600 text-sm mb-2">
-                  {dapp.description}
-                </p>
-                <div className="text-sm text-gray-700">
-                  <span className="font-medium">Cost:</span> {parseFloat(dapp.cost).toLocaleString()} tokens
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={dapp.isEnabled}
-                    onChange={(e) => handleToggleDapp(dapp.appName, e.target.checked)}
-                    disabled={updateDappMutation.isPending}
-                    className="sr-only peer"
-                    data-testid={`toggle-${dapp.appName}`}
-                  />
-                  <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-                <span className={`text-sm font-medium ${
-                  dapp.isEnabled ? 'text-green-400' : 'text-gray-500'
-                }`}>
-                  {dapp.isEnabled ? 'Enabled' : 'Disabled'}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-        
-        {dappSettings.length === 0 && (
-          <div className="text-center py-8 text-gray-600">
-            <Sparkles className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <div>No dapps configured</div>
-            <div className="text-sm">Dapp settings will appear here when configured</div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 // Users Management Panel Component
 function UsersManagementPanel() {
   const { toast } = useToast();
   const [tokenAmount, setTokenAmount] = useState("");
   const [tokenReason, setTokenReason] = useState("");
 
-  // Fetch all users
+  // Fetch users
   const { data: users = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/users"],
   });
 
+  // Send tokens mutation
   const sendTokensMutation = useMutation({
     mutationFn: async ({ userId, amount, reason }: { userId: string; amount: number; reason: string }) => {
-      return apiRequest("POST", `/api/admin/users/${userId}/tokens/send`, { amount, reason });
+      return apiRequest("POST", `/api/admin/users/${userId}/send-tokens`, { amount, reason });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setTokenAmount("");
+      setTokenReason("");
       toast({
         title: "Success",
         description: "Tokens sent successfully",
       });
-      setTokenAmount("");
-      setTokenReason("");
     },
     onError: (error: any) => {
       toast({
@@ -1011,18 +457,19 @@ function UsersManagementPanel() {
     },
   });
 
+  // Deduct tokens mutation
   const deductTokensMutation = useMutation({
     mutationFn: async ({ userId, amount, reason }: { userId: string; amount: number; reason: string }) => {
-      return apiRequest("POST", `/api/admin/users/${userId}/tokens/deduct`, { amount, reason });
+      return apiRequest("POST", `/api/admin/users/${userId}/deduct-tokens`, { amount, reason });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setTokenAmount("");
+      setTokenReason("");
       toast({
         title: "Success",
         description: "Tokens deducted successfully",
       });
-      setTokenAmount("");
-      setTokenReason("");
     },
     onError: (error: any) => {
       toast({
@@ -1096,20 +543,30 @@ function UsersManagementPanel() {
                   
                   <div className="text-center">
                     <div className="text-sm text-gray-600">Token Balance</div>
-                    <div className="font-bold text-yellow-400">
-                      {parseFloat(user.tokenBalance || '0').toLocaleString()} tokens
+                    <div className="font-bold text-lg text-gray-900">
+                      {parseFloat(user.balance?.balance || "0").toFixed(2)} YHT
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      ${(parseFloat(user.balance?.balance || "0") * 0.999999).toFixed(2)} USD
                     </div>
                   </div>
                   
-                  <div className="text-center">
-                    <div className="text-sm text-gray-600">Withdrawal Address</div>
-                    <div className="text-sm text-gray-900">
-                      {user.withdrawalAddress ? (
-                        <span className="break-all">{user.withdrawalAddress}</span>
-                      ) : (
-                        <span className="text-gray-500">Not set</span>
-                      )}
-                    </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      placeholder="Amount"
+                      value={tokenAmount}
+                      onChange={(e) => setTokenAmount(e.target.value)}
+                      className="bg-white border-gray-400 text-sm"
+                      data-testid={`input-amount-${user.id}`}
+                    />
+                    <Input
+                      placeholder="Reason"
+                      value={tokenReason}
+                      onChange={(e) => setTokenReason(e.target.value)}
+                      className="bg-white border-gray-400 text-sm"
+                      data-testid={`input-reason-${user.id}`}
+                    />
                   </div>
                   
                   <div className="flex space-x-2">
@@ -1137,47 +594,9 @@ function UsersManagementPanel() {
                 </div>
               </div>
             ))}
-            
             {users.length === 0 && (
-              <div className="text-center py-8 text-gray-600">
-                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <div>No users found</div>
-              </div>
+              <p className="text-gray-600 text-center py-8">No users found</p>
             )}
-          </div>
-          
-          {/* Token Management Form */}
-          <div className="mt-6 pt-6 border-t border-gray-400">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="token-amount">Amount (tokens)</Label>
-                <Input
-                  id="token-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={tokenAmount}
-                  onChange={(e) => setTokenAmount(e.target.value)}
-                  className="bg-white border-gray-400"
-                  data-testid="input-token-amount"
-                />
-              </div>
-              <div>
-                <Label htmlFor="token-reason">Reason</Label>
-                <Input
-                  id="token-reason"
-                  placeholder="Optional reason"
-                  value={tokenReason}
-                  onChange={(e) => setTokenReason(e.target.value)}
-                  className="bg-white border-gray-400"
-                  data-testid="input-token-reason"
-                />
-              </div>
-              <div className="flex items-end">
-                <div className="text-sm text-gray-600">
-                  Fill in amount and reason, then click Send or Deduct for any user above
-                </div>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -1191,40 +610,55 @@ function NFTMintingPanel() {
   const [nftTheme, setNftTheme] = useState("");
   const [nftRarity, setNftRarity] = useState("Common");
   const [nftQuantity, setNftQuantity] = useState(1);
-  const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referenceImageUrl, setReferenceImageUrl] = useState("");
   const [isUploadingReference, setIsUploadingReference] = useState(false);
 
-  // Handle reference image upload
-  const handleReferenceImageUpload = async (file: File) => {
+  const handleReferenceImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      toast({
+        title: "Error", 
+        description: "Image size must be less than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploadingReference(true);
     try {
-      // Get upload URL
-      const uploadResponse = await apiRequest("POST", "/api/objects/upload");
-      const { uploadURL } = uploadResponse;
-
-      // Upload the file
-      await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('/api/upload/reference-image', {
+        method: 'POST',
+        body: formData,
       });
 
-      // Set the uploaded image URL
-      setReferenceImageUrl(uploadURL.split('?')[0]); // Remove query params
-      setReferenceImage(file);
+      if (!response.ok) throw new Error('Upload failed');
+      
+      const result = await response.json();
+      setReferenceImageUrl(result.url);
       
       toast({
         title: "Success",
         description: "Reference image uploaded successfully",
       });
-    } catch (error) {
-      console.error("Error uploading reference image:", error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to upload reference image",
+        description: error.message || "Failed to upload image",
         variant: "destructive",
       });
     } finally {
@@ -1342,11 +776,12 @@ function NFTMintingPanel() {
           <div className="space-y-4">
             <div>
               <Label>Reference Image (Optional)</Label>
-              <ObjectUploader
-                onFileSelected={handleReferenceImageUpload}
-                isUploading={isUploadingReference}
-                acceptedFileTypes="image/*"
-                buttonClassName="bg-white border-gray-400 hover:bg-gray-600"
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleReferenceImageUpload}
+                disabled={isUploadingReference}
+                className="block w-full text-sm text-gray-900 border border-gray-400 rounded-lg cursor-pointer bg-white focus:outline-none"
               />
               <p className="text-xs text-gray-600 mt-1">
                 Upload a reference image for AI to generate similar styled NFTs
@@ -1360,7 +795,7 @@ function NFTMintingPanel() {
                   alt="Reference" 
                   className="w-full h-32 object-cover rounded"
                 />
-                <div className="text-xs text-green-400 mt-1">✓ Reference uploaded</div>
+                <div className="text-xs text-green-600 mt-1">✓ Reference uploaded</div>
               </div>
             )}
           </div>
@@ -1373,8 +808,8 @@ function NFTMintingPanel() {
               <div><span className="text-gray-600">Quantity:</span> {nftQuantity}</div>
               <div><span className="text-gray-600">Collection:</span> NFTs</div>
             </div>
-            <div className="mt-4 p-3 bg-blue-900/20 rounded border border-blue-500/30">
-              <div className="text-xs text-blue-400 mb-1">ℹ️ AI Generation</div>
+            <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+              <div className="text-xs text-blue-600 mb-1">ℹ️ AI Generation</div>
               <div className="text-xs text-gray-700">
                 Each NFT will get a unique AI-generated description based on the theme and rarity.
               </div>
@@ -1382,7 +817,7 @@ function NFTMintingPanel() {
           </div>
         </div>
         
-        <div className="pt-4 border-t border-gray-400">
+        <div className="pt-4 border-t border-gray-300">
           <Button 
             onClick={handleMintNft}
             disabled={mintNftMutation.isPending || !nftTheme.trim()}
