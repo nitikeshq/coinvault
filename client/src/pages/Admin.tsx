@@ -73,6 +73,9 @@ export default function Admin() {
     secondaryColor: "#8b5cf6",
     auditReportUrl: "",
     whitepaperUrl: "",
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
   });
 
   // Fetch data
@@ -285,6 +288,9 @@ export default function Admin() {
         secondaryColor: currentWebsiteSettings.secondaryColor || "#8b5cf6",
         auditReportUrl: currentWebsiteSettings.auditReportUrl || "",
         whitepaperUrl: currentWebsiteSettings.whitepaperUrl || "",
+        seoTitle: currentWebsiteSettings.seoTitle || "",
+        seoDescription: currentWebsiteSettings.seoDescription || "",
+        seoKeywords: currentWebsiteSettings.seoKeywords || "",
       });
     }
   }, [currentWebsiteSettings]);
@@ -469,6 +475,57 @@ export default function Admin() {
                         className="bg-crypto-gray border-white/20 h-10"
                         data-testid="input-secondary-color"
                       />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/10 pt-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">SEO Settings</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="seoTitle">SEO Title</Label>
+                        <Input
+                          id="seoTitle"
+                          value={websiteSettings.seoTitle}
+                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoTitle: e.target.value }))}
+                          placeholder="CryptoWallet Pro - Secure BEP-20 Token Wallet"
+                          className="bg-crypto-gray border-white/20"
+                          data-testid="input-seo-title"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          The title that appears in search engines and browser tabs
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="seoDescription">SEO Description</Label>
+                        <Textarea
+                          id="seoDescription"
+                          value={websiteSettings.seoDescription}
+                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoDescription: e.target.value }))}
+                          placeholder="Secure cryptocurrency wallet for BEP-20 tokens with NFT marketplace, trading, and DeFi features"
+                          className="bg-crypto-gray border-white/20"
+                          rows={3}
+                          data-testid="textarea-seo-description"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          The description that appears in search engine results (recommended: 150-160 characters)
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="seoKeywords">SEO Keywords</Label>
+                        <Input
+                          id="seoKeywords"
+                          value={websiteSettings.seoKeywords}
+                          onChange={(e) => setWebsiteSettings(prev => ({ ...prev, seoKeywords: e.target.value }))}
+                          placeholder="cryptocurrency, wallet, BEP-20, NFT, trading, DeFi, blockchain"
+                          className="bg-crypto-gray border-white/20"
+                          data-testid="input-seo-keywords"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Comma-separated keywords for search engine optimization
+                        </p>
+                      </div>
                     </div>
                   </div>
 
