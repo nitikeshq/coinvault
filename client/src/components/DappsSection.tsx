@@ -542,6 +542,13 @@ export default function DappsSection() {
                                   </>
                                 )}
                               </div>
+                              {meme.status === 'failed' && meme.errorMessage && (
+                                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                                  <div className="font-medium mb-1">Generation Failed:</div>
+                                  <div>{meme.errorMessage}</div>
+                                  <div className="mt-1 text-red-500">Your tokens have been refunded.</div>
+                                </div>
+                              )}
                               {meme.imageUrl && (
                                 <div className="mt-2">
                                   <img 

@@ -608,7 +608,8 @@ export class DatabaseStorage implements IStorage {
         imageUrl: memeGenerations.imageUrl,
         status: memeGenerations.status,
         generatedAt: memeGenerations.generatedAt,
-        userId: memeGenerations.userId
+        userId: memeGenerations.userId,
+        errorMessage: memeGenerations.generatedDescription // Use generatedDescription for error messages
       }).from(memeGenerations)
         .where(eq(memeGenerations.userId, userId))
         .orderBy(desc(memeGenerations.generatedAt));

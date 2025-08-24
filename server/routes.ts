@@ -980,6 +980,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const imageManager = new ImageManager();
           let imageUrl = null;
+          let shouldRefund = false;
+          let errorMessage = '';
           
           try {
             // Generate meme image with AI, including overlay text if provided
@@ -987,18 +989,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
               `${prompt.trim()}. Please include this text visibly in the image: "${overlayText.trim()}"` : 
               prompt.trim();
             imageUrl = await imageManager.generateAndSaveMemeImage(fullPrompt, 'funny');
-          } catch (imageError) {
+          } catch (imageError: any) {
             console.error('Failed to generate meme image:', imageError);
-            // Fallback to placeholder if AI generation fails
-            imageUrl = `https://via.placeholder.com/512x512.png?text=${encodeURIComponent(prompt.trim().substring(0, 20))}`;
+            
+            // Check if it's a safety system rejection or content policy violation
+            if (imageError.type === 'OPENAI_SAFETY_REJECTION' || 
+                imageError.type === 'CONTENT_POLICY_VIOLATION') {
+              shouldRefund = true;
+              errorMessage = imageError.message;
+              
+              // Refund tokens to user
+              try {
+                const currentBalance = await storage.getUserBalance(userId);
+                const refundAmount = parseFloat(cost.toString());
+                const newRefundedBalance = (parseFloat(currentBalance?.balance || '0') + refundAmount).toString();
+                
+                await storage.updateUserBalance(userId, newRefundedBalance, '0');
+                await storage.adjustUserTokenBalance(userId, refundAmount, `Meme generation refund: ${errorMessage}`);
+                
+                console.log(`Refunded ${refundAmount} tokens to user ${userId} due to safety rejection`);
+              } catch (refundError) {
+                console.error('Failed to refund tokens:', refundError);
+              }
+            } else {
+              // For other errors, use placeholder but don't refund
+              imageUrl = `https://via.placeholder.com/512x512.png?text=${encodeURIComponent(prompt.trim().substring(0, 20))}`;
+              errorMessage = 'Image generation failed, please try again';
+            }
           }
 
-          await storage.updateMemeGeneration(meme.id, {
-            status: 'completed',
-            imageUrl: imageUrl
-          });
+          // Update meme generation status
+          if (shouldRefund) {
+            await storage.updateMemeGeneration(meme.id, {
+              status: 'failed',
+              generatedDescription: errorMessage
+            });
+          } else {
+            await storage.updateMemeGeneration(meme.id, {
+              status: 'completed',
+              imageUrl: imageUrl
+            });
+          }
         } catch (error) {
           console.error('Failed to update meme generation:', error);
+          
+          // Mark as failed and try to refund
+          try {
+            await storage.updateMemeGeneration(meme.id, {
+              status: 'failed',
+              generatedDescription: 'Generation failed due to technical issues'
+            });
+            
+            // Refund tokens for technical failures
+            const currentBalance = await storage.getUserBalance(userId);
+            const refundAmount = parseFloat(cost.toString());
+            const newRefundedBalance = (parseFloat(currentBalance?.balance || '0') + refundAmount).toString();
+            
+            await storage.updateUserBalance(userId, newRefundedBalance, '0');
+            await storage.adjustUserTokenBalance(userId, refundAmount, 'Meme generation refund: Technical failure');
+          } catch (refundError) {
+            console.error('Failed to refund tokens after technical failure:', refundError);
+          }
         }
       }, 3000);
       

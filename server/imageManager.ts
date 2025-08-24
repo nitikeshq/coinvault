@@ -19,11 +19,43 @@ export class ImageManager {
     }
   }
 
+  // Content filtering to prevent inappropriate content
+  private isContentAppropriate(prompt: string): { isValid: boolean; reason?: string } {
+    const inappropriateKeywords = [
+      'porn', 'pornography', 'sex', 'naked', 'nude', 'explicit', 'nsfw', 
+      'violence', 'violent', 'kill', 'murder', 'death', 'suicide',
+      'drug', 'drugs', 'cocaine', 'heroin', 'meth', 'marijuana',
+      'hate', 'racist', 'terrorism', 'bomb', 'weapon', 'gun',
+      'adult', 'erotic', 'sexual', 'fetish', 'bondage'
+    ];
+
+    const lowerPrompt = prompt.toLowerCase();
+    
+    for (const keyword of inappropriateKeywords) {
+      if (lowerPrompt.includes(keyword)) {
+        return { 
+          isValid: false, 
+          reason: `Content contains inappropriate material. Please keep your prompts family-friendly.` 
+        };
+      }
+    }
+
+    return { isValid: true };
+  }
+
   async generateAndSaveMemeImage(prompt: string, style: string): Promise<string> {
     try {
       if (!openai) {
         console.warn("OpenAI API key not configured");
         throw new Error("AI image generation not available");
+      }
+
+      // Check content appropriateness
+      const contentCheck = this.isContentAppropriate(prompt);
+      if (!contentCheck.isValid) {
+        const error = new Error(contentCheck.reason);
+        (error as any).type = 'CONTENT_POLICY_VIOLATION';
+        throw error;
       }
 
       const imagePrompt = `Create a funny meme image based on: "${prompt}". 
@@ -51,8 +83,21 @@ export class ImageManager {
       fs.writeFileSync(filePath, imageBuffer);
       
       return `/uploads/memes/${fileName}`;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating meme image:", error);
+      
+      // Check if it's an OpenAI safety system rejection
+      if (error.message && error.message.includes('safety system')) {
+        const safetyError = new Error('Your request was rejected by our safety system. Please try a different, family-friendly prompt.');
+        (safetyError as any).type = 'OPENAI_SAFETY_REJECTION';
+        throw safetyError;
+      }
+      
+      // Check if it's our content policy violation
+      if (error.type === 'CONTENT_POLICY_VIOLATION') {
+        throw error;
+      }
+      
       throw error;
     }
   }
