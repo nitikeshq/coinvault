@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy, TrendingUp, FileText, Menu, X } from "lucide-react";
 import { Link } from "wouter";
@@ -25,6 +25,17 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
   });
 
   const hasDappsEnabled = enabledDapps.length > 0;
+  
+  // Close mobile menu when section changes (prevents state conflicts)
+  useEffect(() => {
+    setShowMobileMenu(false);
+  }, [activeSection]);
+
+  // Handle mobile menu section change
+  const handleMobileSectionChange = (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => {
+    onSectionChange(section);
+    // Mobile menu will auto-close via useEffect above
+  };
   
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -190,15 +201,12 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
 
       {/* Mobile Dropdown Menu */}
       {showMobileMenu && (
-        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg">
+        <div className="md:hidden fixed top-[64px] left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg">
           <div className="container mx-auto px-4 py-4">
             <div className="space-y-3">
               {/* Navigation Items */}
               <button 
-                onClick={() => {
-                  onSectionChange('wallet');
-                  setShowMobileMenu(false);
-                }}
+                onClick={() => handleMobileSectionChange('wallet')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
                   activeSection === 'wallet' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
@@ -209,10 +217,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               </button>
               
               <button 
-                onClick={() => {
-                  onSectionChange('news');
-                  setShowMobileMenu(false);
-                }}
+                onClick={() => handleMobileSectionChange('news')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
                   activeSection === 'news' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
@@ -224,10 +229,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               
               {hasDappsEnabled && (
                 <button 
-                  onClick={() => {
-                    onSectionChange('dapps');
-                    setShowMobileMenu(false);
-                  }}
+                  onClick={() => handleMobileSectionChange('dapps')}
                   className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
                     activeSection === 'dapps' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
                   }`}
@@ -239,10 +241,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               )}
               
               <button 
-                onClick={() => {
-                  onSectionChange('advertisements');
-                  setShowMobileMenu(false);
-                }}
+                onClick={() => handleMobileSectionChange('advertisements')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
                   activeSection === 'advertisements' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
@@ -253,10 +252,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               </button>
               
               <button 
-                onClick={() => {
-                  onSectionChange('market');
-                  setShowMobileMenu(false);
-                }}
+                onClick={() => handleMobileSectionChange('market')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
                   activeSection === 'market' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
@@ -304,10 +300,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               
               {isAdmin && (
                 <button 
-                  onClick={() => {
-                    onSectionChange('admin');
-                    setShowMobileMenu(false);
-                  }}
+                  onClick={() => handleMobileSectionChange('admin')}
                   className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
                     activeSection === 'admin' ? 'bg-purple-50 text-purple-600' : 'text-gray-700 hover:bg-gray-50'
                   }`}
