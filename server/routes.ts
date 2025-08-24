@@ -298,6 +298,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const newUsdValue = (parseFloat(newBalance) * tokenPrice).toString();
           
           await storage.updateUserBalance(depositRequest.userId, newBalance, newUsdValue);
+          
+          // Create transaction record for the deposit credit
+          await storage.createTransaction({
+            userId: depositRequest.userId,
+            type: 'deposit',
+            amount: tokensToAdd.toString(),
+            description: `Deposit approved - ${depositRequest.paymentMethod} ${depositRequest.amount} USD`,
+            status: 'completed',
+            transactionHash: depositRequest.transactionHash,
+            fromAddress: null,
+            toAddress: null
+          });
+          
+          console.log(`Credited ${tokensToAdd.toFixed(6)} tokens to user ${depositRequest.userId} for deposit approval`);
         }
       }
       

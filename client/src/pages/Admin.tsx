@@ -153,7 +153,14 @@ export default function Admin() {
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Deposit status updated successfully" });
+      // Invalidate admin deposits cache
       queryClient.invalidateQueries({ queryKey: ['/api/admin/deposits'] });
+      // Invalidate user balance caches to reflect credited tokens
+      queryClient.invalidateQueries({ queryKey: ['/api/user/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/token/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      // Invalidate presale progress (affected by approved deposits)
+      queryClient.invalidateQueries({ queryKey: ['/api/presale/progress'] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
