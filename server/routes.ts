@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       
       // Extract form data manually for debugging
-      const data = {
+      const data: any = {
         amount: req.body.amount,
         transactionHash: req.body.transactionHash,
         paymentMethod: req.body.paymentMethod,
