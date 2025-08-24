@@ -22,63 +22,69 @@ interface ProgressData {
   progressPercentage: number;
 }
 
+interface PresaleConfig {
+  endDate: string;
+}
+
 export function PresaleCountdown() {
   const [mounted, setMounted] = useState(false);
-  const [clientTime, setClientTime] = useState<TimerData | null>(null);
+  const [timerData, setTimerData] = useState<TimerData | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Get initial timer data and sync every 60 seconds (instead of every second!)
-  const { data: serverTimerData, isLoading: timerLoading } = useQuery<TimerData>({
-    queryKey: ['/api/presale/timer'],
-    refetchInterval: 60000, // Sync with server every minute
+  // Get presale config (includes end date) - only once!
+  const { data: presaleConfig, isLoading: configLoading } = useQuery<PresaleConfig>({
+    queryKey: ['/api/presale/config'],
+    // No refetchInterval needed - end date doesn't change
   });
 
-  // Update client-side countdown every second
+  // Client-side countdown calculation (zero API calls!)
   useEffect(() => {
-    if (!serverTimerData) return;
+    if (!presaleConfig?.endDate) return;
 
-    // Initialize client timer with server data
-    setClientTime(serverTimerData);
-
-    const interval = setInterval(() => {
-      setClientTime(prevTime => {
-        if (!prevTime || prevTime.timeRemaining <= 0) return prevTime;
-        
-        const newTimeRemaining = prevTime.timeRemaining - 1000; // Subtract 1 second
-        
-        if (newTimeRemaining <= 0) {
-          return {
-            timeRemaining: 0,
-            days: 0,
-            hours: 0,
-            minutes: 0,
-            seconds: 0
-          };
-        }
-        
-        const days = Math.floor(newTimeRemaining / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((newTimeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((newTimeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((newTimeRemaining % (1000 * 60)) / 1000);
-        
-        return {
-          timeRemaining: newTimeRemaining,
-          days,
-          hours,
-          minutes,
-          seconds
-        };
+    const calculateTimer = () => {
+      const now = Date.now();
+      const endDate = new Date(presaleConfig.endDate).getTime();
+      const timeRemaining = Math.max(0, endDate - now);
+      
+      if (timeRemaining <= 0) {
+        setTimerData({
+          timeRemaining: 0,
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          isEnded: true,
+          endDate: presaleConfig.endDate
+        });
+        return;
+      }
+      
+      const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+      
+      setTimerData({
+        timeRemaining,
+        days,
+        hours,
+        minutes,
+        seconds,
+        isEnded: false,
+        endDate: presaleConfig.endDate
       });
-    }, 1000);
+    };
 
+    // Calculate immediately
+    calculateTimer();
+    
+    // Update every second using pure frontend calculation
+    const interval = setInterval(calculateTimer, 1000);
     return () => clearInterval(interval);
-  }, [serverTimerData]);
-
-  // Use client-side calculated timer data
-  const timerData = clientTime || serverTimerData;
+  }, [presaleConfig]);
 
   const { data: progressData, isLoading: progressLoading } = useQuery<ProgressData>({
     queryKey: ['/api/presale/progress'],
@@ -89,7 +95,7 @@ export function PresaleCountdown() {
     return null;
   }
 
-  const isLoading = timerLoading || progressLoading;
+  const isLoading = configLoading || progressLoading;
 
   return (
     <Card className="w-full bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-blue-200 dark:border-blue-800">
