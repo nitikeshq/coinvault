@@ -565,7 +565,7 @@ export default function Admin() {
                   
                   <Button 
                     type="submit" 
-                    className="bg-crypto-blue hover:bg-blue-600"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                     disabled={updateWebsiteSettingsMutation.isPending}
                     data-testid="button-update-website-settings"
                   >
@@ -636,7 +636,7 @@ export default function Admin() {
                           <Button 
                             size="sm" 
                             onClick={() => handleDepositAction(deposit.id, 'approved')}
-                            className="bg-crypto-green hover:bg-green-600"
+                            className="bg-green-600 hover:bg-green-700 text-white"
                             disabled={updateDepositMutation.isPending}
                             data-testid={`button-approve-${deposit.id}`}
                           >
@@ -738,7 +738,7 @@ export default function Admin() {
                     </div>
                     <Button 
                       type="submit" 
-                      className="bg-crypto-blue hover:bg-blue-600"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                       disabled={createNewsMutation.isPending}
                       data-testid="button-create-news"
                     >
@@ -821,7 +821,7 @@ export default function Admin() {
                     </div>
                     <Button 
                       type="submit" 
-                      className="bg-crypto-blue hover:bg-blue-600"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                       disabled={saveSocialLinkMutation.isPending}
                       data-testid="button-save-social"
                     >
@@ -1117,7 +1117,7 @@ function UsersManagementPanel() {
                       size="sm"
                       onClick={() => handleSendTokens(user.id)}
                       disabled={sendTokensMutation.isPending || !tokenAmount}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 text-white"
                       data-testid={`button-send-${user.id}`}
                     >
                       <Send className="h-3 w-3 mr-1" />
@@ -1386,7 +1386,7 @@ function NFTMintingPanel() {
           <Button 
             onClick={handleMintNft}
             disabled={mintNftMutation.isPending || !nftTheme.trim()}
-            className="bg-crypto-blue hover:bg-blue-600"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
             data-testid="button-mint-nft"
           >
             {mintNftMutation.isPending ? "Minting..." : `Mint ${nftQuantity} NFT${nftQuantity > 1 ? 's' : ''} with AI`}
