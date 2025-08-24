@@ -627,7 +627,12 @@ interface UserMemesSectionProps {
 function UserMemesSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: UserMemesSectionProps) {
   const { data: userMemes = [] } = useQuery<any[]>({
     queryKey: ['/api/user/memes'],
-    refetchInterval: 5000, // Auto-refresh to check for completed generations
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchInterval: (data) => {
+      // Only poll if there are pending memes, otherwise check every 2 minutes
+      const hasPending = data?.some((meme: any) => meme.status === 'pending' || meme.status === 'processing');
+      return hasPending ? 30000 : 120000; // 30s if pending, 2min if all complete
+    },
   });
 
   const completedMemes = userMemes.filter((meme: any) => meme.status === 'completed' && meme.imageUrl);
