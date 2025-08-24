@@ -85,11 +85,34 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               )}
             </div>
             
-            {/* Mobile Menu Button - Only visible on mobile */}
-            <div className="md:hidden">
+            {/* Mobile Menu Button - Always visible on mobile */}
+            <div className="md:hidden flex items-center space-x-2">
+              {/* User actions for mobile */}
+              {isAdmin && (
+                <button 
+                  onClick={() => onSectionChange('admin')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    activeSection === 'admin' ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600 hover:bg-gray-100'
+                  }`}
+                  data-testid="mobile-admin-button"
+                  aria-label="Admin Panel"
+                >
+                  <Settings className="h-5 w-5" />
+                </button>
+              )}
+              
+              <button
+                onClick={handleLogout}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                data-testid="mobile-logout-button"
+                aria-label="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+              
               <button 
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors ml-2"
                 data-testid="mobile-menu-toggle"
                 aria-label="Toggle menu"
               >
@@ -215,7 +238,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
 
       {/* Mobile Dropdown Menu - Only visible on mobile when menu is open */}
       {showMobileMenu && (
-        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg">
+        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg max-h-[80vh] overflow-y-auto">
           <div className="container mx-auto px-4 py-4">
             <div className="space-y-3">
               {/* Navigation Items */}
