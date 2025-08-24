@@ -73,17 +73,19 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{settings?.siteName || "Crypto Wallet"}</h1>
             </div>
             
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
-              data-testid="mobile-menu-toggle"
-              aria-label="Toggle menu"
-            >
-              {showMobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            {/* Mobile Menu Button - Only visible on mobile */}
+            <div className="md:hidden">
+              <button 
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                data-testid="mobile-menu-toggle"
+                aria-label="Toggle menu"
+              >
+                {showMobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
             
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - Only visible on desktop */}
             <div className="hidden md:flex items-center space-x-1 sm:space-x-6">
               {/* Documentation Links */}
               {(settings?.auditReportUrl || settings?.whitepaperUrl) && (
@@ -199,9 +201,9 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
         </div>
       </nav>
 
-      {/* Mobile Dropdown Menu */}
+      {/* Mobile Dropdown Menu - Only visible on mobile when menu is open */}
       {showMobileMenu && (
-        <div className="md:hidden fixed top-[64px] left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg">
+        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg">
           <div className="container mx-auto px-4 py-4">
             <div className="space-y-3">
               {/* Navigation Items */}

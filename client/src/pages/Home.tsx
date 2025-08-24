@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
-import MobileNavigation from "@/components/MobileNavigation";
 import WalletDashboard from "@/components/WalletDashboard";
 import DepositSection from "@/components/DepositSection";
 import SwapTrading from "@/components/SwapTrading";
@@ -71,16 +70,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="relative z-10">
-        {/* Desktop Navigation */}
+        {/* Responsive Navigation */}
         <Navigation 
-          activeSection={activeSection} 
-          onSectionChange={setActiveSection}
-          user={user}
-          isAdmin={isAdmin}
-        />
-
-        {/* Mobile Navigation */}
-        <MobileNavigation 
           activeSection={activeSection} 
           onSectionChange={setActiveSection}
           user={user}
