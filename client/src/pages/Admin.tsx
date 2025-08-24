@@ -304,84 +304,84 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-crypto-navy text-white p-4">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-4">
       <div className="container mx-auto max-w-6xl">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button onClick={() => window.location.href = "/"} variant="outline" data-testid="button-back-home">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <Button onClick={() => window.location.href = "/"} variant="outline" className="border-gray-400 text-gray-900 hover:bg-gray-100" data-testid="button-back-home">
             Back to Home
           </Button>
         </div>
 
         <Tabs defaultValue="token" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 bg-crypto-dark">
-            <TabsTrigger value="token" data-testid="tab-token">Token Config</TabsTrigger>
-            <TabsTrigger value="website" data-testid="tab-website">Website</TabsTrigger>
-            <TabsTrigger value="deposits" data-testid="tab-deposits">Deposits</TabsTrigger>
-            <TabsTrigger value="news" data-testid="tab-news">News</TabsTrigger>
-            <TabsTrigger value="social" data-testid="tab-social">Social Links</TabsTrigger>
-            <TabsTrigger value="dapps" data-testid="tab-dapps">Dapps</TabsTrigger>
-            <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
-            <TabsTrigger value="nft-mint" data-testid="tab-nft-mint">NFT Mint</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-8 bg-gray-100 border border-gray-300">
+            <TabsTrigger value="token" data-testid="tab-token" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Token Config</TabsTrigger>
+            <TabsTrigger value="website" data-testid="tab-website" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Website</TabsTrigger>
+            <TabsTrigger value="deposits" data-testid="tab-deposits" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Deposits</TabsTrigger>
+            <TabsTrigger value="news" data-testid="tab-news" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">News</TabsTrigger>
+            <TabsTrigger value="social" data-testid="tab-social" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Social Links</TabsTrigger>
+            <TabsTrigger value="dapps" data-testid="tab-dapps" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Dapps</TabsTrigger>
+            <TabsTrigger value="users" data-testid="tab-users" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Users</TabsTrigger>
+            <TabsTrigger value="nft-mint" data-testid="tab-nft-mint" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">NFT Mint</TabsTrigger>
           </TabsList>
 
           {/* Token Configuration */}
           <TabsContent value="token">
-            <Card className="bg-crypto-dark border-white/10">
+            <Card className="bg-white border-gray-300 shadow-lg">
               <CardHeader>
-                <CardTitle>Token Configuration</CardTitle>
+                <CardTitle className="text-gray-900 text-xl font-bold">Token Configuration</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleConfigSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="contractAddress">Contract Address</Label>
+                    <Label htmlFor="contractAddress" className="text-gray-900 font-semibold">Contract Address</Label>
                     <Input
                       id="contractAddress"
                       value={tokenConfig.contractAddress}
                       onChange={(e) => setTokenConfig(prev => ({ ...prev, contractAddress: e.target.value }))}
                       placeholder="0x..."
-                      className="bg-crypto-gray border-white/20"
+                      className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       data-testid="input-contract-address"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="tokenName">Token Name</Label>
+                      <Label htmlFor="tokenName" className="text-gray-900 font-semibold">Token Name</Label>
                       <Input
                         id="tokenName"
                         value={tokenConfig.tokenName}
                         onChange={(e) => setTokenConfig(prev => ({ ...prev, tokenName: e.target.value }))}
                         placeholder="e.g., CryptoToken"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         data-testid="input-token-name"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="tokenSymbol">Token Symbol</Label>
+                      <Label htmlFor="tokenSymbol" className="text-gray-900 font-semibold">Token Symbol</Label>
                       <Input
                         id="tokenSymbol"
                         value={tokenConfig.tokenSymbol}
                         onChange={(e) => setTokenConfig(prev => ({ ...prev, tokenSymbol: e.target.value }))}
                         placeholder="e.g., CRYPTO"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         data-testid="input-token-symbol"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="decimals">Decimals</Label>
+                    <Label htmlFor="decimals" className="text-gray-900 font-semibold">Decimals</Label>
                     <Input
                       id="decimals"
                       type="number"
                       value={tokenConfig.decimals}
                       onChange={(e) => setTokenConfig(prev => ({ ...prev, decimals: parseInt(e.target.value) }))}
-                      className="bg-crypto-gray border-white/20"
+                      className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       data-testid="input-decimals"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="bg-crypto-blue hover:bg-blue-600"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                     disabled={updateConfigMutation.isPending}
                     data-testid="button-update-config"
                   >
@@ -394,10 +394,10 @@ export default function Admin() {
 
           {/* Website Settings */}
           <TabsContent value="website">
-            <Card className="bg-crypto-dark border-white/10">
+            <Card className="bg-white border-gray-300 shadow-lg">
               <CardHeader>
-                <CardTitle>Website Settings</CardTitle>
-                <p className="text-gray-400 text-sm">
+                <CardTitle className="text-gray-900 text-xl font-bold">Website Settings</CardTitle>
+                <p className="text-gray-700 text-sm">
                   Configure your website branding, colors, and important document links.
                 </p>
               </CardHeader>
@@ -405,24 +405,24 @@ export default function Admin() {
                 <form onSubmit={handleWebsiteSettingsSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="siteName">Site Name</Label>
+                      <Label htmlFor="siteName" className="text-gray-900 font-semibold">Site Name</Label>
                       <Input
                         id="siteName"
                         value={websiteSettings.siteName}
                         onChange={(e) => setWebsiteSettings(prev => ({ ...prev, siteName: e.target.value }))}
                         placeholder="e.g., Your Site Name"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         data-testid="input-site-name"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description" className="text-gray-900 font-semibold">Description</Label>
                       <Input
                         id="description"
                         value={websiteSettings.description}
                         onChange={(e) => setWebsiteSettings(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Brief description of your platform"
-                        className="bg-crypto-gray border-white/20"
+                        className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         data-testid="input-description"
                       />
                     </div>
