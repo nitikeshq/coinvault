@@ -6,6 +6,7 @@ import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, External
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { NFTModal } from "@/components/NFTModal";
+import { CacheClearButton } from "./CacheClearButton";
 
 interface WalletDashboardProps {
   onSectionChange?: (section: 'deposit') => void;
@@ -47,17 +48,20 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     queryKey: ['/api/user/referral-earnings'],
   });
 
-  const { data: presaleTimer } = useQuery<any>({
-    queryKey: ['/api/presale/timer'],
-    refetchInterval: 2000,
+  const { data: settings } = useQuery<any>({
+    queryKey: ['/api/website/settings'],
   });
 
   const { data: presaleConfig } = useQuery<any>({
     queryKey: ['/api/presale/config'],
+    // No refetchInterval needed - end date doesn't change
   });
 
-  const isPresaleActive = presaleTimer && presaleTimer.timeRemaining > 0;
-  const presaleEnded = presaleConfig && new Date() > new Date(presaleConfig.endDate);
+  // Calculate presale status client-side (zero API calls!)
+  const isPresaleActive = presaleConfig && presaleConfig.endDate ? 
+    new Date().getTime() < new Date(presaleConfig.endDate).getTime() : false;
+  const presaleEnded = presaleConfig && presaleConfig.endDate ? 
+    new Date().getTime() > new Date(presaleConfig.endDate).getTime() : false;
 
 
   const formatBalance = (balance: string) => {
@@ -144,6 +148,12 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
 
   return (
     <section className="container mx-auto px-4 py-8">
+      {/* Header with Cache Clear */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Wallet Dashboard</h1>
+        <CacheClearButton />
+      </div>
+      
       {/* Token Balance Card */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-6 mb-6 border border-gray-200 shadow-lg text-white">
         <div className="flex justify-between items-start mb-4">

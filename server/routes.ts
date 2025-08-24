@@ -658,37 +658,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/presale/timer', async (req, res) => {
-    try {
-      const config = await storage.getPresaleConfig();
-      if (!config) {
-        return res.status(404).json({ message: 'Presale config not found' });
-      }
-
-      const now = new Date();
-      if (!config.endDate) {
-        return res.status(400).json({ message: 'Presale end date not configured' });
-      }
-      const endDate = new Date(config.endDate);
-      const timeRemaining = Math.max(0, endDate.getTime() - now.getTime());
-      
-      const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
-      res.json({
-        timeRemaining,
-        days,
-        hours,
-        minutes,
-        seconds,
-        isEnded: timeRemaining === 0,
-        endDate: config.endDate
-      });
-    } catch (error) {
-      console.error('Error calculating presale timer:', error);
-      res.status(500).json({ message: 'Failed to calculate timer' });
-    }
+    // DISABLED: Frontend should use client-side calculations instead
+    console.log('⚠️  DEPRECATED: /api/presale/timer called - frontend should use /api/presale/config + client calculations');
+    res.status(410).json({ 
+      message: 'This endpoint is deprecated. Use /api/presale/config and calculate client-side.',
+      hint: 'Get endDate from /api/presale/config and use Date.now() to calculate remaining time' 
+    });
   });
 
   app.get('/api/presale/progress', async (req, res) => {
