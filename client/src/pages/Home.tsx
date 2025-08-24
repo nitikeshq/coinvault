@@ -4,6 +4,7 @@ import WalletDashboard from "@/components/WalletDashboard";
 import DepositSection from "@/components/DepositSection";
 import SwapTrading from "@/components/SwapTrading";
 import NewsSection from "@/components/NewsSection";
+import AdminPanel from "@/components/AdminPanel";
 import Admin from "@/pages/Admin";
 import DappsSection from "@/components/DappsSection";
 import AdvertisementsPage from "@/pages/Advertisements";
@@ -15,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market'>('wallet');
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAdmin } = useAuth();
   const { settings: websiteSettings } = useWebsiteSettings() as { settings: any };
@@ -51,6 +52,13 @@ export default function Home() {
       case 'market':
         return <MarketSection />;
       case 'admin':
+        return isAdmin ? <AdminPanel /> : (
+          <div className="container mx-auto px-4 space-y-6">
+            <WalletDashboard onSectionChange={setActiveSection} />
+            <PresaleCountdown />
+          </div>
+        );
+      case 'admin-new':
         return isAdmin ? <Admin /> : (
           <div className="container mx-auto px-4 space-y-6">
             <WalletDashboard onSectionChange={setActiveSection} />

@@ -7,8 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
 interface NavigationProps {
-  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market';
-  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => void;
+  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market';
+  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market') => void;
   user?: any;
   isAdmin?: boolean;
 }
@@ -40,7 +40,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
   }, [activeSection]);
 
   // Handle mobile menu section change
-  const handleMobileSectionChange = (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => {
+  const handleMobileSectionChange = (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market') => {
     onSectionChange(section);
     // Mobile menu will auto-close via useEffect above
   };
@@ -95,9 +95,21 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                     activeSection === 'admin' ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600 hover:bg-gray-100'
                   }`}
                   data-testid="mobile-admin-button"
-                  aria-label="Admin Panel"
+                  aria-label="Admin Panel (Classic)"
                 >
                   <Settings className="h-5 w-5" />
+                </button>
+              )}
+              {isAdmin && (
+                <button 
+                  onClick={() => onSectionChange('admin-new')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    activeSection === 'admin-new' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'
+                  }`}
+                  data-testid="mobile-admin-new-button"
+                  aria-label="Admin Panel (Enhanced)"
+                >
+                  <Sparkles className="h-5 w-5" />
                 </button>
               )}
               
@@ -225,8 +237,23 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                       activeSection === 'admin' ? 'bg-purple-100 text-purple-600' : 'text-gray-600'
                     }`}
                     data-testid="button-admin"
+                    title="Admin (Classic)"
                   >
                     <Settings className="h-4 w-4" />
+                  </Button>
+                )}
+                {isAdmin && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onSectionChange('admin-new')}
+                    className={`hover:bg-blue-100 hover:text-blue-600 ${
+                      activeSection === 'admin-new' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                    }`}
+                    data-testid="button-admin-new"
+                    title="Admin (Enhanced)"
+                  >
+                    <Sparkles className="h-4 w-4" />
                   </Button>
                 )}
                 
@@ -364,7 +391,19 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                   data-testid="mobile-nav-admin"
                 >
                   <Settings className="h-5 w-5 mr-3" />
-                  Admin Panel
+                  Admin (Classic)
+                </button>
+              )}
+              {isAdmin && (
+                <button 
+                  onClick={() => handleMobileSectionChange('admin-new')}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                    activeSection === 'admin-new' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  data-testid="mobile-nav-admin-new"
+                >
+                  <Sparkles className="h-5 w-5 mr-3" />
+                  Admin (Enhanced)
                 </button>
               )}
               
