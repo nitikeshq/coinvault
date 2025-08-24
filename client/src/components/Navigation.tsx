@@ -14,7 +14,7 @@ interface NavigationProps {
 }
 
 export default function Navigation({ activeSection, onSectionChange, user, isAdmin }: NavigationProps) {
-  const { settings, isLoading } = useWebsiteSettings();
+  const { settings, isLoading } = useWebsiteSettings() as { settings: any; isLoading: boolean };
   const { toast } = useToast();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
