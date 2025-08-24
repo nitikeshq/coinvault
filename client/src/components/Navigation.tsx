@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy, TrendingUp, FileText, Menu, X } from "lucide-react";
+import { Wallet, User, LogOut, Settings, Copy, Sparkles, Trophy, TrendingUp, FileText, Menu, X, CreditCard } from "lucide-react";
 import { Link } from "wouter";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { useToast } from "@/hooks/use-toast";
