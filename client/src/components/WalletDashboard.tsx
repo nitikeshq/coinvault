@@ -6,7 +6,6 @@ import { Copy, ArrowDown, ArrowUp, TrendingUp, Share2, Image, Sparkles, External
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { NFTModal } from "@/components/NFTModal";
-import { CacheClearButton } from "./CacheClearButton";
 
 interface WalletDashboardProps {
   onSectionChange?: (section: 'deposit') => void;
@@ -146,12 +145,39 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     }, 0).toFixed(2);
   };
 
+  const clearCache = () => {
+    // Clear all types of cache
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    toast({
+      title: "🧹 Cache Cleared!",
+      description: "Refreshing page with fresh data...",
+    });
+    
+    // Force complete refresh with cache-busting
+    setTimeout(() => {
+      window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+    }, 1000);
+  };
+
   return (
     <section className="container mx-auto px-4 py-8">
       {/* Header with Cache Clear */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Wallet Dashboard</h1>
-        <CacheClearButton />
+        <Button
+          onClick={clearCache}
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          data-testid="button-clear-cache"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Clear Cache
+        </Button>
       </div>
       
       {/* Token Balance Card */}
