@@ -642,7 +642,7 @@ export default function MarketSection() {
       });
 
       listNFTMutation.mutate({ 
-        nftId: nft.nftId || nft.id, 
+        nftId: nft.id, // Use the userNft.id, not nft.nftId
         minPrice: price,
         auctionEndDate: auctionEndDate.toISOString()
       });

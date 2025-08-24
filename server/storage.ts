@@ -1290,6 +1290,9 @@ export class DatabaseStorage implements IStorage {
           amount: `-${giftAmount}`,
           description: `Gift sent to meme creator`,
           status: 'completed',
+          transactionHash: null,
+          fromAddress: null,
+          toAddress: null,
           createdAt: new Date()
         },
         {
@@ -1298,6 +1301,9 @@ export class DatabaseStorage implements IStorage {
           amount: giftAmount.toString(),
           description: `Gift received for meme`,
           status: 'completed',
+          transactionHash: null,
+          fromAddress: null,
+          toAddress: null,
           createdAt: new Date()
         }
       ]);
