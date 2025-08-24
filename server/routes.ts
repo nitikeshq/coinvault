@@ -250,6 +250,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Shared deposit approval logic
+  const processDepositApproval = async (depositRequest: any, status: string, adminNotes?: string) => {
+    await storage.updateDepositStatus(depositRequest.id, status, adminNotes);
+    
+    // If deposit is approved, trigger referral earnings and update user balance
+    if (status === 'approved' && depositRequest.status !== 'approved') {
+      const depositAmount = parseFloat(depositRequest.amount);
+      
+      // Get user details to check for referrer
+      const user = await storage.getUser(depositRequest.userId);
+      if (user?.referredBy) {
+        // Calculate 5% referral earnings
+        const earningsAmount = depositAmount * 0.05;
+        
+        // Record referral earnings
+        await storage.recordReferralEarning({
+          referrerId: user.referredBy,
+          referredUserId: user.id,
+          depositAmount,
+          earningsAmount,
+        });
+        
+        console.log(`💰 Recorded referral earning: $${earningsAmount.toFixed(2)} for referrer ${user.referredBy}`);
+      }
+      
+      // Update user's token balance (convert USD to tokens)
+      const tokenConfig = await storage.getActiveTokenConfig();
+      if (tokenConfig && tokenConfig.defaultPriceUsd) {
+        const tokenPrice = parseFloat(tokenConfig.defaultPriceUsd.toString());
+        const tokensToAdd = depositAmount / tokenPrice;
+        
+        // Get current balance and add new tokens
+        const currentBalance = await storage.getUserBalance(depositRequest.userId);
+        const currentTokens = parseFloat(currentBalance?.balance || '0');
+        const newBalance = (currentTokens + tokensToAdd).toString();
+        const newUsdValue = (parseFloat(newBalance) * tokenPrice).toString();
+        
+        await storage.updateUserBalance(depositRequest.userId, newBalance, newUsdValue);
+        
+        // Create transaction record for the deposit credit
+        await storage.createTransaction({
+          userId: depositRequest.userId,
+          type: 'deposit',
+          amount: tokensToAdd.toString(),
+          description: `Deposit approved - ${depositRequest.paymentMethod} ${depositRequest.amount} USD`,
+          status: 'completed',
+          transactionHash: depositRequest.transactionHash,
+          fromAddress: null,
+          toAddress: null
+        });
+        
+        console.log(`🎉 Credited ${tokensToAdd.toFixed(6)} tokens to user ${depositRequest.userId} for deposit approval`);
+      }
+    }
+  };
+
   app.put('/api/admin/deposits/:id', requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -262,63 +318,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Deposit request not found" });
       }
       
-      await storage.updateDepositStatus(id, status, adminNotes);
-      
-      // If deposit is approved, trigger referral earnings and update user balance
-      if (status === 'approved' && depositRequest.status !== 'approved') {
-        const depositAmount = parseFloat(depositRequest.amount);
-        
-        // Get user details to check for referrer
-        const user = await storage.getUser(depositRequest.userId);
-        if (user?.referredBy) {
-          // Calculate 5% referral earnings
-          const earningsAmount = depositAmount * 0.05;
-          
-          // Record referral earnings
-          await storage.recordReferralEarning({
-            referrerId: user.referredBy,
-            referredUserId: user.id,
-            depositAmount,
-            earningsAmount,
-          });
-          
-          console.log(`Recorded referral earning: $${earningsAmount.toFixed(2)} for referrer ${user.referredBy}`);
-        }
-        
-        // Update user's token balance (convert USD to tokens)
-        const tokenConfig = await storage.getActiveTokenConfig();
-        if (tokenConfig && tokenConfig.defaultPriceUsd) {
-          const tokenPrice = parseFloat(tokenConfig.defaultPriceUsd.toString());
-          const tokensToAdd = depositAmount / tokenPrice;
-          
-          // Get current balance and add new tokens
-          const currentBalance = await storage.getUserBalance(depositRequest.userId);
-          const currentTokens = parseFloat(currentBalance?.balance || '0');
-          const newBalance = (currentTokens + tokensToAdd).toString();
-          const newUsdValue = (parseFloat(newBalance) * tokenPrice).toString();
-          
-          await storage.updateUserBalance(depositRequest.userId, newBalance, newUsdValue);
-          
-          // Create transaction record for the deposit credit
-          await storage.createTransaction({
-            userId: depositRequest.userId,
-            type: 'deposit',
-            amount: tokensToAdd.toString(),
-            description: `Deposit approved - ${depositRequest.paymentMethod} ${depositRequest.amount} USD`,
-            status: 'completed',
-            transactionHash: depositRequest.transactionHash,
-            fromAddress: null,
-            toAddress: null
-          });
-          
-          console.log(`Credited ${tokensToAdd.toFixed(6)} tokens to user ${depositRequest.userId} for deposit approval`);
-        }
-      }
+      await processDepositApproval(depositRequest, status, adminNotes);
       
       res.json({ message: "Deposit status updated successfully" });
     } catch (error) {
       console.error("Error updating deposit status:", error);
       res.status(500).json({ message: "Failed to update deposit status" });
+    }
+  });
+
+  // Add missing endpoints that tests expect
+  app.post('/api/admin/deposits/:id/approve', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminNotes } = req.body;
+      
+      // Get deposit details before updating
+      const allDeposits = await storage.getDepositRequests();
+      const depositRequest = allDeposits.find(d => d.id === id);
+      if (!depositRequest) {
+        return res.status(404).json({ message: "Deposit request not found" });
+      }
+      
+      await processDepositApproval(depositRequest, 'approved', adminNotes);
+      
+      // Return updated deposit
+      const updatedDeposits = await storage.getDepositRequests();
+      const updatedDeposit = updatedDeposits.find(d => d.id === id);
+      res.json(updatedDeposit);
+    } catch (error) {
+      console.error("Error approving deposit:", error);
+      res.status(500).json({ message: "Failed to approve deposit" });
+    }
+  });
+
+  app.post('/api/admin/deposits/:id/reject', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminNotes } = req.body;
+      
+      // Get deposit details before updating
+      const allDeposits = await storage.getDepositRequests();
+      const depositRequest = allDeposits.find(d => d.id === id);
+      if (!depositRequest) {
+        return res.status(404).json({ message: "Deposit request not found" });
+      }
+      
+      await processDepositApproval(depositRequest, 'rejected', adminNotes);
+      
+      // Return updated deposit
+      const updatedDeposits = await storage.getDepositRequests();
+      const updatedDeposit = updatedDeposits.find(d => d.id === id);
+      res.json(updatedDeposit);
+    } catch (error) {
+      console.error("Error rejecting deposit:", error);
+      res.status(500).json({ message: "Failed to reject deposit" });
     }
   });
 

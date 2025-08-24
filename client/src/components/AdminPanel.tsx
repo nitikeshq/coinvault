@@ -872,9 +872,9 @@ export default function AdminPanel() {
                       <TableCell className="text-gray-900 font-mono text-sm">{deposit.transactionHash}</TableCell>
                       <TableCell>
                         <Badge 
-                          variant={deposit.status === 'confirmed' ? 'default' : deposit.status === 'pending' ? 'secondary' : 'destructive'}
+                          variant={deposit.status === 'approved' ? 'default' : deposit.status === 'pending' ? 'secondary' : 'destructive'}
                           className={
-                            deposit.status === 'confirmed' ? 'bg-green-100 text-green-700 border-green-200' :
+                            deposit.status === 'approved' ? 'bg-green-100 text-green-700 border-green-200' :
                             deposit.status === 'pending' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
                             'bg-red-100 text-red-700 border-red-200'
                           }
@@ -888,18 +888,22 @@ export default function AdminPanel() {
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => updateDepositMutation.mutate({ id: deposit.id, status: 'confirmed' })}
-                            data-testid={`button-confirm-${deposit.id}`}
+                            onClick={() => updateDepositMutation.mutate({ id: deposit.id, status: 'approved' })}
+                            data-testid={`button-approve-${deposit.id}`}
+                            disabled={updateDepositMutation.isPending}
                           >
                             <Check className="h-4 w-4" />
+                            {updateDepositMutation.isPending ? 'Processing...' : 'Approve'}
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => updateDepositMutation.mutate({ id: deposit.id, status: 'failed' })}
+                            onClick={() => updateDepositMutation.mutate({ id: deposit.id, status: 'rejected' })}
                             data-testid={`button-reject-${deposit.id}`}
+                            disabled={updateDepositMutation.isPending}
                           >
                             <X className="h-4 w-4" />
+                            {updateDepositMutation.isPending ? 'Processing...' : 'Reject'}
                           </Button>
                         </div>
                       </TableCell>
