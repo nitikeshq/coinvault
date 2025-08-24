@@ -24,15 +24,61 @@ interface ProgressData {
 
 export function PresaleCountdown() {
   const [mounted, setMounted] = useState(false);
+  const [clientTime, setClientTime] = useState<TimerData | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const { data: timerData, isLoading: timerLoading } = useQuery<TimerData>({
+  // Get initial timer data and sync every 60 seconds (instead of every second!)
+  const { data: serverTimerData, isLoading: timerLoading } = useQuery<TimerData>({
     queryKey: ['/api/presale/timer'],
-    refetchInterval: 1000, // Update every second
+    refetchInterval: 60000, // Sync with server every minute
   });
+
+  // Update client-side countdown every second
+  useEffect(() => {
+    if (!serverTimerData) return;
+
+    // Initialize client timer with server data
+    setClientTime(serverTimerData);
+
+    const interval = setInterval(() => {
+      setClientTime(prevTime => {
+        if (!prevTime || prevTime.timeRemaining <= 0) return prevTime;
+        
+        const newTimeRemaining = prevTime.timeRemaining - 1000; // Subtract 1 second
+        
+        if (newTimeRemaining <= 0) {
+          return {
+            timeRemaining: 0,
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            seconds: 0
+          };
+        }
+        
+        const days = Math.floor(newTimeRemaining / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((newTimeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((newTimeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((newTimeRemaining % (1000 * 60)) / 1000);
+        
+        return {
+          timeRemaining: newTimeRemaining,
+          days,
+          hours,
+          minutes,
+          seconds
+        };
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [serverTimerData]);
+
+  // Use client-side calculated timer data
+  const timerData = clientTime || serverTimerData;
 
   const { data: progressData, isLoading: progressLoading } = useQuery<ProgressData>({
     queryKey: ['/api/presale/progress'],
