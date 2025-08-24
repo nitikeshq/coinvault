@@ -519,6 +519,15 @@ export default function MarketSection() {
         description: data.message,
       });
     },
+    onError: (error: any) => {
+      console.error('Gift error:', error);
+      const errorMessage = error.message || "Failed to send gift";
+      toast({
+        title: "Gift Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
   });
 
   // NFT Listing Mutation with $1 fee
