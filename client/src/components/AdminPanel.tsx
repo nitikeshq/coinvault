@@ -373,33 +373,33 @@ export default function AdminPanel() {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-300 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-gray-800">Total Deposits</CardTitle>
+                <CardTitle className="text-gray-900 font-bold">Total Deposits</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-green-600">{deposits.length}</div>
-                <p className="text-gray-500">Pending and completed deposits</p>
+                <p className="text-gray-700">Pending and completed deposits</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-300 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-gray-800">Published Articles</CardTitle>
+                <CardTitle className="text-gray-900 font-bold">Published Articles</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-blue-600">{allNews.filter((n: any) => n.isPublished).length}</div>
-                <p className="text-gray-500">Live news articles</p>
+                <p className="text-gray-700">Live news articles</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-300 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-gray-800">Active Social Links</CardTitle>
+                <CardTitle className="text-gray-900 font-bold">Active Social Links</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-purple-600">{socialLinks.filter((s: any) => s.isActive).length}</div>
-                <p className="text-gray-500">Connected social platforms</p>
+                <p className="text-gray-700">Connected social platforms</p>
               </CardContent>
             </Card>
           </div>
@@ -412,8 +412,8 @@ export default function AdminPanel() {
         <TabsContent value="website" className="space-y-6">
           <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-gray-800">Website Settings</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-gray-900 text-xl font-bold">Website Settings</CardTitle>
+              <CardDescription className="text-gray-700">
                 Manage your website branding and appearance
               </CardDescription>
             </CardHeader>
@@ -425,12 +425,12 @@ export default function AdminPanel() {
                     name="siteName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Website Name</FormLabel>
+                        <FormLabel className="text-gray-900 font-semibold">Website Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="CryptoWallet Pro"
-                            className="bg-gray-50 border-gray-300 text-gray-900"
+                            className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                             data-testid="input-site-name"
                           />
                         </FormControl>
@@ -445,12 +445,12 @@ export default function AdminPanel() {
                       name="logoUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Logo URL</FormLabel>
+                          <FormLabel className="text-gray-900 font-semibold">Logo URL</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="https://example.com/logo.png"
-                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                               data-testid="input-logo-url"
                             />
                           </FormControl>
@@ -464,12 +464,12 @@ export default function AdminPanel() {
                       name="faviconUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700">Favicon URL</FormLabel>
+                          <FormLabel className="text-gray-900 font-semibold">Favicon URL</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="https://example.com/favicon.ico"
-                              className="bg-gray-50 border-gray-300 text-gray-900"
+                              className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                               data-testid="input-favicon-url"
                             />
                           </FormControl>
@@ -484,12 +484,12 @@ export default function AdminPanel() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">Website Description</FormLabel>
+                        <FormLabel className="text-gray-900 font-semibold">Website Description</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             placeholder="Professional cryptocurrency wallet platform..."
-                            className="bg-gray-50 border-gray-300 text-gray-900"
+                            className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                             data-testid="textarea-description"
                           />
                         </FormControl>
@@ -846,31 +846,31 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="deposits" className="space-y-6">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-300 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-gray-800">Deposit Requests</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-gray-900 text-xl font-bold">Deposit Requests</CardTitle>
+              <CardDescription className="text-gray-700">
                 Review and manage user deposit requests
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow className="border-gray-200">
-                    <TableHead className="text-gray-700">User</TableHead>
-                    <TableHead className="text-gray-700">Amount</TableHead>
-                    <TableHead className="text-gray-700">Transaction Hash</TableHead>
-                    <TableHead className="text-gray-700">Status</TableHead>
-                    <TableHead className="text-gray-700">Actions</TableHead>
+                  <TableRow className="border-gray-300 bg-gray-50">
+                    <TableHead className="text-gray-900 font-semibold">User</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Amount</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Transaction Hash</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Status</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {deposits.map((deposit: any) => (
-                    <TableRow key={deposit.id} className="border-gray-200">
-                      <TableCell className="text-gray-900">{deposit.userId}</TableCell>
-                      <TableCell className="text-gray-900">
+                    <TableRow key={deposit.id} className="border-gray-300 hover:bg-gray-50">
+                      <TableCell className="text-gray-900 font-medium">{deposit.userId}</TableCell>
+                      <TableCell className="text-gray-900 font-medium">
                         {deposit.amount} YHT 
-                        <span className="text-gray-500 text-sm block">
+                        <span className="text-gray-700 text-sm block">
                           ({deposit.originalAmount} {deposit.currency})
                         </span>
                       </TableCell>
