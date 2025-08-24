@@ -7,8 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
 interface NavigationProps {
-  activeSection: 'wallet' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market';
-  onSectionChange: (section: 'wallet' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => void;
+  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market';
+  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => void;
   user?: any;
   isAdmin?: boolean;
 }
@@ -40,7 +40,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
   }, [activeSection]);
 
   // Handle mobile menu section change
-  const handleMobileSectionChange = (section: 'wallet' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => {
+  const handleMobileSectionChange = (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'dapps' | 'advertisements' | 'market') => {
     onSectionChange(section);
     // Mobile menu will auto-close via useEffect above
   };
@@ -163,6 +163,15 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
                   Wallet
                 </button>
                 <button 
+                  onClick={() => onSectionChange('deposit')}
+                  className={`hover:text-blue-600 transition-colors font-medium text-sm ${
+                    activeSection === 'deposit' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
+                  }`}
+                  data-testid="nav-deposit"
+                >
+                  Deposit
+                </button>
+                <button 
                   onClick={() => onSectionChange('news')}
                   className={`hover:text-blue-600 transition-colors font-medium text-sm ${
                     activeSection === 'news' ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-gray-600'
@@ -251,6 +260,17 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
               >
                 <Wallet className="h-5 w-5 mr-3" />
                 Wallet
+              </button>
+              
+              <button 
+                onClick={() => handleMobileSectionChange('deposit')}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                  activeSection === 'deposit' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                data-testid="mobile-nav-deposit"
+              >
+                <CreditCard className="h-5 w-5 mr-3" />
+                Deposit
               </button>
               
               <button 
