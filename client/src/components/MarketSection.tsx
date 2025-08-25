@@ -19,7 +19,7 @@ export default function MarketSection() {
   const [selectedNFT, setSelectedNFT] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { tokenName } = useTokenInfo();
+  const { tokenName, tokenSymbol } = useTokenInfo();
 
   // NFT Data Queries
   const { data: nftListings = [] } = useQuery<any[]>({
@@ -360,7 +360,7 @@ export default function MarketSection() {
                               data-testid={`button-list-${nft?.id || userNft.id}`}
                             >
                               <TrendingUp className="h-4 w-4 mr-2" />
-                              List for Sale ($1 fee)
+                              List for Sale (1 {tokenSymbol} fee)
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
@@ -647,7 +647,7 @@ export default function MarketSection() {
       // Check if user has enough balance for $1 listing fee
       toast({
         title: "Listing NFT...",
-        description: "Processing your NFT listing with $1 fee",
+        description: `Processing your NFT listing with 1 ${tokenSymbol} fee`,
       });
 
       listNFTMutation.mutate({ 
@@ -680,7 +680,7 @@ export default function MarketSection() {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <div className="flex items-center space-x-2 text-yellow-800">
               <Zap className="h-4 w-4" />
-              <span className="font-medium">Listing Fee: $1.00 worth of tokens</span>
+              <span className="font-medium">Listing Fee: 1 {tokenSymbol}</span>
             </div>
             <p className="text-xs text-yellow-700 mt-1">
               This fee will be deducted from your balance when you list the NFT
@@ -688,7 +688,7 @@ export default function MarketSection() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="price">Minimum Price ($)</Label>
+            <Label htmlFor="price">Minimum Price ({tokenSymbol})</Label>
             <Input
               id="price"
               type="number"
@@ -770,7 +770,7 @@ export default function MarketSection() {
       if (!bidAmount || parseFloat(bidAmount) < requiredBid) {
         toast({
           title: "Invalid Bid Amount",
-          description: `Bid must be at least $${requiredBid.toFixed(2)}`,
+          description: `Bid must be at least ${requiredBid.toFixed(2)} ${tokenSymbol}`,
           variant: "destructive",
         });
         return;
@@ -807,19 +807,19 @@ export default function MarketSection() {
         <div className="bg-gray-50 p-3 rounded-lg space-y-2">
           <div className="flex justify-between text-sm">
             <span>Current Highest Bid:</span>
-            <span className="font-medium">${currentHighestBid.toFixed(2)}</span>
+            <span className="font-medium">{currentHighestBid.toFixed(2)} {tokenSymbol}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Minimum Bid Required:</span>
-            <span className="font-medium text-green-600">${requiredBid.toFixed(2)}</span>
+            <span className="font-medium text-green-600">{requiredBid.toFixed(2)} {tokenSymbol}</span>
           </div>
           <div className="text-xs text-gray-500">
-            Platform fee: $1.00 (will be deducted from your balance)
+            Platform fee: 1 {tokenSymbol} (will be deducted from your balance)
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bidAmount">Your Bid Amount ($)</Label>
+          <Label htmlFor="bidAmount">Your Bid Amount ({tokenSymbol})</Label>
           <Input
             id="bidAmount"
             type="number"
@@ -827,7 +827,7 @@ export default function MarketSection() {
             min={requiredBid}
             value={bidAmount}
             onChange={(e) => setBidAmount(e.target.value)}
-            placeholder={`Enter at least $${requiredBid.toFixed(2)}`}
+            placeholder={`Enter at least ${requiredBid.toFixed(2)} ${tokenSymbol}`}
           />
         </div>
         
@@ -880,12 +880,12 @@ export default function MarketSection() {
         <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
           <div>
             <span className="text-sm text-gray-500">Minimum Price</span>
-            <p className="font-semibold">${parseFloat(listing.minPrice).toFixed(2)}</p>
+            <p className="font-semibold">{parseFloat(listing.minPrice).toFixed(2)} {tokenSymbol}</p>
           </div>
           <div>
             <span className="text-sm text-gray-500">Current Highest Bid</span>
             <p className="font-semibold text-green-600">
-              ${parseFloat(listing.currentHighestBid || "0").toFixed(2)}
+              {parseFloat(listing.currentHighestBid || "0").toFixed(2)} {tokenSymbol}
             </p>
           </div>
           {auctionEndDate && (
@@ -944,7 +944,7 @@ export default function MarketSection() {
                   </div>
                   <div className="text-right">
                     <p className={`font-semibold ${index === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                      ${parseFloat(bidItem.bid.bidAmount).toFixed(2)}
+                      {parseFloat(bidItem.bid.bidAmount).toFixed(2)} {tokenSymbol}
                     </p>
                     {index === 0 && (
                       <Badge variant="default" className="text-xs">Highest Bid</Badge>
