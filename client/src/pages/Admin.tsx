@@ -544,7 +544,7 @@ function UsersManagementPanel() {
                   <div className="text-center">
                     <div className="text-sm text-gray-600">Token Balance</div>
                     <div className="font-bold text-lg text-gray-900">
-                      {parseFloat(user.balance?.balance || "0").toFixed(2)} YHT
+                      {parseFloat(user.balance?.balance || "0").toFixed(2)} {currentConfig?.tokenSymbol || "TOKEN"}
                     </div>
                     <div className="text-xs text-gray-500">
                       ${(parseFloat(user.balance?.balance || "0") * 0.999999).toFixed(2)} USD
