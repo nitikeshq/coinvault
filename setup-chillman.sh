@@ -95,48 +95,57 @@ else
     log_message "${GREEN}✓ Dependencies are up to date${NC}"
 fi
 
-# Step 5: Build the frontend
-log_message "${BLUE}🏗️ Building frontend...${NC}"
+# Step 5: Check Vite configuration for proper binding
+log_message "${BLUE}🔧 Checking Vite server configuration...${NC}"
 
-npm run build
-if [[ $? -eq 0 ]]; then
-    log_message "${GREEN}✓ Frontend built successfully${NC}"
+# Check if server/vite.ts exists and is configured correctly
+if [[ -f "server/vite.ts" ]]; then
+    # Check if vite.ts is configured to bind to 0.0.0.0 and correct port
+    if grep -q "host.*0\.0\.0\.0\|host.*true" "server/vite.ts" && grep -q "port.*$APP_PORT" "server/vite.ts"; then
+        log_message "${GREEN}✓ Vite server configuration looks correct${NC}"
+    else
+        log_message "${YELLOW}⚠ Updating Vite server configuration...${NC}"
+        
+        # Create backup
+        cp "server/vite.ts" "server/vite.ts.backup.$(date +%Y%m%d_%H%M%S)"
+        
+        # Update vite.ts to ensure it binds to 0.0.0.0:5771
+        sed -i "s/host: ['\"][^'\"]*['\"]/host: '0.0.0.0'/g" "server/vite.ts"
+        sed -i "s/port: [0-9]*/port: $APP_PORT/g" "server/vite.ts"
+        
+        log_message "${GREEN}✓ Vite configuration updated${NC}"
+    fi
 else
-    log_message "${RED}✗ Frontend build failed${NC}"
-    exit 1
+    log_message "${YELLOW}⚠ server/vite.ts not found${NC}"
 fi
 
-# Verify build directory exists
-if [[ -d "client/dist" ]]; then
-    log_message "${GREEN}✓ Build directory created: client/dist${NC}"
-else
-    log_message "${RED}✗ Build directory not found after build${NC}"
-    exit 1
-fi
+# Step 6: Prepare application for development
+log_message "${BLUE}🏗️ Preparing application...${NC}"
 
-# Step 6: Update nginx configuration to serve static files correctly
+# Since we're using npm run dev, we don't need to build
+# The dev server serves files directly and handles hot reload
+log_message "${GREEN}✓ Will use development server (npm run dev)${NC}"
+
+# Step 7: Update nginx configuration to proxy to development server
 log_message "${BLUE}🔧 Updating nginx configuration...${NC}"
 
 # Backup existing config
 sudo cp "$NGINX_CONFIG" "$NGINX_CONFIG.backup.$(date +%Y%m%d_%H%M%S)"
 
-# Create new nginx config that serves static files correctly
+# Create new nginx config for development server
 sudo tee "$NGINX_CONFIG" > /dev/null << EOF
 server {
     listen 80;
     server_name ourchillman.com www.ourchillman.com;
-    
-    # Root directory for static files
-    root $PROJECT_PATH/client/dist;
-    index index.html;
     
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header X-Content-Type-Options "nosniff" always;
     
-    # Handle API requests - proxy to backend
-    location /api/ {
+    # Proxy everything to the development server
+    # The Vite dev server handles both frontend and backend
+    location / {
         proxy_pass http://127.0.0.1:$APP_PORT;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
@@ -147,29 +156,9 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_cache_bypass \$http_upgrade;
         proxy_read_timeout 86400;
-    }
-    
-    # Serve static assets directly
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        try_files \$uri =404;
-    }
-    
-    # Handle manifest.json and other special files
-    location = /manifest.json {
-        try_files \$uri =404;
-        add_header Content-Type application/json;
-    }
-    
-    # Handle favicon
-    location = /favicon.ico {
-        try_files \$uri =404;
-    }
-    
-    # Handle all other requests - serve index.html for SPA
-    location / {
-        try_files \$uri \$uri/ /index.html;
+        
+        # Handle WebSocket connections for hot reload
+        proxy_set_header Origin http://127.0.0.1:$APP_PORT;
     }
     
     # Optional: Enable gzip compression
@@ -194,7 +183,7 @@ else
     exit 1
 fi
 
-# Step 7: Check database connection
+# Step 8: Check database connection
 log_message "${BLUE}🗄️ Testing database connection...${NC}"
 
 if command_exists psql; then
@@ -208,7 +197,7 @@ else
     log_message "${YELLOW}⚠ psql not found, skipping database test${NC}"
 fi
 
-# Step 8: Run database migrations (if needed)
+# Step 9: Run database migrations (if needed)
 log_message "${BLUE}🗄️ Running database setup...${NC}"
 
 if [[ -f "package.json" ]] && grep -q "db:push" package.json; then
@@ -218,7 +207,7 @@ else
     log_message "${YELLOW}⚠ No db:push script found, skipping database migration${NC}"
 fi
 
-# Step 9: Setup cronjob for monitoring
+# Step 10: Setup cronjob for monitoring
 log_message "${BLUE}⏰ Setting up monitoring cronjob...${NC}"
 
 # Create monitoring script
@@ -254,7 +243,7 @@ chmod +x "$PROJECT_PATH/monitor.sh"
 
 log_message "${GREEN}✓ Monitoring cronjob setup complete${NC}"
 
-# Step 10: Kill any existing processes on the port
+# Step 11: Kill any existing processes on the port
 log_message "${BLUE}🔄 Cleaning up existing processes...${NC}"
 
 # Kill any process using our port
@@ -270,7 +259,7 @@ sleep 2
 
 log_message "${GREEN}✓ Cleanup complete${NC}"
 
-# Step 11: Start the application
+# Step 12: Start the application
 log_message "${BLUE}🚀 Starting the application...${NC}"
 
 # Create log directory
@@ -302,7 +291,7 @@ else
     exit 1
 fi
 
-# Step 12: Test website accessibility
+# Step 13: Test website accessibility
 log_message "${BLUE}🌐 Testing website accessibility...${NC}"
 
 sleep 5
@@ -314,11 +303,11 @@ else
     log_message "${YELLOW}⚠ Website not accessible locally${NC}"
 fi
 
-# Test static files
-if curl -f http://localhost/manifest.json >/dev/null 2>&1; then
-    log_message "${GREEN}✓ Static files (manifest.json) serving correctly${NC}"
+# Test API endpoint
+if curl -f http://localhost/api/website/settings >/dev/null 2>&1; then
+    log_message "${GREEN}✓ API endpoints accessible${NC}"
 else
-    log_message "${YELLOW}⚠ Static files may not be serving correctly${NC}"
+    log_message "${YELLOW}⚠ API endpoints may not be accessible${NC}"
 fi
 
 # Final summary
