@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireAdmin } from "./auth";
-import { insertDepositRequestSchema, insertNewsArticleSchema, insertSocialLinkSchema, insertTokenConfigSchema, insertWebsiteSettingsSchema } from "@shared/schema";
+import { insertDepositRequestSchema, insertDepositSettingsSchema, insertNewsArticleSchema, insertSocialLinkSchema, insertTokenConfigSchema, insertWebsiteSettingsSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import { blockchainService } from "./blockchainService";
@@ -375,6 +375,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting deposit:", error);
       res.status(500).json({ message: "Failed to reject deposit" });
+    }
+  });
+
+  // Deposit settings routes
+  app.get('/api/deposit-settings', async (req, res) => {
+    try {
+      const settings = await storage.getEnabledDepositSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching enabled deposit settings:", error);
+      res.status(500).json({ message: "Failed to fetch deposit settings" });
+    }
+  });
+
+  app.get('/api/admin/deposit-settings', requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getDepositSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching all deposit settings:", error);
+      res.status(500).json({ message: "Failed to fetch deposit settings" });
+    }
+  });
+
+  app.put('/api/admin/deposit-settings/:paymentMethod', requireAdmin, upload.single('qrCode'), async (req, res) => {
+    try {
+      const { paymentMethod } = req.params;
+      const data = { ...req.body };
+      
+      if (req.file) {
+        data.qrCodeUrl = req.file.path;
+      }
+      
+      // Convert isEnabled to boolean
+      if (data.isEnabled !== undefined) {
+        data.isEnabled = data.isEnabled === 'true' || data.isEnabled === true;
+      }
+      
+      const validatedData = insertDepositSettingsSchema.parse({
+        paymentMethod,
+        ...data
+      });
+      
+      const settings = await storage.upsertDepositSettings(validatedData);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating deposit settings:", error);
+      res.status(500).json({ message: "Failed to update deposit settings" });
     }
   });
 

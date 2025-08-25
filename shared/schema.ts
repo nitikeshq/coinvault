@@ -254,6 +254,19 @@ export type InsertWebsiteSettings = z.infer<typeof insertWebsiteSettingsSchema>;
 export type PresaleConfig = typeof presaleConfig.$inferSelect;
 export type InsertPresaleConfig = z.infer<typeof insertPresaleConfigSchema>;
 
+// Deposit settings table (admin controlled)
+export const depositSettings = pgTable("deposit_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  paymentMethod: varchar("payment_method").notNull().unique(), // "upi", "bsc"
+  displayName: varchar("display_name").notNull(), // "UPI Payment", "BSC Transfer"
+  isEnabled: boolean("is_enabled").default(false),
+  qrCodeUrl: varchar("qr_code_url"), // QR code image URL
+  walletAddress: varchar("wallet_address"), // For BSC only - the BSC wallet address
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Dapp settings table (admin controlled)
 export const dappSettings = pgTable("dapp_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -405,6 +418,13 @@ export const insertMemeDislikeSchema = createInsertSchema(memeDislikes).omit({
   createdAt: true,
 });
 
+// Deposit settings schema
+export const insertDepositSettingsSchema = createInsertSchema(depositSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Marketplace types
 export type NftListing = typeof nftListings.$inferSelect;
 export type InsertNftListing = z.infer<typeof insertNftListingSchema>;
@@ -414,3 +434,7 @@ export type MemeLike = typeof memeLikes.$inferSelect;
 export type InsertMemeLike = z.infer<typeof insertMemeLikeSchema>;
 export type MemeDislike = typeof memeDislikes.$inferSelect;
 export type InsertMemeDislike = z.infer<typeof insertMemeDislikeSchema>;
+
+// Deposit settings types
+export type DepositSettings = typeof depositSettings.$inferSelect;
+export type InsertDepositSettings = z.infer<typeof insertDepositSettingsSchema>;

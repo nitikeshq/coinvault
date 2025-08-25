@@ -9,6 +9,7 @@ import {
   transactions,
   websiteSettings,
   presaleConfig,
+  depositSettings,
   dappSettings,
   nftCollection,
   userNfts,
@@ -36,6 +37,8 @@ import {
   type InsertWebsiteSettings,
   type PresaleConfig,
   type InsertPresaleConfig,
+  type DepositSettings,
+  type InsertDepositSettings,
   type ReferralEarnings,
 } from "@shared/schema";
 import { db } from "./db";
@@ -66,6 +69,12 @@ export interface IStorage {
   createDepositRequest(userId: string, request: InsertDepositRequest): Promise<DepositRequest>;
   getDepositRequests(userId?: string): Promise<DepositRequest[]>;
   updateDepositStatus(id: string, status: string, adminNotes?: string): Promise<void>;
+  
+  // Deposit settings
+  getDepositSettings(): Promise<DepositSettings[]>;
+  getEnabledDepositSettings(): Promise<DepositSettings[]>;
+  upsertDepositSettings(settings: InsertDepositSettings): Promise<DepositSettings>;
+  updateDepositSettings(paymentMethod: string, updates: Partial<InsertDepositSettings>): Promise<void>;
   
   // News operations
   getPublishedNews(): Promise<NewsArticle[]>;
@@ -266,6 +275,52 @@ export class DatabaseStorage implements IStorage {
       .update(depositRequests)
       .set({ status, adminNotes, updatedAt: new Date() })
       .where(eq(depositRequests.id, id));
+  }
+
+  // Deposit settings methods
+  async getDepositSettings(): Promise<DepositSettings[]> {
+    return await db
+      .select()
+      .from(depositSettings)
+      .orderBy(depositSettings.paymentMethod);
+  }
+
+  async getEnabledDepositSettings(): Promise<DepositSettings[]> {
+    return await db
+      .select()
+      .from(depositSettings)
+      .where(eq(depositSettings.isEnabled, true))
+      .orderBy(depositSettings.paymentMethod);
+  }
+
+  async upsertDepositSettings(settings: InsertDepositSettings): Promise<DepositSettings> {
+    const existing = await db
+      .select()
+      .from(depositSettings)
+      .where(eq(depositSettings.paymentMethod, settings.paymentMethod))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(depositSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(depositSettings.paymentMethod, settings.paymentMethod))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(depositSettings)
+        .values(settings)
+        .returning();
+      return created;
+    }
+  }
+
+  async updateDepositSettings(paymentMethod: string, updates: Partial<InsertDepositSettings>): Promise<void> {
+    await db
+      .update(depositSettings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(depositSettings.paymentMethod, paymentMethod));
   }
 
   async getPublishedNews(): Promise<NewsArticle[]> {

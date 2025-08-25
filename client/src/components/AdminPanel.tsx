@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Edit, Trash2, Check, X, Settings, Users, FileText, Link, TrendingUp, Shield, Clock, Sparkles, Image, Send, Minus } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Check, X, Settings, Users, FileText, Link, TrendingUp, Shield, Clock, Sparkles, Image, Send, Minus, CreditCard, Wallet } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,6 +54,14 @@ const websiteSettingsSchema = z.object({
   whitepaperUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   nftCharacterPrompt: z.string().optional().or(z.literal("")),
   maxNfts: z.number().min(1, "Must be at least 1").max(10000, "Cannot exceed 10,000"),
+});
+
+const depositSettingsSchema = z.object({
+  paymentMethod: z.string().min(1, "Payment method is required"),
+  displayName: z.string().min(1, "Display name is required"),
+  isEnabled: z.boolean(),
+  walletAddress: z.string().optional().or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
 });
 
 export default function AdminPanel() {
@@ -105,6 +113,7 @@ export default function AdminPanel() {
   const { data: deposits = [] } = useQuery({ queryKey: ["/api/admin/deposits"] });
   const { data: socialLinks = [] } = useQuery({ queryKey: ["/api/admin/social-links"] });
   const { data: websiteSettings } = useQuery({ queryKey: ["/api/website/settings"] });
+  const { data: depositSettings = [] } = useQuery({ queryKey: ["/api/admin/deposit-settings"] });
 
   // Forms
   const tokenForm = useForm({
@@ -349,7 +358,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-10 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-11 bg-white border border-gray-200">
           <TabsTrigger value="overview" className="flex items-center space-x-2">
             <TrendingUp className="h-4 w-4" />
             <span>Overview</span>
@@ -369,6 +378,10 @@ export default function AdminPanel() {
           <TabsTrigger value="deposits" className="flex items-center space-x-2">
             <Users className="h-4 w-4" />
             <span>Deposits</span>
+          </TabsTrigger>
+          <TabsTrigger value="deposit-settings" className="flex items-center space-x-2">
+            <CreditCard className="h-4 w-4" />
+            <span>Payment Settings</span>
           </TabsTrigger>
           <TabsTrigger value="news" className="flex items-center space-x-2">
             <FileText className="h-4 w-4" />
@@ -1416,6 +1429,11 @@ export default function AdminPanel() {
         {/* NFT Mint */}
         <TabsContent value="nft-mint" className="space-y-6">
           <NFTMintingPanel />
+        </TabsContent>
+
+        {/* Deposit Settings */}
+        <TabsContent value="deposit-settings" className="space-y-6">
+          <DepositSettingsPanel depositSettings={depositSettings} />
         </TabsContent>
       </Tabs>
     </div>
@@ -2525,5 +2543,266 @@ function NFTMintingPanel() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// Deposit Settings Panel Component
+function DepositSettingsPanel({ depositSettings }: { depositSettings: any[] }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const updateDepositSettingsMutation = useMutation({
+    mutationFn: async ({ paymentMethod, data }: { paymentMethod: string; data: FormData }) => {
+      const response = await fetch(`/api/admin/deposit-settings/${paymentMethod}`, {
+        method: 'PUT',
+        body: data,
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update deposit settings');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/deposit-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deposit-settings"] });
+      toast({
+        title: "Success",
+        description: "Deposit settings updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (paymentMethod: string, formData: any, qrCodeFile?: File) => {
+    const data = new FormData();
+    Object.keys(formData).forEach(key => {
+      data.append(key, formData[key]);
+    });
+    
+    if (qrCodeFile) {
+      data.append('qrCode', qrCodeFile);
+    }
+    
+    updateDepositSettingsMutation.mutate({ paymentMethod, data });
+  };
+
+  const getSettingsByMethod = (method: string) => {
+    return depositSettings.find(s => s.paymentMethod === method) || {
+      paymentMethod: method,
+      displayName: method === 'upi' ? 'UPI Payment' : 'BSC Wallet',
+      isEnabled: false,
+      walletAddress: '',
+      description: '',
+      qrCodeUrl: ''
+    };
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* UPI Settings */}
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-gray-900 text-xl font-bold flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            UPI Payment Settings
+          </CardTitle>
+          <CardDescription className="text-gray-700">
+            Configure UPI payment method for deposits
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DepositSettingForm 
+            settings={getSettingsByMethod('upi')}
+            onSubmit={(data, file) => handleSubmit('upi', data, file)}
+            isLoading={updateDepositSettingsMutation.isPending}
+          />
+        </CardContent>
+      </Card>
+
+      {/* BSC Settings */}
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-gray-900 text-xl font-bold flex items-center gap-2">
+            <Wallet className="h-5 w-5" />
+            BSC Wallet Settings
+          </CardTitle>
+          <CardDescription className="text-gray-700">
+            Configure BSC wallet for cryptocurrency deposits
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DepositSettingForm 
+            settings={getSettingsByMethod('bsc')}
+            onSubmit={(data, file) => handleSubmit('bsc', data, file)}
+            isLoading={updateDepositSettingsMutation.isPending}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Individual deposit setting form component
+function DepositSettingForm({ 
+  settings, 
+  onSubmit, 
+  isLoading 
+}: { 
+  settings: any; 
+  onSubmit: (data: any, file?: File) => void; 
+  isLoading: boolean;
+}) {
+  const [qrCodeFile, setQrCodeFile] = useState<File | null>(null);
+  
+  const form = useForm({
+    resolver: zodResolver(depositSettingsSchema),
+    defaultValues: {
+      paymentMethod: settings.paymentMethod,
+      displayName: settings.displayName,
+      isEnabled: settings.isEnabled,
+      walletAddress: settings.walletAddress || '',
+      description: settings.description || ''
+    },
+  });
+
+  const handleFormSubmit = (data: any) => {
+    onSubmit(data, qrCodeFile || undefined);
+    setQrCodeFile(null);
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="isEnabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base font-semibold">
+                  Enable {settings.displayName}
+                </FormLabel>
+                <FormDescription>
+                  Allow users to make deposits using this payment method
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  data-testid={`switch-enable-${settings.paymentMethod}`}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="displayName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-900 font-semibold">Display Name</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="e.g., UPI Payment"
+                  className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  data-testid={`input-display-name-${settings.paymentMethod}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="walletAddress"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-900 font-semibold">
+                {settings.paymentMethod === 'upi' ? 'UPI ID' : 'Wallet Address'}
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder={settings.paymentMethod === 'upi' ? 'your-upi@bank' : '0x...'}
+                  className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  data-testid={`input-wallet-address-${settings.paymentMethod}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-900 font-semibold">Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="Additional instructions for users"
+                  className="bg-white border-gray-400 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  data-testid={`textarea-description-${settings.paymentMethod}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            QR Code Image
+          </label>
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setQrCodeFile(e.target.files?.[0] || null)}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              data-testid={`input-qr-code-${settings.paymentMethod}`}
+            />
+            {settings.qrCodeUrl && (
+              <div className="mt-2">
+                <p className="text-sm text-gray-600 mb-1">Current QR Code:</p>
+                <img 
+                  src={settings.qrCodeUrl} 
+                  alt="Current QR Code" 
+                  className="w-32 h-32 object-cover border rounded"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Button 
+          type="submit" 
+          disabled={isLoading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          data-testid={`button-save-${settings.paymentMethod}`}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save Settings'
+          )}
+        </Button>
+      </form>
+    </Form>
   );
 }
