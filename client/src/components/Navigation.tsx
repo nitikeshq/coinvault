@@ -7,8 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
 interface NavigationProps {
-  activeSection: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market';
-  onSectionChange: (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market') => void;
+  activeSection: 'wallet' | 'deposit' | 'press' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market';
+  onSectionChange: (section: 'wallet' | 'deposit' | 'press' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market') => void;
   user?: any;
   isAdmin?: boolean;
 }
@@ -40,7 +40,7 @@ export default function Navigation({ activeSection, onSectionChange, user, isAdm
   }, [activeSection]);
 
   // Handle mobile menu section change
-  const handleMobileSectionChange = (section: 'wallet' | 'deposit' | 'swap' | 'news' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market') => {
+  const handleMobileSectionChange = (section: 'wallet' | 'deposit' | 'press' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market') => {
     onSectionChange(section);
     // Mobile menu will auto-close via useEffect above
   };
