@@ -53,7 +53,7 @@ export default function SwapTrading() {
                 </CardTitle>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-yellow-600" data-testid="text-current-price">
-                    ${formatPrice(tokenPrice?.priceUsd || "0")}
+                    {formatPrice(tokenPrice?.priceUsd || "0")} {tokenConfig?.tokenSymbol || 'TOKEN'}
                   </p>
                   <p className="text-sm text-green-600 flex items-center">
                     <TrendingUp className="h-4 w-4 mr-1" />
@@ -107,25 +107,25 @@ export default function SwapTrading() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">24h High</span>
                   <span className="font-semibold text-red-600" data-testid="text-24h-high">
-                    ${formatPrice(tokenPrice?.high24h || "0")}
+                    {formatPrice(tokenPrice?.high24h || "0")} {tokenConfig?.tokenSymbol || 'TOKEN'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">24h Low</span>
                   <span className="font-semibold text-green-600" data-testid="text-24h-low">
-                    ${formatPrice(tokenPrice?.low24h || "0")}
+                    {formatPrice(tokenPrice?.low24h || "0")} {tokenConfig?.tokenSymbol || 'TOKEN'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">24h Volume</span>
                   <span className="font-semibold text-gray-800" data-testid="text-24h-volume">
-                    ${formatPrice(tokenPrice?.volume24h || "0")}
+                    {formatPrice(tokenPrice?.volume24h || "0")} {tokenConfig?.tokenSymbol || 'TOKEN'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Market Cap</span>
                   <span className="font-semibold text-gray-800" data-testid="text-market-cap">
-                    ${formatPrice(tokenPrice?.marketCap || "0")}
+                    {formatPrice(tokenPrice?.marketCap || "0")} {tokenConfig?.tokenSymbol || 'TOKEN'}
                   </span>
                 </div>
               </div>

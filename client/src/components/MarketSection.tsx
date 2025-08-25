@@ -135,12 +135,12 @@ export default function MarketSection() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Min Price:</span>
-                        <span className="font-medium">${formatBalance(listing.listing.minPrice)}</span>
+                        <span className="font-medium">{formatBalance(listing.listing.minPrice)} {tokenName}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Highest Bid:</span>
                         <span className="font-medium text-green-600">
-                          ${formatBalance(listing.listing.currentHighestBid || "0")}
+                          {formatBalance(listing.listing.currentHighestBid || "0")} {tokenName}
                         </span>
                       </div>
                       {listing.listing.auctionEndDate && (
@@ -247,12 +247,12 @@ export default function MarketSection() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Min Price:</span>
-                        <span className="font-medium">${formatBalance(listing.listing.minPrice)}</span>
+                        <span className="font-medium">{formatBalance(listing.listing.minPrice)} {tokenName}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Highest Bid:</span>
                         <span className="font-medium text-green-600">
-                          ${formatBalance(listing.listing.currentHighestBid || "0")}
+                          {formatBalance(listing.listing.currentHighestBid || "0")} {tokenName}
                         </span>
                       </div>
                       {listing.listing.auctionEndDate && (

@@ -437,4 +437,29 @@ export type InsertMemeDislike = z.infer<typeof insertMemeDislikeSchema>;
 
 // Deposit settings types
 export type DepositSettings = typeof depositSettings.$inferSelect;
+
+// Staking tables
+export const stakings = pgTable("stakings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  stakeType: varchar("stake_type").notNull(), // "token" or "nft"
+  tokenAmount: decimal("token_amount", { precision: 18, scale: 8 }), // For token staking
+  nftId: varchar("nft_id").references(() => nftCollection.id), // For NFT staking
+  stakeDurationDays: integer("stake_duration_days").notNull(), // 30, 60, 90, 180, 365
+  rewardRate: decimal("reward_rate", { precision: 5, scale: 4 }).notNull(), // % per day
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date").notNull(),
+  isActive: boolean("is_active").default(true),
+  totalRewards: decimal("total_rewards", { precision: 18, scale: 8 }).default("0"),
+  lastRewardClaim: timestamp("last_reward_claim").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertStakingSchema = createInsertSchema(stakings).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Staking = typeof stakings.$inferSelect;
+export type InsertStaking = z.infer<typeof insertStakingSchema>;
 export type InsertDepositSettings = z.infer<typeof insertDepositSettingsSchema>;

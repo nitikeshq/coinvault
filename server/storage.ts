@@ -19,6 +19,7 @@ import {
   nftBids,
   memeLikes,
   memeDislikes,
+  stakings,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -40,9 +41,11 @@ import {
   type DepositSettings,
   type InsertDepositSettings,
   type ReferralEarnings,
+  type Staking,
+  type InsertStaking,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, lt } from "drizzle-orm";
+import { eq, desc, and, sql, lt, gte } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -804,6 +807,78 @@ export class DatabaseStorage implements IStorage {
     console.log('   traitsString:', traitsString);
     console.log('✅ checkTraitsCombinationExists returning empty array');
     return [];
+  }
+
+  // Staking methods
+  async createStaking(data: InsertStaking): Promise<Staking> {
+    const [staking] = await db.insert(stakings)
+      .values(data)
+      .returning();
+    return staking;
+  }
+
+  async getUserStakings(userId: string): Promise<any[]> {
+    return await db.select({
+      staking: stakings,
+      nft: nftCollection
+    })
+    .from(stakings)
+    .leftJoin(nftCollection, eq(stakings.nftId, nftCollection.id))
+    .where(eq(stakings.userId, userId))
+    .orderBy(desc(stakings.createdAt));
+  }
+
+  async getActiveStakings(userId: string): Promise<any[]> {
+    const now = new Date();
+    return await db.select({
+      staking: stakings,
+      nft: nftCollection
+    })
+    .from(stakings)
+    .leftJoin(nftCollection, eq(stakings.nftId, nftCollection.id))
+    .where(and(
+      eq(stakings.userId, userId),
+      eq(stakings.isActive, true),
+      gte(stakings.endDate, now)
+    ))
+    .orderBy(desc(stakings.createdAt));
+  }
+
+  async updateStakingRewards(stakingId: string, rewards: string, claimDate: Date): Promise<Staking> {
+    const [updated] = await db.update(stakings)
+      .set({ 
+        totalRewards: rewards,
+        lastRewardClaim: claimDate 
+      })
+      .where(eq(stakings.id, stakingId))
+      .returning();
+    return updated;
+  }
+
+  async unstakeStaking(stakingId: string, userId: string): Promise<any> {
+    return await db.transaction(async (tx) => {
+      // Get staking details
+      const [staking] = await tx.select()
+        .from(stakings)
+        .where(and(eq(stakings.id, stakingId), eq(stakings.userId, userId)));
+      
+      if (!staking) {
+        throw new Error('Staking not found');
+      }
+
+      // Mark staking as inactive
+      await tx.update(stakings)
+        .set({ isActive: false })
+        .where(eq(stakings.id, stakingId));
+
+      // Return tokens/rewards to user
+      if (staking.stakeType === 'token' && staking.tokenAmount) {
+        const totalReturn = parseFloat(staking.tokenAmount) + parseFloat(staking.totalRewards || '0');
+        await this.adjustUserTokenBalance(userId, totalReturn, `Unstaking rewards: ${staking.tokenAmount} tokens + ${staking.totalRewards} rewards`);
+      }
+
+      return staking;
+    });
   }
 
   // Update createMemeGeneration to match the new signature

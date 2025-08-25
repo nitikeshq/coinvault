@@ -1607,6 +1607,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Staking endpoints
+  app.get('/api/user/stakings', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const stakings = await storage.getUserStakings(userId);
+      res.json(stakings);
+    } catch (error) {
+      console.error("Error getting user stakings:", error);
+      res.status(500).json({ message: "Failed to get stakings" });
+    }
+  });
+
+  app.post('/api/staking/create', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { stakeType, tokenAmount, nftId, stakeDurationDays } = req.body;
+
+      // Validate inputs
+      if (!stakeType || !stakeDurationDays) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      if (stakeType === 'token' && (!tokenAmount || parseFloat(tokenAmount) <= 0)) {
+        return res.status(400).json({ message: "Invalid token amount" });
+      }
+
+      if (stakeType === 'nft' && !nftId) {
+        return res.status(400).json({ message: "NFT ID required for NFT staking" });
+      }
+
+      // Calculate reward rate based on duration (longer = higher rate)
+      const rewardRates = {
+        30: 0.05,   // 5% for 30 days
+        60: 0.08,   // 8% for 60 days  
+        90: 0.12,   // 12% for 90 days
+        180: 0.18,  // 18% for 180 days
+        365: 0.25   // 25% for 365 days
+      };
+
+      const rewardRate = rewardRates[stakeDurationDays as keyof typeof rewardRates] || 0.05;
+
+      // For token staking, deduct tokens from user balance
+      if (stakeType === 'token') {
+        const balance = await storage.getUserBalance(userId);
+        const currentBalance = parseFloat(balance?.balance || '0');
+        
+        if (currentBalance < parseFloat(tokenAmount)) {
+          return res.status(400).json({ message: "Insufficient token balance" });
+        }
+
+        // Deduct tokens from user balance
+        await storage.adjustUserTokenBalance(userId, -parseFloat(tokenAmount), `Staked ${tokenAmount} tokens for ${stakeDurationDays} days`);
+      }
+
+      // Create staking record
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + stakeDurationDays);
+
+      const staking = await storage.createStaking({
+        userId,
+        stakeType,
+        tokenAmount: stakeType === 'token' ? tokenAmount : undefined,
+        nftId: stakeType === 'nft' ? nftId : undefined,
+        stakeDurationDays,
+        rewardRate: rewardRate.toString(),
+        endDate,
+        isActive: true,
+        totalRewards: "0"
+      });
+
+      res.json({ message: "Staking created successfully", staking });
+    } catch (error) {
+      console.error("Error creating staking:", error);
+      res.status(500).json({ message: "Failed to create staking" });
+    }
+  });
+
+  app.post('/api/staking/unstake/:stakingId', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { stakingId } = req.params;
+
+      const staking = await storage.unstakeStaking(stakingId, userId);
+      res.json({ message: "Unstaked successfully", staking });
+    } catch (error) {
+      console.error("Error unstaking:", error);
+      res.status(500).json({ message: "Failed to unstake" });
+    }
+  });
+
   // Leaderboard endpoints
   app.get('/api/leaderboard/investors', async (req, res) => {
     try {

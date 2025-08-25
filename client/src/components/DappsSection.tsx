@@ -30,6 +30,10 @@ export default function DappsSection() {
   const [memeOverlayText, setMemeOverlayText] = useState("");
   const [nftTheme, setNftTheme] = useState("");
   const [nftStyle, setNftStyle] = useState("");
+  const [stakeType, setStakeType] = useState("token");
+  const [stakeAmount, setStakeAmount] = useState("");
+  const [stakeDuration, setStakeDuration] = useState(30);
+  const [selectedNftForStaking, setSelectedNftForStaking] = useState("");
   const { tokenSymbol } = useTokenInfo();
 
   // Fetch enabled dapps
@@ -66,6 +70,11 @@ export default function DappsSection() {
       const hasPending = Array.isArray(data) && data.some((meme: any) => meme.status === 'pending' || meme.status === 'processing');
       return hasPending ? 30000 : 120000; // 30s if pending, 2min if all complete
     },
+  });
+
+  // Fetch user stakings
+  const { data: userStakings = [] } = useQuery<any[]>({
+    queryKey: ["/api/user/stakings"],
   });
 
   const nftBuyMutation = useMutation({
@@ -137,6 +146,50 @@ export default function DappsSection() {
     },
   });
 
+  const stakingMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("POST", "/api/staking/create", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Staking Created!",
+        description: "Your tokens/NFT have been staked successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/stakings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/balance"] });
+      setStakeAmount("");
+      setSelectedNftForStaking("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Staking Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unstakeMutation = useMutation({
+    mutationFn: async (stakingId: string) => {
+      return apiRequest("POST", `/api/staking/unstake/${stakingId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Unstaked Successfully!",
+        description: "Your tokens and rewards have been returned!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/stakings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/balance"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Unstaking Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleBuyNft = (nftId: string) => {
     nftBuyMutation.mutate(nftId);
   };
@@ -151,11 +204,25 @@ export default function DappsSection() {
     nftGenerationMutation.mutate({ theme: nftTheme.trim(), style: nftStyle });
   };
 
+  const handleStake = () => {
+    if (stakeType === 'token' && (!stakeAmount || parseFloat(stakeAmount) <= 0)) return;
+    if (stakeType === 'nft' && !selectedNftForStaking) return;
+
+    stakingMutation.mutate({
+      stakeType,
+      tokenAmount: stakeType === 'token' ? stakeAmount : undefined,
+      nftId: stakeType === 'nft' ? selectedNftForStaking : undefined,
+      stakeDurationDays: stakeDuration
+    });
+  };
+
   const isNftMintEnabled = dappSettings.some(d => d.appName === 'nft_mint' && d.isEnabled);
   const isMemeGeneratorEnabled = dappSettings.some(d => d.appName === 'meme_generator' && d.isEnabled);
+  const isStakingEnabled = dappSettings.some(d => d.appName === 'staking' && d.isEnabled);
 
   const nftMintSettings = dappSettings.find(d => d.appName === 'nft_mint');
   const memeGeneratorSettings = dappSettings.find(d => d.appName === 'meme_generator');
+  const stakingSettings = dappSettings.find(d => d.appName === 'staking');
 
   const userBalance = parseFloat(balance?.balance || '0');
   const nftCost = parseFloat(nftMintSettings?.cost || '0');
@@ -202,8 +269,8 @@ export default function DappsSection() {
         </Card>
       </div>
 
-      <Tabs defaultValue={isNftMintEnabled ? "nft-mint" : "meme-generator"} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue={isNftMintEnabled ? "nft-mint" : isMemeGeneratorEnabled ? "meme-generator" : "staking"} className="w-full">
+        <TabsList className={`grid w-full ${[isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 4 ? 'grid-cols-4' : [isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
           {isNftMintEnabled && (
             <TabsTrigger value="nft-mint" data-testid="tab-nft-mint">
               <Image className="h-4 w-4 mr-2" />
@@ -220,6 +287,12 @@ export default function DappsSection() {
             <TabsTrigger value="meme-generator" data-testid="tab-meme-generator">
               <Sparkles className="h-4 w-4 mr-2" />
               Memes Generator
+            </TabsTrigger>
+          )}
+          {isStakingEnabled && (
+            <TabsTrigger value="staking" data-testid="tab-staking">
+              <Clock className="h-4 w-4 mr-2" />
+              Staking
             </TabsTrigger>
           )}
         </TabsList>
@@ -573,6 +646,189 @@ export default function DappsSection() {
                       <Sparkles className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <div>No memes generated yet</div>
                       <div className="text-sm">Create your first AI meme!</div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
+
+        {/* Staking Tab */}
+        {isStakingEnabled && (
+          <TabsContent value="staking" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Staking Interface */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5" />
+                    <span>Create Stake</span>
+                    <Badge variant="outline">Earn Rewards</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-gray-600">
+                    {stakingSettings?.description}
+                  </div>
+                  
+                  {/* Stake Type Selection */}
+                  <div>
+                    <Label htmlFor="stake-type">Stake Type</Label>
+                    <select
+                      id="stake-type"
+                      value={stakeType}
+                      onChange={(e) => setStakeType(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      data-testid="select-stake-type"
+                    >
+                      <option value="token">Token Staking</option>
+                      <option value="nft">NFT Staking</option>
+                    </select>
+                  </div>
+
+                  {/* Token Amount Input */}
+                  {stakeType === 'token' && (
+                    <div>
+                      <Label htmlFor="stake-amount">Amount to Stake</Label>
+                      <Input
+                        id="stake-amount"
+                        type="number"
+                        step="0.00000001"
+                        min="0"
+                        value={stakeAmount}
+                        onChange={(e) => setStakeAmount(e.target.value)}
+                        placeholder={`Amount in ${tokenSymbol}`}
+                        className="w-full"
+                        data-testid="input-stake-amount"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        Available: {userBalance.toLocaleString()} {tokenSymbol}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NFT Selection */}
+                  {stakeType === 'nft' && (
+                    <div>
+                      <Label htmlFor="stake-nft">Select NFT to Stake</Label>
+                      <select
+                        id="stake-nft"
+                        value={selectedNftForStaking}
+                        onChange={(e) => setSelectedNftForStaking(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        data-testid="select-stake-nft"
+                      >
+                        <option value="">Choose NFT...</option>
+                        {userNfts.map((nft: any) => (
+                          <option key={nft.id} value={nft.id}>
+                            {nft.name} - {nft.rarity}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="text-xs text-gray-500 mt-1">
+                        You own {userNfts.length} NFTs
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Duration Selection */}
+                  <div>
+                    <Label htmlFor="stake-duration">Staking Duration</Label>
+                    <select
+                      id="stake-duration"
+                      value={stakeDuration}
+                      onChange={(e) => setStakeDuration(parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      data-testid="select-stake-duration"
+                    >
+                      <option value={30}>30 Days (5% APY)</option>
+                      <option value={60}>60 Days (8% APY)</option>
+                      <option value={90}>90 Days (12% APY)</option>
+                      <option value={180}>180 Days (18% APY)</option>
+                      <option value={365}>365 Days (25% APY)</option>
+                    </select>
+                  </div>
+
+                  <Button 
+                    onClick={handleStake}
+                    disabled={stakingMutation.isPending || 
+                      (stakeType === 'token' && (!stakeAmount || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > userBalance)) ||
+                      (stakeType === 'nft' && !selectedNftForStaking)
+                    }
+                    className="w-full"
+                    data-testid="button-create-stake"
+                  >
+                    {stakingMutation.isPending ? "Creating Stake..." : "Create Stake"}
+                  </Button>
+                  
+                  {stakeType === 'token' && parseFloat(stakeAmount) > userBalance && (
+                    <div className="text-sm text-red-600 text-center">
+                      Insufficient {tokenSymbol} balance
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Active Stakes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Active Stakes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {userStakings.length > 0 ? (
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {userStakings.filter((stake: any) => stake.staking.isActive).map((stake: any) => {
+                        const daysRemaining = Math.ceil((new Date(stake.staking.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                        const isExpired = daysRemaining <= 0;
+                        
+                        return (
+                          <div key={stake.staking.id} className="bg-gray-50 p-3 rounded-lg">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="font-medium">
+                                  {stake.staking.stakeType === 'token' ? 
+                                    `${parseFloat(stake.staking.tokenAmount).toLocaleString()} ${tokenSymbol}` :
+                                    stake.nft?.name || 'NFT Stake'
+                                  }
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  Duration: {stake.staking.stakeDurationDays} days
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  APY: {(parseFloat(stake.staking.rewardRate) * 365 * 100).toFixed(1)}%
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {isExpired ? 'Ready to unstake' : `${daysRemaining} days remaining`}
+                                </div>
+                                <div className="text-sm text-green-600">
+                                  Rewards: {parseFloat(stake.staking.totalRewards || '0').toLocaleString()} {tokenSymbol}
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <Badge variant={isExpired ? "default" : "secondary"}>
+                                  {isExpired ? "Ready" : "Active"}
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  onClick={() => unstakeMutation.mutate(stake.staking.id)}
+                                  disabled={unstakeMutation.isPending}
+                                  className="text-xs"
+                                  data-testid={`button-unstake-${stake.staking.id}`}
+                                >
+                                  {unstakeMutation.isPending ? "..." : "Unstake"}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-600">
+                      <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <div>No active stakes</div>
+                      <div className="text-sm">Create your first stake to earn rewards!</div>
                     </div>
                   )}
                 </CardContent>
