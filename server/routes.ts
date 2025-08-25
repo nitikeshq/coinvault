@@ -1156,8 +1156,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.error('Failed to refund tokens:', refundError);
               }
             } else {
-              // For other errors, use placeholder but don't refund
-              imageUrl = `https://via.placeholder.com/512x512.png?text=${encodeURIComponent(prompt.trim().substring(0, 20))}`;
+              // For other errors, set empty imageUrl and don't refund
+              imageUrl = '';
               errorMessage = 'Image generation failed, please try again';
             }
           }

@@ -785,7 +785,7 @@ export class DatabaseStorage implements IStorage {
         tokenId: nextTokenId,
         name: nftData.name || `NFT #${nextTokenId}`,
         description: nftData.description,
-        imageUrl: nftData.imageUrl || `https://via.placeholder.com/512x512.png?text=NFT+${nextTokenId}`,
+        imageUrl: nftData.imageUrl || '',
         rarity: nftData.rarity || 'Common',
         attributes: nftData.attributes,
         referenceImageUrl: nftData.referenceImageUrl,

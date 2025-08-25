@@ -553,7 +553,7 @@ function UserNFTsSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: U
             {/* NFT Image */}
             <div className="mb-3">
               <img
-                src={nft.imageUrl || `https://via.placeholder.com/200x200/6b46c1/ffffff?text=${encodeURIComponent(nft.name)}`}
+                src={nft.imageUrl || ""}
                 alt={nft.name}
                 className="w-full h-40 object-cover rounded-lg border border-purple-200"
                 loading="lazy"
