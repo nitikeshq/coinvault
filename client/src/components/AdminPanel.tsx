@@ -966,7 +966,7 @@ export default function AdminPanel() {
                   // Calculate token amount and USD equivalent
                   const isUpiPayment = deposit.paymentMethod === 'upi';
                   const usdAmount = parseFloat(deposit.amount); // Amount is already in USD (converted by backend)
-                  const tokenPrice = currentTokenConfig?.defaultPriceUsd ? parseFloat(currentTokenConfig.defaultPriceUsd.toString()) : 0.99999900;
+                  const tokenPrice = tokenConfig?.defaultPriceUsd ? parseFloat(tokenConfig.defaultPriceUsd.toString()) : 0.99999900;
                   const tokensToCredit = (usdAmount / tokenPrice).toFixed(6);
                   
                   // For UPI payments, show original INR amount
