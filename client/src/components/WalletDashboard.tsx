@@ -630,7 +630,7 @@ function UserMemesSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: 
     staleTime: 30000, // Consider data fresh for 30 seconds
     refetchInterval: (data) => {
       // Only poll if there are pending memes, otherwise check every 2 minutes
-      const hasPending = data?.some((meme: any) => meme.status === 'pending' || meme.status === 'processing');
+      const hasPending = Array.isArray(data) && data.some((meme: any) => meme.status === 'pending' || meme.status === 'processing');
       return hasPending ? 30000 : 120000; // 30s if pending, 2min if all complete
     },
   });
