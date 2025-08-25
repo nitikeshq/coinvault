@@ -15,9 +15,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { useToast } from "@/hooks/use-toast";
 import { PresaleAdmin } from "@/components/PresaleAdmin";
 import { useTokenInfo } from "@/hooks/useTokenInfo";
+import type { 
+  TokenConfig, 
+  NewsArticle, 
+  DepositRequest, 
+  SocialLink, 
+  WebsiteSettings, 
+  DepositSettings 
+} from "@shared/schema";
 
 const tokenConfigSchema = z.object({
   contractAddress: z.string().min(1, "Contract address is required"),
@@ -108,12 +117,12 @@ export default function AdminPanel() {
   };
 
   // Queries
-  const { data: tokenConfig } = useQuery({ queryKey: ["/api/token/config"] });
-  const { data: allNews = [] } = useQuery({ queryKey: ["/api/admin/news"] });
-  const { data: deposits = [] } = useQuery({ queryKey: ["/api/admin/deposits"] });
-  const { data: socialLinks = [] } = useQuery({ queryKey: ["/api/admin/social-links"] });
-  const { data: websiteSettings } = useQuery({ queryKey: ["/api/website/settings"] });
-  const { data: depositSettings = [] } = useQuery({ queryKey: ["/api/admin/deposit-settings"] });
+  const { data: tokenConfig } = useQuery<TokenConfig>({ queryKey: ["/api/token/config"] });
+  const { data: allNews = [] } = useQuery<NewsArticle[]>({ queryKey: ["/api/admin/news"] });
+  const { data: deposits = [] } = useQuery<DepositRequest[]>({ queryKey: ["/api/admin/deposits"] });
+  const { data: socialLinks = [] } = useQuery<SocialLink[]>({ queryKey: ["/api/admin/social-links"] });
+  const { data: websiteSettings } = useQuery<WebsiteSettings>({ queryKey: ["/api/website/settings"] });
+  const { data: depositSettings = [] } = useQuery<DepositSettings[]>({ queryKey: ["/api/admin/deposit-settings"] });
 
   // Forms
   const tokenForm = useForm({
