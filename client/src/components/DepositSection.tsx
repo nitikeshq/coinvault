@@ -60,6 +60,7 @@ export default function DepositSection() {
 
   // Calculate token amounts for INR (used for UPI deposits)
   const calculateTokensFromINR = (inrAmount: string) => {
+
     if (!inrAmount || !tokenPrice?.priceUsd) return "0";
     const amount = parseFloat(inrAmount);
     const price = parseFloat(tokenPrice.priceUsd);
@@ -139,50 +140,71 @@ export default function DepositSection() {
   });
 
   const handleUpiSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!upiForm.amount || !upiForm.utrId) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
+  e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('amount', upiForm.amount);
-    formData.append('paymentMethod', 'upi');
-    formData.append('utrId', upiForm.utrId);
-    if (upiForm.screenshot) {
-      formData.append('screenshot', upiForm.screenshot);
-    }
+  if (!upiForm.amount || !upiForm.utrId) {
+    toast({
+      title: "Missing information",
+      description: "Please fill in all required fields.",
+      variant: "destructive",
+    });
+    return;
+  }
+const formatToNumber = (value: string): number => {
+  if (!value) return 0;
+  // Remove commas, currency symbols, or spaces
+  const clean = value.replace(/[^0-9.]/g, "");
+  const num = parseFloat(clean);
+  return isNaN(num) ? 0 : num;
+};
+  // Calculate token amount
+  const tokenAmount = formatToNumber(calculateTokensFromINR(upiForm.amount));
 
-    upiDepositMutation.mutate(formData);
-  };
+
+  const formData = new FormData();
+  formData.append('tokenAmount', tokenAmount);       // ✅ required
+  formData.append('originalAmount', upiForm.amount); // ✅ original INR value
+  formData.append('currency', 'INR');                // ✅
+  formData.append('paymentMethod', 'upi');
+  formData.append('utrId', upiForm.utrId);
+
+  if (upiForm.screenshot) {
+    formData.append('screenshot', upiForm.screenshot);
+  }
+
+  upiDepositMutation.mutate(formData);
+};
+
 
   const handleBscSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!bscForm.amount || !bscForm.transactionHash) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
+  e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('amount', bscForm.amount);
-    formData.append('paymentMethod', 'bsc');
-    formData.append('transactionHash', bscForm.transactionHash);
-    if (bscForm.screenshot) {
-      formData.append('screenshot', bscForm.screenshot);
-    }
+  if (!bscForm.amount || !bscForm.transactionHash) {
+    toast({
+      title: "Missing information",
+      description: "Please fill in all required fields.",
+      variant: "destructive",
+    });
+    return;
+  }
 
-    bscDepositMutation.mutate(formData);
-  };
+  // Calculate token amount
+  const tokenAmount = formatToNumber(calculateTokens(bscForm.amount));
+
+  const formData = new FormData();
+  formData.append('tokenAmount', tokenAmount);           // ✅ required
+  formData.append('originalAmount', bscForm.amount);     // ✅ original USD value
+  formData.append('currency', 'USD');                    // ✅
+  formData.append('paymentMethod', 'bsc');
+  formData.append('transactionHash', bscForm.transactionHash);
+
+  if (bscForm.screenshot) {
+    formData.append('screenshot', bscForm.screenshot);
+  }
+
+  bscDepositMutation.mutate(formData);
+};
+
 
   // Filter only enabled deposit settings
   const enabledSettings = depositSettings.filter((setting: any) => setting.isEnabled);
@@ -272,18 +294,35 @@ export default function DepositSection() {
                             )}
                           </div>
                           <div>
-                            <h3 className="text-lg font-semibold text-gray-800">{setting.displayName}</h3>
-                            <p className="text-sm text-gray-600">
-                              {setting.description || 
-                                (setting.paymentMethod === 'upi' 
-                                  ? 'Pay via PhonePe, GPay, Paytm, or any UPI app' 
-                                  : 'Send cryptocurrency to the wallet address'
-                                )
-                              }
-                            </p>
+                            <h3 className="text-lg font-semibold text-gray-800">
+  {setting.displayName}
+</h3>
+
+<p className="text-sm text-gray-600 mt-2">
+  {setting.description ||
+    (setting.paymentMethod === 'upi'
+      ? 'Pay via PhonePe, GPay, Paytm, or any UPI app'
+      : 'Send cryptocurrency to the wallet address')}
+</p>
+
                           </div>
+                          
                         </div>
-                        
+                        {setting.paymentMethod === 'upi' && (
+  <div className="my-2">
+    <p className="text-sm text-gray-700 mb-2">
+      Do direct payment, and share your screenshot or reference below.
+    </p>
+    <a
+      href="https://razorpay.me/@CHILLMAN"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg shadow hover:bg-indigo-700 transition"
+    >
+      Pay via Razorpay
+    </a>
+  </div>
+)}
                         {/* QR Code */}
                         {setting.qrCodeUrl && (
                           <div className="text-center mb-6">

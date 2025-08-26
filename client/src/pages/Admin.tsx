@@ -329,80 +329,100 @@ export default function Admin() {
               <CardContent>
                 <div className="space-y-4">
                   {deposits.map((deposit: any) => {
-                    // Calculate token amount and USD equivalent
-                    const isUpiPayment = deposit.paymentMethod === 'upi';
-                    const usdAmount = parseFloat(deposit.amount); // Amount is already in USD (converted by backend)
-                    const tokenPrice = currentConfig?.defaultPriceUsd ? parseFloat(currentConfig.defaultPriceUsd.toString()) : 0.99999900;
-                    const tokensToCredit = (usdAmount / tokenPrice).toFixed(6);
-                    
-                    // For UPI payments, show original INR amount
+                      const tokenAmount = parseFloat(deposit.amount);
+
+                    // USD price per token (falling back to ~1 USD if not set)
+                    const tokenPrice = currentConfig?.defaultPriceUsd
+                      ? parseFloat(currentConfig.defaultPriceUsd.toString())
+                      : 0.999999;
+
+                    // USD equivalent of the deposit
+                    const usdEquivalent = (tokenAmount * tokenPrice).toFixed(2);
+
+                    // Tokens to credit = token amount
+                    const tokensToCredit = tokenAmount.toFixed(6);
+
                     let originalAmount = '';
-                    if (isUpiPayment && deposit.originalAmount) {
+                    if (deposit.paymentMethod === 'upi' && deposit.originalAmount) {
                       originalAmount = `₹${deposit.originalAmount} INR → `;
                     }
-                    
                     return (
-                      <div key={deposit.id} className="border border-gray-400 rounded-lg p-4" data-testid={`deposit-${deposit.id}`}>
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="text-xs">
-                              {deposit.paymentMethod?.toUpperCase() || 'BSC'}
-                            </Badge>
-                            <Badge 
-                              variant={deposit.status === 'approved' ? 'default' : 
-                                      deposit.status === 'rejected' ? 'destructive' : 'secondary'}
-                              data-testid={`badge-status-${deposit.id}`}
-                            >
-                              {deposit.status}
-                            </Badge>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <p className="font-semibold text-gray-900">
-                              {originalAmount}${deposit.amount} USD
-                            </p>
-                            <p className="text-sm text-green-400">
-                              → {tokensToCredit} tokens will be credited
-                            </p>
-                            <p className="text-sm text-gray-600">User: {deposit.userId}</p>
-                            <p className="text-sm text-gray-600">Date: {new Date(deposit.createdAt).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {deposit.transactionHash && (
-                        <p className="text-sm text-gray-600 mb-3">Hash: {deposit.transactionHash}</p>
-                      )}
-                      
-                      {deposit.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleDepositAction(deposit.id, 'approved')}
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            disabled={updateDepositMutation.isPending}
-                            data-testid={`button-approve-${deposit.id}`}
-                          >
-                            {updateDepositMutation.isPending ? 'Processing...' : 'Approve'}
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            onClick={() => handleDepositAction(deposit.id, 'rejected')}
-                            disabled={updateDepositMutation.isPending}
-                            data-testid={`button-reject-${deposit.id}`}
-                          >
-                            {updateDepositMutation.isPending ? 'Processing...' : 'Reject'}
-                          </Button>
-                        </div>
-                      )}
-                      </div>
-                    );
-                  })}
-                  {deposits.length === 0 && (
-                    <p className="text-gray-600 text-center py-8">No deposit requests found</p>
-                  )}
+    <div
+      key={deposit.id}
+      className="border border-gray-400 rounded-lg p-4"
+      data-testid={`deposit-${deposit.id}`}
+    >
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="outline" className="text-xs">
+              {deposit.paymentMethod?.toUpperCase() || 'BSC'}
+            </Badge>
+            <Badge
+              variant={
+                deposit.status === 'approved'
+                  ? 'default'
+                  : deposit.status === 'rejected'
+                  ? 'destructive'
+                  : 'secondary'
+              }
+              data-testid={`badge-status-${deposit.id}`}
+            >
+              {deposit.status}
+            </Badge>
+          </div>
+
+          <div className="space-y-1">
+            <p className="font-semibold text-gray-900">
+              {originalAmount}${usdEquivalent} USD
+            </p>
+            <p className="text-sm text-green-400">
+              → {tokensToCredit} tokens will be credited
+            </p>
+            <p className="text-sm text-gray-600">User: {deposit.userId}</p>
+            <p className="text-sm text-gray-600">
+              Date: {new Date(deposit.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {deposit.transactionHash && (
+        <p className="text-sm text-gray-600 mb-3">
+          Hash: {deposit.transactionHash}
+        </p>
+      )}
+
+      {deposit.status === 'pending' && (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => handleDepositAction(deposit.id, 'approved')}
+            className="bg-green-600 hover:bg-green-700 text-white"
+            disabled={updateDepositMutation.isPending}
+            data-testid={`button-approve-${deposit.id}`}
+          >
+            {updateDepositMutation.isPending ? 'Processing...' : 'Approve'}
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => handleDepositAction(deposit.id, 'rejected')}
+            disabled={updateDepositMutation.isPending}
+            data-testid={`button-reject-${deposit.id}`}
+          >
+            {updateDepositMutation.isPending ? 'Processing...' : 'Reject'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+})}
+{deposits.length === 0 && (
+  <p className="text-gray-600 text-center py-8">
+    No deposit requests found
+  </p>
+)}
                 </div>
               </CardContent>
             </Card>

@@ -270,7 +270,7 @@ export default function DappsSection() {
       </div>
 
       <Tabs defaultValue={isNftMintEnabled ? "nft-mint" : isMemeGeneratorEnabled ? "meme-generator" : "staking"} className="w-full">
-        <TabsList className={`grid w-full ${[isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 4 ? 'grid-cols-4' : [isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <TabsList className={`grid w-full ${[isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 4 ? 'grid-cols-4' : [isNftMintEnabled, isMemeGeneratorEnabled, isStakingEnabled].filter(Boolean).length === 3 ? 'grid-cols-4' : 'grid-cols-3'}`}>
           {isNftMintEnabled && (
             <TabsTrigger value="nft-mint" data-testid="tab-nft-mint">
               <Image className="h-4 w-4 mr-2" />

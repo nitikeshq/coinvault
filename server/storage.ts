@@ -501,24 +501,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePresaleConfig(config: InsertPresaleConfig): Promise<PresaleConfig> {
-    // Check if config exists
-    const existing = await this.getPresaleConfig();
-    
-    if (existing) {
-      const [updated] = await db
-        .update(presaleConfig)
-        .set({ ...config, updatedAt: new Date() })
-        .where(eq(presaleConfig.id, existing.id))
-        .returning();
-      return updated;
-    } else {
-      const [created] = await db
-        .insert(presaleConfig)
-        .values(config)
-        .returning();
-      return created;
-    }
+  const existing = await this.getPresaleConfig();
+
+  // Ensure endDate is a Date object
+  const sanitizedConfig = {
+    ...config,
+    endDate: config.endDate ? new Date(config.endDate) : null,
+    updatedAt: new Date()
+  };
+
+  if (existing) {
+    const [updated] = await db
+      .update(presaleConfig)
+      .set(sanitizedConfig)
+      .where(eq(presaleConfig.id, existing.id))
+      .returning();
+    return updated;
+  } else {
+    const [created] = await db
+      .insert(presaleConfig)
+      .values(sanitizedConfig)
+      .returning();
+    return created;
   }
+}
+
 
   async updatePresaleLiquidity(amount: string): Promise<PresaleConfig> {
     const config = await this.getPresaleConfig();
@@ -590,8 +597,8 @@ export class DatabaseStorage implements IStorage {
 
   async getUserNfts(userId: string): Promise<any[]> {
     return await db.select({
-      id: userNfts.id,
-      nftId: userNfts.nftId, // Add the missing nftId field for marketplace listing
+      id: userNfts.nftId,
+      nftId: userNfts.id, // Add the missing nftId field for marketplace listing
       tokenId: nftCollection.tokenId,
       name: nftCollection.name,
       description: nftCollection.description,

@@ -22,10 +22,16 @@ export default function WalletDashboard({ onSectionChange }: WalletDashboardProp
     queryKey: ['/api/user/balance'],
   });
 
-  const { data: tokenBalance } = useQuery<any>({
-    queryKey: ['/api/user/token/balance'],
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
+const { data: tokenBalance } = useQuery<any>({
+  queryKey: ['/api/user/token/balance'],
+  refetchInterval: 30000,
+  onSuccess: (data) => {
+    console.log('Token balance response:', data);
+  },
+  onError: (error) => {
+    console.error('Token balance error:', error);
+  },
+});
 
   const { data: tokenPrice } = useQuery<any>({
     queryKey: ['/api/token/price'],
@@ -629,25 +635,31 @@ function UserMemesSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: 
     queryKey: ['/api/user/memes'],
     staleTime: 30000, // Consider data fresh for 30 seconds
     refetchInterval: (data) => {
-      // Only poll if there are pending memes, otherwise check every 2 minutes
-      const hasPending = Array.isArray(data) && data.some((meme: any) => meme.status === 'pending' || meme.status === 'processing');
-      return hasPending ? 30000 : 120000; // 30s if pending, 2min if all complete
+      const hasPending =
+        Array.isArray(data) &&
+        data.some(
+          (meme: any) =>
+            meme.status === "pending" || meme.status === "processing"
+        );
+      return hasPending ? 30000 : 120000; // 30s if pending, 2min otherwise
     },
   });
 
-  const completedMemes = userMemes.filter((meme: any) => meme.status === 'completed' && meme.imageUrl);
+  const completedMemes = userMemes.filter(
+    (meme: any) => meme.status === "completed" && meme.imageUrl
+  );
 
-  const handleShareMeme = (meme: any) => {
+  const handleShareMeme = (meme: any, platform: string) => {
     const shareText = `Check out my AI-generated meme! 😂 "${meme.prompt}" #Meme #AI #Crypto`;
-    if (meme.imageUrl) {
+    if (platform === "telegram") {
       shareOnTelegram(shareText, meme.imageUrl);
-    } else {
-      shareOnTelegram(shareText);
+    } else if (platform === "twitter") {
+      shareOnTwitter(shareText, meme.imageUrl);
     }
   };
 
   const handleCopyMeme = (meme: any) => {
-    const shareText = `AI Meme: "${meme.prompt}" - ${meme.imageUrl || 'Generated meme'}`;
+    const shareText = `AI Meme: "${meme.prompt}" - ${meme.imageUrl || "Generated meme"}`;
     copyToClipboard(shareText);
   };
 
@@ -662,33 +674,48 @@ function UserMemesSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: 
         </h3>
         <Badge variant="secondary">{completedMemes.length} Memes</Badge>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {completedMemes.map((meme: any) => (
-          <div key={meme.id} className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200" data-testid={`meme-card-${meme.id}`}>
+          <div
+            key={meme.id}
+            className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200 hover:shadow-lg transition-shadow"
+            data-testid={`meme-card-${meme.id}`}
+          >
+            {/* Meme Image */}
             <div className="mb-3">
-              <p className="text-sm font-medium text-gray-800 mb-2">"{meme.prompt}"</p>
-              {meme.imageUrl && (
-                <div className="relative">
-                  <img 
-                    src={meme.imageUrl} 
-                    alt={meme.prompt}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                </div>
-              )}
+              <img
+                src={meme.imageUrl}
+                alt={meme.prompt}
+                className="w-full h-40 object-cover rounded-lg border border-yellow-200"
+                loading="lazy"
+              />
             </div>
-            
+
+            <p className="text-sm text-gray-700 mb-3 line-clamp-2">
+              {meme.prompt}
+            </p>
+
             <div className="flex gap-2">
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleShareMeme(meme)}
+                onClick={() => handleShareMeme(meme, "telegram")}
                 className="flex items-center gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
-                data-testid={`button-share-meme-${meme.id}`}
+                data-testid={`button-share-meme-telegram-${meme.id}`}
               >
                 <Share2 className="h-3 w-3" />
-                Share
+                Telegram
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleShareMeme(meme, "twitter")}
+                className="flex items-center gap-1 text-sky-600 border-sky-200 hover:bg-sky-50"
+                data-testid={`button-share-meme-twitter-${meme.id}`}
+              >
+                <Share2 className="h-3 w-3" />
+                Twitter
               </Button>
               <Button
                 size="sm"
@@ -700,18 +727,6 @@ function UserMemesSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: 
                 <Copy className="h-3 w-3" />
                 Copy
               </Button>
-              {meme.imageUrl && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open(meme.imageUrl, '_blank')}
-                  className="flex items-center gap-1 text-purple-600 border-purple-200 hover:bg-purple-50"
-                  data-testid={`button-view-meme-${meme.id}`}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  View
-                </Button>
-              )}
             </div>
           </div>
         ))}
@@ -719,3 +734,28 @@ function UserMemesSection({ shareOnTelegram, shareOnTwitter, copyToClipboard }: 
     </div>
   );
 }
+/**
+ * WalletDashboard.tsx
+ * 
+ * This component serves as the main dashboard for users to view their wallet information,
+ * including token balances, referral program details, NFTs, memes, and recent transactions.
+ * It integrates with various APIs to fetch real-time data and provides interactive features
+ * such as sharing referral codes and NFTs on social media platforms.
+ * 
+ * Key Features:
+ * - Displays user's token balance and its USD value with live price updates.
+ * - Provides action buttons for depositing, withdrawing, and swapping tokens.
+ * - Showcases referral program details with options to copy and share referral codes.
+ * - Lists user's NFTs with options to view details in a modal and share them.
+ * - Displays user's AI-generated memes with sharing capabilities.
+ * - Shows recent transaction history with status indicators.
+ * - Includes a cache clearing feature to refresh data.
+ * 
+ * Dependencies:
+ * - React and React Query for state management and data fetching.
+ * - UI components from a custom library (Card, Button, Badge).
+ * - Icons from Lucide React for visual enhancements.
+ * - Custom hooks for toast notifications.
+ * 
+ * Note: Ensure that the necessary API endpoints are available and return the expected data formats.
+ */

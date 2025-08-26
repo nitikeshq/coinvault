@@ -15,15 +15,19 @@ interface TimerData {
 }
 
 interface ProgressData {
-  totalRaised: string;
-  targetAmount: string;
-  initialLiquidity: string;
-  fromDeposits: string;
+  totalRaised: string;     // in tokens
+  targetAmount: string;    // in tokens
+  initialLiquidity: string; // in tokens
+  fromDeposits: string;    // in tokens
   progressPercentage: number;
 }
 
 interface PresaleConfig {
   endDate: string;
+}
+
+interface TokenConfig {
+  defaultPriceUsd: number; // price per token in USD
 }
 
 export function PresaleCountdown() {
@@ -34,13 +38,17 @@ export function PresaleCountdown() {
     setMounted(true);
   }, []);
 
-  // Get presale config (includes end date) - only once!
+  // Get presale config
   const { data: presaleConfig, isLoading: configLoading } = useQuery<PresaleConfig>({
     queryKey: ['/api/presale/config'],
-    // No refetchInterval needed - end date doesn't change
   });
 
-  // Client-side countdown calculation (zero API calls!)
+  // Get token config (for USD conversion)
+  const { data: tokenConfig, isLoading: tokenConfigLoading } = useQuery<TokenConfig>({
+    queryKey: ['/api/token/config'],
+  });
+
+  // Client-side countdown
   useEffect(() => {
     if (!presaleConfig?.endDate) return;
 
@@ -48,7 +56,7 @@ export function PresaleCountdown() {
       const now = Date.now();
       const endDate = new Date(presaleConfig.endDate).getTime();
       const timeRemaining = Math.max(0, endDate - now);
-      
+
       if (timeRemaining <= 0) {
         setTimerData({
           timeRemaining: 0,
@@ -57,16 +65,16 @@ export function PresaleCountdown() {
           minutes: 0,
           seconds: 0,
           isEnded: true,
-          endDate: presaleConfig.endDate
+          endDate: presaleConfig.endDate,
         });
         return;
       }
-      
+
       const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
       const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-      
+
       setTimerData({
         timeRemaining,
         days,
@@ -74,28 +82,29 @@ export function PresaleCountdown() {
         minutes,
         seconds,
         isEnded: false,
-        endDate: presaleConfig.endDate
+        endDate: presaleConfig.endDate,
       });
     };
 
-    // Calculate immediately
     calculateTimer();
-    
-    // Update every second using pure frontend calculation
     const interval = setInterval(calculateTimer, 1000);
     return () => clearInterval(interval);
   }, [presaleConfig]);
 
   const { data: progressData, isLoading: progressLoading } = useQuery<ProgressData>({
     queryKey: ['/api/presale/progress'],
-    refetchInterval: 30000, // Update every 30 seconds
+    refetchInterval: 30000,
   });
 
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
-  const isLoading = configLoading || progressLoading;
+  const isLoading = configLoading || progressLoading || tokenConfigLoading;
+
+  // ✅ Convert tokens → USD using tokenConfig
+  const tokenPrice = tokenConfig?.defaultPriceUsd ?? 1;
+
+  const toUSD = (tokenAmount: string) =>
+    (parseFloat(tokenAmount) * tokenPrice).toFixed(2);
 
   return (
     <Card className="w-full bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-blue-200 dark:border-blue-800">
@@ -118,40 +127,26 @@ export function PresaleCountdown() {
           </div>
         ) : (
           <>
-            {/* Countdown Timer */}
+            {/* Countdown */}
             <div className="grid grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {timerData?.days || 0}
+              {["Days", "Hours", "Minutes", "Seconds"].map((label, idx) => {
+                const values = [
+                  timerData?.days || 0,
+                  timerData?.hours || 0,
+                  timerData?.minutes || 0,
+                  timerData?.seconds || 0,
+                ];
+                return (
+                  <div key={label} className="text-center">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {values[idx]}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{label}</div>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Days</div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {timerData?.hours || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Hours</div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {timerData?.minutes || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Minutes</div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {timerData?.seconds || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Seconds</div>
-                </div>
-              </div>
+                );
+              })}
             </div>
 
             {/* Progress Section */}
@@ -163,15 +158,15 @@ export function PresaleCountdown() {
                     Funding Progress
                   </h3>
                 </div>
-                
-                <Progress 
-                  value={progressData.progressPercentage} 
+
+                <Progress
+                  value={progressData.progressPercentage}
                   className="h-3 bg-gray-200 dark:bg-gray-700"
                 />
-                
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">
-                    ${parseFloat(progressData.totalRaised).toLocaleString()} raised
+                    ${parseFloat(toUSD(progressData.totalRaised))+parseFloat(progressData.initialLiquidity.toLocaleString())} raised
                   </span>
                   <span className="text-gray-600 dark:text-gray-400">
                     ${parseFloat(progressData.targetAmount).toLocaleString()} target
@@ -187,7 +182,7 @@ export function PresaleCountdown() {
                   </div>
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
                     <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                      ${parseFloat(progressData.fromDeposits).toLocaleString()}
+                      ${parseFloat(toUSD(progressData.fromDeposits)).toLocaleString()}
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">From Deposits</div>
                   </div>

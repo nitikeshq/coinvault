@@ -108,7 +108,7 @@ export default function Home() {
                     <div>
                       <h3 className="text-xl font-bold text-gray-800">{websiteSettings.siteName}</h3>
                       {websiteSettings?.description && (
-                        <p className="text-sm text-purple-600">{websiteSettings.description}</p>
+                        <p className="text-sm text-purple-600">{websiteSettings.siteName}</p>
                       )}
                     </div>
                   )}

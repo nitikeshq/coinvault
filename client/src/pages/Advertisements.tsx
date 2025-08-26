@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Star, Users, DollarSign, Medal, Crown } from "lucide-react";
-
+import type { 
+  TokenConfig, 
+} from "@shared/schema";
 export default function Advertisements() {
   const { data: topInvestors = [] } = useQuery<any[]>({
     queryKey: ['/api/leaderboard/investors'],
@@ -88,7 +90,7 @@ export default function Advertisements() {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-green-600 text-lg">
-                        ${parseFloat(investor.totalInvested).toFixed(2)}
+                        CHIL {parseFloat(investor.totalInvested).toFixed(2)}
                       </p>
                       <p className="text-xs text-gray-500">Total Investment</p>
                     </div>
