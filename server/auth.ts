@@ -8,7 +8,10 @@ import { body, validationResult } from "express-validator";
 import { storage } from "./storage";
 import connectPg from "connect-pg-simple";
 import { User as DBUser } from "@shared/schema";
+import dotenv from "dotenv";
 
+// Load env variables
+dotenv.config();
 declare global {
   namespace Express {
     interface User extends DBUser {}
@@ -256,15 +259,25 @@ export function setupAuth(app: Express) {
     );
   }
 
-  app.get('/api/logout', (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: 'Logout failed' });
-      }
-      // Redirect to home page after logout
-      res.redirect('/');
-    });
+// Add POST support to your logout endpoint
+app.post('/api/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Logout failed' });
+    }
+    res.json({ message: 'Logged out successfully' });
   });
+});
+
+// Keep the GET version for redirects
+app.get('/api/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Logout failed' });
+    }
+    res.redirect('/');
+  });
+});
 
 }
 

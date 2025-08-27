@@ -11,6 +11,8 @@ import Home from "@/pages/Home";
 import LandingPage from "@/pages/LandingPage";
 import RegisterPage from "@/pages/RegisterPage";
 import NotFound from "@/pages/not-found";
+import { HelmetProvider } from "react-helmet-async";  // 👈 import this
+
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,6 +37,7 @@ function Router() {
 
 function App() {
   return (
+        <HelmetProvider>   
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <DynamicSEO />
@@ -43,6 +46,8 @@ function App() {
         <Router />
       </TooltipProvider>
     </QueryClientProvider>
+        </HelmetProvider>
+
   );
 }
 

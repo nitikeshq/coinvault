@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import heroImage from "@assets/generated_images/Crypto_wallet_NFT_registration_hero_be3ab4ca.png";
+import { Helmet } from "react-helmet-async";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -66,6 +67,30 @@ export default function RegisterPage() {
   };
 
   return (
+        <>
+  <Helmet>
+    <title>Register | Chillman</title>
+    <meta
+      name="description"
+      content="Register now on Chillman to explore NFTs, connect with creators, and start your digital journey."
+    />
+    <meta name="keywords" content="NFT, register, signup, Chillman" />
+    <meta property="og:title" content="Register | Chillman" />
+    <meta
+      property="og:description"
+      content="Register now on Chillman to explore NFTs, connect with creators, and start your digital journey."
+    />
+    <meta property="og:image" content={heroImage} />
+    <meta name="twitter:title" content="Register | Chillman" />
+    <meta
+      name="twitter:description"
+      content="Register now on Chillman to explore NFTs, connect with creators, and start your digital journey."
+    />
+    <meta name="twitter:image" content={heroImage} />
+  </Helmet>
+
+
+
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-3 md:p-4 pt-[20px] md:pt-[30px]">
       <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-4 md:gap-6 items-start mx-auto">
         {/* Left Side - Hero Content */}
@@ -356,5 +381,6 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

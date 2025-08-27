@@ -10,8 +10,13 @@ import { blockchainService } from "./blockchainService";
 import OpenAI from "openai";
 import { ImageManager } from "./imageManager";
 import marketRoutes from "./marketRoutes";
+import feedRoutes from "./feedRoutes";
+import { profileRoutes } from "./profileRoutes";
 import { createHash } from "crypto";
+import dotenv from "dotenv";
 
+// Load env variables
+dotenv.config();
 const openai = process.env.OPENAI_API_KEY 
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
@@ -35,6 +40,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount marketplace routes (separate from existing APIs)
   app.use(marketRoutes);
+  
+  // Mount feed routes (separate from existing APIs)
+  app.use(feedRoutes);
+
+  // Mount profile routes (separate from existing APIs)
+  app.use(profileRoutes);
 
   // Upload Routes - Now using local storage
   app.post('/api/objects/upload', requireAuth, async (req, res) => {
@@ -114,53 +125,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get token balance for user (during presale, read from database; post-presale, read from blockchain)
   app.get('/api/user/token/balance', requireAuth, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
+  try {
+    console.log('🔍 === /api/user/token/balance CALLED ===');
+    console.log('👤 User ID:', req.user.id);
+    
+    // Force no caching
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    const userId = req.user.id;
+    
+    // Check if presale is active
+    const presaleConfig = await storage.getPresaleConfig();
+    console.log('📊 Presale config:', presaleConfig);
+    
+    const isPresaleActive = presaleConfig?.isActive && presaleConfig.endDate && new Date() < new Date(presaleConfig.endDate);
+    console.log('🎯 Presale active:', isPresaleActive);
+    
+    if (isPresaleActive) {
+      console.log('💰 Reading from database during presale');
       
-      // Check if presale is active
-      const presaleConfig = await storage.getPresaleConfig();
-      const isPresaleActive = presaleConfig?.isActive && presaleConfig.endDate && new Date() < new Date(presaleConfig.endDate);
+      // Get user balance from database
+      const balance = await storage.getUserBalance(userId);
+      console.log('💳 Database balance result:', balance);
       
-      if (isPresaleActive) {
-        // During presale: Read from database
-        const balance = await storage.getUserBalance(userId);
-        const tokenConfig = await storage.getActiveTokenConfig();
-        const tokenPrice = tokenConfig ? await storage.getLatestTokenPrice(tokenConfig.id) : null;
-        
-        if (balance && tokenPrice) {
-          const usdValue = (parseFloat(balance.balance || '0') * parseFloat(tokenPrice.priceUsd || '0')).toString();
-          res.json({ 
-            balance: balance.balance || '0', 
-            usdValue: usdValue || '0' 
-          });
-        } else {
-          res.json({ balance: '0', usdValue: '0' });
-        }
-      } else {
-        // Post-presale: Read from blockchain
-        const wallet = await storage.getUserWallet(userId);
-        const tokenConfig = await storage.getActiveTokenConfig();
-        
-        if (!wallet?.address || !tokenConfig) {
-          return res.json({ balance: '0', usdValue: '0' });
-        }
-
-        const tokenBalance = await blockchainService.getTokenBalance(tokenConfig.contractAddress, wallet.address);
-        
-        // Get current price to calculate USD value
-        const priceData = await blockchainService.getTokenPrice(tokenConfig.contractAddress);
-        const usdValue = (parseFloat(tokenBalance) * parseFloat(priceData.priceUsd)).toString();
-        
-        // Update user balance in database
-        await storage.updateUserBalance(userId, tokenBalance, usdValue);
-        
-        res.json({ balance: tokenBalance, usdValue });
+      const tokenConfig = await storage.getActiveTokenConfig();
+      console.log('⚙️ Token config:', tokenConfig);
+      
+      let tokenPrice = null;
+      if (tokenConfig) {
+        tokenPrice = tokenConfig.defaultPriceUsd;
+        console.log('💵 Token price from DB:', tokenPrice);
       }
-    } catch (error) {
-      console.error("Error fetching user token balance:", error);
-      res.status(500).json({ message: "Failed to fetch token balance" });
+      
+      if (balance.balance ) {
+        const balanceValue = parseFloat(balance.balance || '0');
+        const priceValue = parseFloat(tokenPrice || '0');
+        const usdValue = (balanceValue * priceValue).toString();
+        
+        console.log('🧮 Calculation:', `${balanceValue} * ${priceValue} = ${usdValue}`);
+        console.log('✅ Returning balance:', balanceValue, 'USD:', usdValue);
+        
+        res.json({ 
+          balance: balance.balance || '0',
+          usdValue: usdValue || '0' 
+        });
+      } else {
+        console.log('⚠️  No balance or price found - balance:', !!balance, 'tokenPrice:', !!tokenPrice);
+        console.log('❓ Balance details:', balance);
+        console.log('❓ Token price details:', tokenPrice);
+        res.json({ balance: '0', usdValue: '0' });
+      }
+    } else {
+      console.log('🔗 Reading from blockchain post-presale');
+      const wallet = await storage.getUserWallet(userId);
+      console.log('👛 User wallet:', wallet);
+      
+      const tokenConfig = await storage.getActiveTokenConfig();
+      console.log('⚙️ Token config:', tokenConfig);
+      
+      if (!wallet?.address || !tokenConfig) {
+        console.log('❌ Missing wallet address or token config');
+        console.log('💼 Wallet address:', wallet?.address);
+        console.log('🏷️ Token config exists:', !!tokenConfig);
+        return res.json({ balance: '0', usdValue: '0' });
+      }
+
+      console.log('🌐 Calling blockchain service...');
+      const tokenBalance = await blockchainService.getTokenBalance(tokenConfig.contractAddress, wallet.address);
+      console.log('💎 Blockchain token balance:', tokenBalance);
+      
+      const priceData = await blockchainService.getTokenPrice(tokenConfig.contractAddress);
+      console.log('💵 Blockchain price data:', priceData);
+      
+      const usdValue = (parseFloat(tokenBalance) * parseFloat(priceData.priceUsd)).toString();
+      console.log('💲 USD value calculation:', `${tokenBalance} * ${priceData.priceUsd} = ${usdValue}`);
+      
+      console.log('💾 Updating user balance in database...');
+      await storage.updateUserBalance(userId, tokenBalance, usdValue);
+      
+      console.log('✅ Returning blockchain balance:', tokenBalance, 'USD:', usdValue);
+      res.json({ balance: tokenBalance, usdValue });
     }
-  });
+  } catch (error) {
+    console.error("❌ Error in /api/user/token/balance:", error);
+    console.error("📋 Error details:", error.message);
+    console.error("🔍 Error stack:", error.stack);
+    res.status(500).json({ message: "Failed to fetch token balance" });
+  }
+});
 
   app.put('/api/admin/token/config', requireAdmin, async (req, res) => {
     try {
@@ -713,37 +767,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       hint: 'Get endDate from /api/presale/config and use Date.now() to calculate remaining time' 
     });
   });
-
-  app.get('/api/presale/progress', async (req, res) => {
-    try {
-      const config = await storage.getPresaleConfig();
-      if (!config) {
-        return res.status(404).json({ message: 'Presale config not found' });
-      }
-
-      // Calculate total raised from approved deposits
-      const approvedDeposits = await storage.getApprovedDeposits();
-      const fromDeposits = approvedDeposits.reduce((total, deposit) => 
-        total + parseFloat(deposit.amount), 0
-      );
-
-      const initialLiquidity = parseFloat(config.initialLiquidity || '0');
-      const totalRaised = initialLiquidity + fromDeposits;
-      const targetAmount = parseFloat(config.targetAmount || '1000000');
-      const progressPercentage = (totalRaised / targetAmount) * 100;
-
-      res.json({
-        totalRaised: totalRaised.toString(),
-        targetAmount: config.targetAmount,
-        initialLiquidity: config.initialLiquidity,
-        fromDeposits: fromDeposits.toString(),
-        progressPercentage: Math.min(100, progressPercentage)
-      });
-    } catch (error) {
-      console.error('Error calculating presale progress:', error);
-      res.status(500).json({ message: 'Failed to calculate progress' });
+app.get('/api/presale/progress', async (req, res) => {
+  try {
+    //console.log('🔍 Starting presale progress calculation...');
+    
+    const config = await storage.getPresaleConfig();
+    //console.log('📊 Presale config:', config);
+    
+    if (!config) {
+      //console.log('❌ No presale config found');
+      return res.status(404).json({ message: 'Presale config not found' });
     }
-  });
+
+    const tokenConfig = await storage.getActiveTokenConfig();
+    //console.log('💰 Token config:', tokenConfig);
+    
+    const tokenPriceUsd = tokenConfig?.defaultPriceUsd ? parseFloat(tokenConfig.defaultPriceUsd.toString()) : 0.001;
+    //console.log('💵 Token price USD:', tokenPriceUsd);
+    
+    const targetAmountUsd = parseFloat(config.targetAmount || '1000000');
+    //console.log('🎯 Target amount USD:', targetAmountUsd);
+
+    // Get all deposits and filter for approved ones
+    //console.log('📦 Fetching all deposits...');
+    const allDeposits = await storage.getDepositRequests();
+    //console.log('📋 All deposits count:', allDeposits.length);
+    //console.log('📋 All deposits:', allDeposits);
+    
+    const approvedDeposits = allDeposits.filter(deposit => deposit.status === 'approved');
+    //console.log('✅ Approved deposits count:', approvedDeposits.length);
+    //console.log('✅ Approved deposits:', approvedDeposits);
+
+    // Calculate raised from approved deposits (tokens -> USD)
+    let fromDepositsUsd = 0;
+    if (approvedDeposits.length > 0) {
+      //console.log('🧮 Calculating USD value from approved deposits...');
+      approvedDeposits.forEach((deposit, index) => {
+        const depositAmount = parseFloat(deposit.amount || '0');
+        const depositUsdValue = depositAmount * tokenPriceUsd;
+        //console.log(`   Deposit ${index + 1}: ${depositAmount} tokens = $${depositUsdValue} USD`);
+        fromDepositsUsd += depositUsdValue;
+      });
+    } else {
+      console.log('⚠️  No approved deposits found');
+    }
+    
+    //console.log('💰 Total from deposits USD:', fromDepositsUsd);
+
+    // Initial liquidity (tokens -> USD)
+    const initialLiquidity = parseFloat(config.initialLiquidity || '0');
+    //console.log('💧 Initial liquidity:', initialLiquidity);
+    
+    const initialLiquidityUsd = initialLiquidity;
+    //console.log('💧 Initial liquidity USD:', initialLiquidityUsd);
+
+    const totalRaisedUsd = initialLiquidityUsd + fromDepositsUsd;
+    //console.log('🏦 Total raised USD:', totalRaisedUsd);
+
+    const progressPercentage = (totalRaisedUsd / targetAmountUsd) * 100;
+    //console.log('📈 Progress percentage:', progressPercentage + '%');
+
+    const finalProgress = Math.min(100, progressPercentage);
+    //console.log('🎯 Final progress:', finalProgress + '%');
+
+    const response = {
+      totalRaised: totalRaisedUsd.toString(),
+      targetAmount: targetAmountUsd.toString(),
+      initialLiquidity: initialLiquidityUsd.toString(),
+      fromDeposits: fromDepositsUsd.toString(),
+      progressPercentage: finalProgress
+    };
+
+    console.log('📤 Sending response:', response);
+    
+    res.json(response);
+    
+  } catch (error) {
+    console.error('❌ Error calculating presale progress:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Failed to calculate progress' });
+  }
+});
 
   app.put('/api/admin/presale/config', requireAdmin, async (req, res) => {
     try {
