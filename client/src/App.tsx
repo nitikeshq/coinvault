@@ -8,6 +8,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { DynamicSEO } from "@/components/DynamicSEO";
 import AuthPage from "@/pages/AuthPage";
 import Home from "@/pages/Home";
+import Profile from "@/pages/Profile";
 import LandingPage from "@/pages/LandingPage";
 import RegisterPage from "@/pages/RegisterPage";
 import NotFound from "@/pages/not-found";
@@ -28,6 +29,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={!isAuthenticated ? AuthPage : Home} />
+      <Route path="/profile/:userId" component={Profile} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/landing" component={LandingPage} />
       <Route component={NotFound} />

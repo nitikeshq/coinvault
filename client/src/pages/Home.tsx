@@ -8,6 +8,8 @@ import Admin from "@/pages/Admin";
 import DappsSection from "@/components/DappsSection";
 import AdvertisementsPage from "@/pages/Advertisements";
 import MarketSection from "@/components/MarketSection";
+import FeedSection from "@/components/FeedSection";
+import Profile from "@/pages/Profile";
 import { PresaleCountdown } from "@/components/PresaleCountdown";
 import { UserProfile } from "@/components/UserProfile";
 import { useQuery } from "@tanstack/react-query";
@@ -15,7 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'press' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'deposit' | 'press' | 'admin' | 'admin-new' | 'dapps' | 'advertisements' | 'market' | 'feed'>('wallet');
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAdmin } = useAuth();
   const { settings: websiteSettings } = useWebsiteSettings() as { settings: any };
@@ -48,6 +50,9 @@ export default function Home() {
         return <AdvertisementsPage />;
       case 'market':
         return <MarketSection />;
+      case 'feed':
+        // Feed is handled in the main return for full-screen layout
+        return null;
       case 'admin':
         return isAdmin ? <AdminPanel /> : (
           <div className="container mx-auto px-4 space-y-6">
@@ -73,27 +78,41 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="relative z-10">
-        {/* Responsive Navigation */}
-        <Navigation 
-          activeSection={activeSection} 
-          onSectionChange={setActiveSection}
-          user={user}
-          isAdmin={isAdmin}
-        />
-        
-        {/* User Profile Modal */}
-        {showProfile && (
-          <UserProfile onClose={() => setShowProfile(false)} />
-        )}
-        
-        <div className="pt-20 pb-8 md:pb-8 pb-20">
-          {renderSection()}
+    <>
+      {activeSection === 'feed' ? (
+        // Full-screen feed layout
+        <div className="min-h-screen bg-black">
+          <Navigation 
+            activeSection={activeSection} 
+            onSectionChange={setActiveSection}
+            user={user}
+            isAdmin={isAdmin}
+          />
+          <FeedSection onBack={() => setActiveSection('wallet')} />
         </div>
+      ) : (
+        // Regular app layout for other sections
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+          <div className="relative z-10">
+            {/* Responsive Navigation */}
+            <Navigation 
+              activeSection={activeSection} 
+              onSectionChange={setActiveSection}
+              user={user}
+              isAdmin={isAdmin}
+            />
+            
+            {/* User Profile Modal */}
+            {showProfile && (
+              <UserProfile onClose={() => setShowProfile(false)} />
+            )}
+            
+            <div className="pt-20 pb-8 md:pb-8 pb-20">
+              {renderSection()}
+            </div>
 
-        {/* Clean Footer - Hidden on mobile */}
-        <footer className="bg-white/80 backdrop-blur-md border-t border-gray-200 mt-16 hidden md:block">
+            {/* Clean Footer - Hidden on mobile */}
+            <footer className="bg-white/80 backdrop-blur-md border-t border-gray-200 mt-16 hidden md:block">
           <div className="container mx-auto px-4 py-12">
             <div className="grid md:grid-cols-4 gap-8">
               <div className="space-y-4">
@@ -214,7 +233,9 @@ export default function Home() {
             </div>
           </div>
         </footer>
-      </div>
-    </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -10,12 +10,13 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { Sparkles, Users, Send, Minus, Image, Coins } from "lucide-react";
+import { Sparkles, Users, Send, Minus, Image, Coins, Video, Gift, Settings } from "lucide-react";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { formatDistanceToNow } from "date-fns";
 
@@ -314,9 +315,10 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="deposits" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100 border border-gray-300">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-100 border border-gray-300">
             <TabsTrigger value="deposits" data-testid="tab-deposits" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Deposits</TabsTrigger>
             <TabsTrigger value="users" data-testid="tab-users" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Users</TabsTrigger>
+            <TabsTrigger value="feed" data-testid="tab-feed" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">Feed</TabsTrigger>
             <TabsTrigger value="nft-mint" data-testid="tab-nft-mint" className="text-gray-900 data-[state=active]:bg-white data-[state=active]:text-gray-900">NFT Mint</TabsTrigger>
           </TabsList>
 
@@ -431,6 +433,11 @@ export default function Admin() {
           {/* Users Management */}
           <TabsContent value="users">
             <UsersManagementPanel />
+          </TabsContent>
+
+          {/* Feed Management */}
+          <TabsContent value="feed">
+            <FeedManagementPanel />
           </TabsContent>
 
           {/* NFT Admin Minting */}
@@ -850,6 +857,627 @@ function NFTMintingPanel() {
           <div className="mt-2 text-xs text-gray-600">
             NFTs will be stored in database for the presale. After presale ends, they can be deployed to blockchain.
           </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Feed Management Panel Component
+function FeedManagementPanel() {
+  const { toast } = useToast();
+  
+  // Gift Management State
+  const [showAddGiftModal, setShowAddGiftModal] = useState(false);
+  const [editingGift, setEditingGift] = useState<any>(null);
+  const [giftForm, setGiftForm] = useState({
+    displayName: '',
+    emoji: '',
+    tokenCost: '',
+    isActive: true,
+  });
+
+  // Feed Settings Query
+  const { data: feedSettings } = useQuery({
+    queryKey: ["/api/feed/settings"],
+  });
+
+  // Gift Types Query
+  const { data: giftTypes = [] } = useQuery({
+    queryKey: ["/api/admin/gift-types"],
+  });
+
+  // Storage Settings Query
+  const { data: storageSettings } = useQuery({
+    queryKey: ["/api/admin/storage-settings"],
+  });
+
+  // Feed Settings Update Mutation
+  const updateFeedSettingsMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("PUT", "/api/admin/feed/settings", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/settings"] });
+      toast({
+        title: "Success",
+        description: "Feed settings updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You don't have permission to update feed settings",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to update feed settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Storage Settings Update Mutation
+  const updateStorageSettingsMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("PUT", "/api/admin/storage-settings", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/storage-settings"] });
+      toast({
+        title: "Success",
+        description: "Storage settings updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update storage settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Gift Type Mutations
+  const giftMutation = useMutation({
+    mutationFn: (data: any) => {
+      if (editingGift) {
+        return apiRequest("PUT", `/api/admin/gift-types/${editingGift.id}`, data);
+      } else {
+        return apiRequest("POST", "/api/admin/gift-types", data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/gift-types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/gift-types"] });
+      setShowAddGiftModal(false);
+      setEditingGift(null);
+      setGiftForm({ displayName: '', emoji: '', tokenCost: '', isActive: true });
+      toast({
+        title: "Success",
+        description: editingGift ? "Gift type updated successfully" : "Gift type created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to save gift type",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/gift-types/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/gift-types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/gift-types"] });
+      setShowAddGiftModal(false);
+      setEditingGift(null);
+      setGiftForm({ displayName: '', emoji: '', tokenCost: '', isActive: true });
+      toast({
+        title: "Success",
+        description: "Gift type deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete gift type",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFeedToggle = (enabled: boolean) => {
+    updateFeedSettingsMutation.mutate({
+      isEnabled: enabled,
+      requireApproval: feedSettings?.requireApproval,
+      maxVideoDuration: feedSettings?.maxVideoDuration,
+      maxVideoSize: feedSettings?.maxVideoSize,
+      giftsEnabled: feedSettings?.giftsEnabled,
+      liveStreamEnabled: feedSettings?.liveStreamEnabled,
+    });
+  };
+
+  const handleApprovalToggle = (requireApproval: boolean) => {
+    updateFeedSettingsMutation.mutate({
+      isEnabled: feedSettings?.isEnabled,
+      requireApproval,
+      maxVideoDuration: feedSettings?.maxVideoDuration,
+      maxVideoSize: feedSettings?.maxVideoSize,
+      giftsEnabled: feedSettings?.giftsEnabled,
+      liveStreamEnabled: feedSettings?.liveStreamEnabled,
+    });
+  };
+
+  const handleGiftsToggle = (giftsEnabled: boolean) => {
+    updateFeedSettingsMutation.mutate({
+      isEnabled: feedSettings?.isEnabled,
+      requireApproval: feedSettings?.requireApproval,
+      maxVideoDuration: feedSettings?.maxVideoDuration,
+      maxVideoSize: feedSettings?.maxVideoSize,
+      giftsEnabled,
+      liveStreamEnabled: feedSettings?.liveStreamEnabled,
+    });
+  };
+
+  const handleStorageToggle = (useS3: boolean) => {
+    updateStorageSettingsMutation.mutate({
+      ...storageSettings,
+      storageType: useS3 ? 's3' : 'local',
+    });
+  };
+
+  const handleSaveGift = () => {
+    const tokenCost = parseFloat(giftForm.tokenCost);
+    if (!giftForm.displayName || !giftForm.emoji || !tokenCost || tokenCost <= 0) {
+      toast({
+        title: "Error",
+        description: "Please fill all fields with valid values",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    giftMutation.mutate({
+      name: giftForm.displayName.toLowerCase().replace(/\s+/g, '_'),
+      displayName: giftForm.displayName,
+      emoji: giftForm.emoji,
+      tokenCost: tokenCost.toFixed(8),
+      isActive: giftForm.isActive,
+      sortOrder: editingGift?.sortOrder || ((giftTypes?.length || 0) + 1),
+    });
+  };
+
+  const handleDeleteGift = () => {
+    if (editingGift && confirm('Are you sure you want to delete this gift type?')) {
+      deleteMutation.mutate(editingGift.id);
+    }
+  };
+
+  // Load gift data when editing
+  useEffect(() => {
+    if (editingGift) {
+      setGiftForm({
+        displayName: editingGift.displayName,
+        emoji: editingGift.emoji,
+        tokenCost: parseFloat(editingGift.tokenCost).toString(),
+        isActive: editingGift.isActive,
+      });
+    }
+  }, [editingGift]);
+
+  return (
+    <div className="space-y-6">
+      {/* Feed Settings Card */}
+      <Card className="bg-white border-gray-300">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Video className="w-5 h-5" />
+            <span>Feed Settings</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Enable/Disable Feed */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Enable Feed Feature</Label>
+              <p className="text-xs text-gray-500">
+                Controls whether the Feed tab appears in navigation
+              </p>
+            </div>
+            <Switch
+              checked={feedSettings?.isEnabled || false}
+              onCheckedChange={handleFeedToggle}
+              disabled={updateFeedSettingsMutation.isPending}
+            />
+          </div>
+
+          {/* Require Approval */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Require Video Approval</Label>
+              <p className="text-xs text-gray-500">
+                Videos must be approved by admin before appearing in feed
+              </p>
+            </div>
+            <Switch
+              checked={feedSettings?.requireApproval || false}
+              onCheckedChange={handleApprovalToggle}
+              disabled={updateFeedSettingsMutation.isPending || !feedSettings?.isEnabled}
+            />
+          </div>
+
+          {/* Enable Gifts */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Enable Gift System</Label>
+              <p className="text-xs text-gray-500">
+                Allow users to send token-based gifts to videos
+              </p>
+            </div>
+            <Switch
+              checked={feedSettings?.giftsEnabled || false}
+              onCheckedChange={handleGiftsToggle}
+              disabled={updateFeedSettingsMutation.isPending || !feedSettings?.isEnabled}
+            />
+          </div>
+
+          {/* Video Limits */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Max Video Duration (seconds)</Label>
+              <Input
+                type="number"
+                value={feedSettings?.maxVideoDuration || 60}
+                onChange={(e) => {
+                  updateFeedSettingsMutation.mutate({
+                    ...feedSettings,
+                    maxVideoDuration: parseInt(e.target.value),
+                  });
+                }}
+                min="10"
+                max="300"
+                disabled={updateFeedSettingsMutation.isPending || !feedSettings?.isEnabled}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Max Video Size (MB)</Label>
+              <Input
+                type="number"
+                value={feedSettings?.maxVideoSize || 50}
+                onChange={(e) => {
+                  updateFeedSettingsMutation.mutate({
+                    ...feedSettings,
+                    maxVideoSize: parseInt(e.target.value),
+                  });
+                }}
+                min="1"
+                max="500"
+                disabled={updateFeedSettingsMutation.isPending || !feedSettings?.isEnabled}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Storage Settings Card */}
+      <Card className="bg-white border-gray-300">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Settings className="w-5 h-5" />
+            <span>Video Storage Settings</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Use AWS S3 Storage</Label>
+              <p className="text-xs text-gray-500">
+                Store videos on AWS S3 (recommended) or local server
+              </p>
+            </div>
+            <Switch
+              checked={storageSettings?.storageType === 's3'}
+              onCheckedChange={handleStorageToggle}
+              disabled={updateStorageSettingsMutation.isPending}
+            />
+          </div>
+
+          {storageSettings?.storageType === 's3' && (
+            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">S3 Bucket</Label>
+                <Input
+                  value={storageSettings?.s3BucketName || ''}
+                  disabled
+                  className="bg-gray-100"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">S3 Region</Label>
+                <Input
+                  value={storageSettings?.s3Region || ''}
+                  disabled
+                  className="bg-gray-100"
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Gift Types Management Card */}
+      <Card className="bg-white border-gray-300">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Gift className="w-5 h-5" />
+              <span>Gift Types ({giftTypes?.length || 0})</span>
+            </div>
+            <Button
+              onClick={() => setShowAddGiftModal(true)}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Add Gift Type
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {giftTypes?.map((gift: any) => (
+              <div
+                key={gift.id}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">{gift.emoji}</span>
+                  <div>
+                    <div className="font-medium text-sm">{gift.displayName}</div>
+                    <div className="text-xs text-gray-500">{gift.tokenCost} tokens</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge variant={gift.isActive ? "default" : "secondary"}>
+                    {gift.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingGift(gift);
+                      setShowAddGiftModal(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {(!giftTypes || giftTypes.length === 0) && (
+            <div className="text-center py-8 text-gray-500">
+              <Gift className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <p>No gift types configured yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit Gift Type Modal */}
+      <Dialog open={showAddGiftModal} onOpenChange={setShowAddGiftModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingGift ? 'Edit Gift Type' : 'Add New Gift Type'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Display Name</Label>
+                <Input
+                  value={giftForm.displayName}
+                  onChange={(e) => setGiftForm(prev => ({ ...prev, displayName: e.target.value }))}
+                  placeholder="Heart"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Emoji</Label>
+                <Input
+                  value={giftForm.emoji}
+                  onChange={(e) => setGiftForm(prev => ({ ...prev, emoji: e.target.value }))}
+                  placeholder="❤️"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Token Cost</Label>
+              <Input
+                type="number"
+                value={giftForm.tokenCost}
+                onChange={(e) => setGiftForm(prev => ({ ...prev, tokenCost: e.target.value }))}
+                placeholder="1.00"
+                min="0.01"
+                step="0.01"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={giftForm.isActive}
+                onCheckedChange={(checked) => setGiftForm(prev => ({ ...prev, isActive: checked }))}
+              />
+              <Label>Active</Label>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleSaveGift}
+                disabled={giftMutation.isPending || !giftForm.displayName || !giftForm.emoji || !giftForm.tokenCost}
+                className="flex-1"
+              >
+                {giftMutation.isPending ? "Saving..." : (editingGift ? "Update" : "Create")}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddGiftModal(false);
+                  setEditingGift(null);
+                  setGiftForm({ displayName: '', emoji: '', tokenCost: '', isActive: true });
+                }}
+              >
+                Cancel
+              </Button>
+              {editingGift && (
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteGift}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pending Videos for Approval */}
+      <PendingVideosSection />
+    </div>
+  );
+}
+
+// Pending Videos Section Component
+function PendingVideosSection() {
+  const { toast } = useToast();
+
+  // Pending videos query
+  const { data: pendingVideos = [], isLoading } = useQuery({
+    queryKey: ["/api/admin/pending-videos"],
+  });
+
+  // Video approval mutation
+  const approvalMutation = useMutation({
+    mutationFn: ({ videoId, isApproved }: { videoId: string; isApproved: boolean }) =>
+      apiRequest("PUT", `/api/admin/videos/${videoId}/status`, { isApproved }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/pending-videos"] });
+      toast({
+        title: "Success",
+        description: "Video status updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update video status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (pendingVideos.length === 0) {
+    return (
+      <Card className="bg-white border-gray-300">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Video className="w-5 h-5" />
+            <span>Pending Video Approvals</span>
+            <Badge variant="secondary">0</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-gray-500">
+            <Video className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No videos pending approval</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-white border-gray-300">
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Video className="w-5 h-5" />
+          <span>Pending Video Approvals</span>
+          <Badge variant="destructive">{pendingVideos.length}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {pendingVideos.map((video: any) => (
+            <div key={video.id} className="border rounded-lg p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                      {video.user?.profileImageUrl ? (
+                        <img
+                          src={video.user.profileImageUrl}
+                          alt={video.user.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs font-semibold">
+                          {(video.user?.name || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium">{video.user?.name || 'Unknown User'}</div>
+                      <div className="text-sm text-gray-500">@{video.user?.username}</div>
+                    </div>
+                  </div>
+                  
+                  <h4 className="font-medium">{video.title || 'Untitled Video'}</h4>
+                  {video.description && (
+                    <p className="text-sm text-gray-600 mt-1">{video.description}</p>
+                  )}
+                  
+                  <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                    <span>Duration: {video.duration || 0}s</span>
+                    <span>Size: {video.fileSize ? `${(video.fileSize / 1024 / 1024).toFixed(1)}MB` : 'Unknown'}</span>
+                    <span>Uploaded: {formatDistanceToNow(new Date(video.createdAt))} ago</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Video Preview */}
+              <div className="w-full max-w-xs mx-auto">
+                <video
+                  src={video.videoUrl}
+                  poster={video.thumbnailUrl}
+                  className="w-full aspect-video rounded-lg object-cover"
+                  controls
+                  preload="metadata"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-2 pt-2">
+                <Button
+                  onClick={() => approvalMutation.mutate({ videoId: video.id, isApproved: true })}
+                  disabled={approvalMutation.isPending}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {approvalMutation.isPending ? "Processing..." : "Approve"}
+                </Button>
+                <Button
+                  onClick={() => approvalMutation.mutate({ videoId: video.id, isApproved: false })}
+                  disabled={approvalMutation.isPending}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  {approvalMutation.isPending ? "Processing..." : "Reject"}
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
