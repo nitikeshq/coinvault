@@ -43,6 +43,15 @@ export const users: any = pgTable("users", {
   // Referral fields
   referralCode: varchar("referral_code").unique(),
   referredBy: varchar("referred_by").references((): any => users.id),
+  // Social profile fields for Feed system
+  bio: text("bio"),
+  followerCount: integer("follower_count").default(0),
+  followingCount: integer("following_count").default(0),
+  videoCount: integer("video_count").default(0),
+  totalLikesReceived: integer("total_likes_received").default(0),
+  totalGiftsReceived: decimal("total_gifts_received", { precision: 18, scale: 8 }).default("0"),
+  isVerified: boolean("is_verified").default(false),
+  isContentCreator: boolean("is_content_creator").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -463,3 +472,173 @@ export const insertStakingSchema = createInsertSchema(stakings).omit({
 export type Staking = typeof stakings.$inferSelect;
 export type InsertStaking = z.infer<typeof insertStakingSchema>;
 export type InsertDepositSettings = z.infer<typeof insertDepositSettingsSchema>;
+
+// ===== FEED SYSTEM TABLES =====
+
+// Gift types configuration (admin managed)
+export const giftTypes = pgTable("gift_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(), // heart, star, coin, crown, rocket
+  displayName: varchar("display_name").notNull(), // "Heart", "Star", "Gold Coin"
+  emoji: varchar("emoji").notNull(), // "❤️", "⭐", "🪙", "👑", "🚀"
+  tokenCost: decimal("token_cost", { precision: 18, scale: 8 }).notNull(),
+  animationUrl: varchar("animation_url"), // Optional custom animation file
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0), // For ordering in UI
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Storage configuration (admin managed)
+export const storageSettings = pgTable("storage_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storageType: varchar("storage_type").notNull().default("local"), // "local" or "s3"
+  isActive: boolean("is_active").default(true),
+  
+  // S3 Configuration (encrypted in production)
+  s3AccessKey: varchar("s3_access_key"),
+  s3SecretKey: varchar("s3_secret_key"),
+  s3BucketName: varchar("s3_bucket_name"),
+  s3Region: varchar("s3_region").default("us-east-1"),
+  s3BaseUrl: varchar("s3_base_url"), // Custom domain or CloudFront URL
+  
+  // Local storage settings
+  localBasePath: varchar("local_base_path").default("/uploads"),
+  
+  // General settings
+  maxFileSize: integer("max_file_size").default(100), // MB
+  allowedFormats: varchar("allowed_formats").default("mp4,webm,mov"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User follows/social relationships
+export const userFollows = pgTable("user_follows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  followerId: varchar("follower_id").notNull().references(() => users.id),
+  followingId: varchar("following_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Video posts (shorts)
+export const videoPosts = pgTable("video_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: varchar("title"),
+  description: text("description"),
+  videoUrl: varchar("video_url").notNull(), // Stored in uploads/videos/ or S3
+  thumbnailUrl: varchar("thumbnail_url"), // Auto-generated thumbnail
+  duration: integer("duration"), // in seconds
+  isLive: boolean("is_live").default(false),
+  liveStreamKey: varchar("live_stream_key"), // For live streaming
+  viewCount: integer("view_count").default(0),
+  likeCount: integer("like_count").default(0),
+  giftCount: integer("gift_count").default(0),
+  commentCount: integer("comment_count").default(0),
+  isActive: boolean("is_active").default(true),
+  isApproved: boolean("is_approved").default(false), // Admin moderation
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Video likes
+export const videoLikes = pgTable("video_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videoPosts.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Video gifts (token-based)
+export const videoGifts = pgTable("video_gifts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videoPosts.id),
+  senderId: varchar("sender_id").notNull().references(() => users.id),
+  receiverId: varchar("receiver_id").notNull().references(() => users.id),
+  giftTypeId: varchar("gift_type_id").notNull().references(() => giftTypes.id),
+  tokenAmount: decimal("token_amount", { precision: 18, scale: 8 }).notNull(),
+  message: text("message"), // Optional gift message
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Video comments
+export const videoComments = pgTable("video_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videoPosts.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  comment: text("comment").notNull(),
+  parentId: varchar("parent_id").references((): any => videoComments.id), // For replies
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Feed settings (admin managed)
+export const feedSettings = pgTable("feed_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  isEnabled: boolean("is_enabled").default(false), // Enable/disable Feed feature
+  requireApproval: boolean("require_approval").default(true), // Video moderation
+  maxVideoDuration: integer("max_video_duration").default(60), // seconds
+  maxVideoSize: integer("max_video_size").default(50), // MB
+  giftsEnabled: boolean("gifts_enabled").default(true),
+  liveStreamEnabled: boolean("live_stream_enabled").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ===== VALIDATION SCHEMAS =====
+
+export const insertGiftTypeSchema = createInsertSchema(giftTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStorageSettingsSchema = createInsertSchema(storageSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertVideoPostSchema = createInsertSchema(videoPosts).omit({
+  id: true,
+  viewCount: true,
+  likeCount: true,
+  giftCount: true,
+  commentCount: true,
+  isApproved: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertVideoGiftSchema = createInsertSchema(videoGifts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVideoCommentSchema = createInsertSchema(videoComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFeedSettingsSchema = createInsertSchema(feedSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// ===== FEED SYSTEM TYPES =====
+
+export type GiftType = typeof giftTypes.$inferSelect;
+export type InsertGiftType = z.infer<typeof insertGiftTypeSchema>;
+export type StorageSettings = typeof storageSettings.$inferSelect;
+export type InsertStorageSettings = z.infer<typeof insertStorageSettingsSchema>;
+export type UserFollow = typeof userFollows.$inferSelect;
+export type VideoPost = typeof videoPosts.$inferSelect;
+export type InsertVideoPost = z.infer<typeof insertVideoPostSchema>;
+export type VideoLike = typeof videoLikes.$inferSelect;
+export type VideoGift = typeof videoGifts.$inferSelect;
+export type InsertVideoGift = z.infer<typeof insertVideoGiftSchema>;
+export type VideoComment = typeof videoComments.$inferSelect;
+export type InsertVideoComment = z.infer<typeof insertVideoCommentSchema>;
+export type FeedSettings = typeof feedSettings.$inferSelect;
+export type InsertFeedSettings = z.infer<typeof insertFeedSettingsSchema>;

@@ -796,7 +796,7 @@ export default function DappsSection() {
                                   Duration: {stake.staking.stakeDurationDays} days
                                 </div>
                                 <div className="text-sm text-gray-600">
-                                  APY: {(parseFloat(stake.staking.rewardRate) * 365 * 100).toFixed(1)}%
+                                  APY: {(parseFloat(stake.staking.rewardRate) * 100).toFixed(1)}%
                                 </div>
                                 <div className="text-sm text-gray-600">
                                   {isExpired ? 'Ready to unstake' : `${daysRemaining} days remaining`}
