@@ -10,6 +10,8 @@ import { blockchainService } from "./blockchainService";
 import OpenAI from "openai";
 import { ImageManager } from "./imageManager";
 import marketRoutes from "./marketRoutes";
+import feedRoutes from "./feedRoutes";
+import { profileRoutes } from "./profileRoutes";
 import { createHash } from "crypto";
 import dotenv from "dotenv";
 
@@ -38,6 +40,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount marketplace routes (separate from existing APIs)
   app.use(marketRoutes);
+  
+  // Mount feed routes (separate from existing APIs)
+  app.use(feedRoutes);
+
+  // Mount profile routes (separate from existing APIs)
+  app.use(profileRoutes);
 
   // Upload Routes - Now using local storage
   app.post('/api/objects/upload', requireAuth, async (req, res) => {

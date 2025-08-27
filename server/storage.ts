@@ -20,6 +20,15 @@ import {
   memeLikes,
   memeDislikes,
   stakings,
+  // Feed system tables
+  giftTypes,
+  storageSettings,
+  userFollows,
+  videoPosts,
+  videoLikes,
+  videoGifts,
+  videoComments,
+  feedSettings,
   type User,
   type InsertUser,
   type RegisterUser,
@@ -43,6 +52,21 @@ import {
   type ReferralEarnings,
   type Staking,
   type InsertStaking,
+  // Feed system types
+  type GiftType,
+  type InsertGiftType,
+  type StorageSettings,
+  type InsertStorageSettings,
+  type UserFollow,
+  type VideoPost,
+  type InsertVideoPost,
+  type VideoLike,
+  type VideoGift,
+  type InsertVideoGift,
+  type VideoComment,
+  type InsertVideoComment,
+  type FeedSettings,
+  type InsertFeedSettings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, lt, gte } from "drizzle-orm";
@@ -119,6 +143,61 @@ export interface IStorage {
   removeDislike(memeId: string, userId: string): Promise<void>;
   getMemeStats(memeId: string): Promise<{likes: number, dislikes: number}>;
   getMemeLeaderboard(): Promise<any[]>;
+  
+  // Feed system operations
+  // Gift types management
+  getAllGiftTypes(): Promise<any[]>;
+  getActiveGiftTypes(): Promise<any[]>;
+  createGiftType(giftType: any): Promise<any>;
+  updateGiftType(id: string, updates: any): Promise<void>;
+  deleteGiftType(id: string): Promise<void>;
+  
+  // Storage settings
+  getActiveStorageSettings(): Promise<any>;
+  getStorageSettings(): Promise<any[]>;
+  updateStorageSettings(settings: any): Promise<any>;
+  
+  // Feed settings
+  getFeedSettings(): Promise<any>;
+  updateFeedSettings(settings: any): Promise<any>;
+  
+  // Social features
+  followUser(followerId: string, followingId: string): Promise<void>;
+  unfollowUser(followerId: string, followingId: string): Promise<void>;
+  getUserFollowers(userId: string): Promise<any[]>;
+  getUserFollowing(userId: string): Promise<any[]>;
+  isUserFollowing(followerId: string, followingId: string): Promise<boolean>;
+  
+  // Video operations
+  createVideoPost(videoData: any): Promise<any>;
+  getVideoPost(videoId: string): Promise<any>;
+  getUserVideos(userId: string): Promise<any[]>;
+  getFeedVideos(page: number, limit: number): Promise<any[]>;
+  getFollowingVideos(userId: string, page: number, limit: number): Promise<any[]>;
+  updateVideoPost(videoId: string, updates: any): Promise<void>;
+  deleteVideoPost(videoId: string): Promise<void>;
+  incrementVideoViews(videoId: string): Promise<void>;
+  getPendingVideos(): Promise<any[]>;
+  updateVideoApprovalStatus(videoId: string, isApproved: boolean): Promise<void>;
+  
+  // Video interactions
+  likeVideo(videoId: string, userId: string): Promise<void>;
+  unlikeVideo(videoId: string, userId: string): Promise<void>;
+  sendVideoGift(giftData: any): Promise<any>;
+  addVideoComment(commentData: any): Promise<any>;
+  getVideoComments(videoId: string): Promise<any[]>;
+  getVideoStats(videoId: string): Promise<{likes: number, gifts: number, comments: number, views: number}>;
+  
+  // Profile methods
+  getUserProfile(userId: string): Promise<any>;
+  updateUserProfile(userId: string, updates: any): Promise<void>;
+  uploadUserImage(userId: string, imageUrl: string, type: 'profile' | 'banner'): Promise<void>;
+  getUserVideos(userId: string): Promise<any[]>;
+  getUserNFTs(userId: string): Promise<any[]>;
+  getUserMemes(userId: string): Promise<any[]>;
+  checkIsFollowing(followerId: string, followingId: string): Promise<boolean>;
+  searchUsers(searchTerm: string): Promise<any[]>;
+  getRecentStories(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -825,7 +904,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserStakings(userId: string): Promise<any[]> {
-    return await db.select({
+    const stakingRecords = await db.select({
       staking: stakings,
       nft: nftCollection
     })
@@ -833,6 +912,32 @@ export class DatabaseStorage implements IStorage {
     .leftJoin(nftCollection, eq(stakings.nftId, nftCollection.id))
     .where(eq(stakings.userId, userId))
     .orderBy(desc(stakings.createdAt));
+
+    // Calculate current rewards for each staking
+    const now = new Date();
+    return stakingRecords.map(item => {
+      if (item.staking.isActive && item.staking.tokenAmount) {
+        const startDate = new Date(item.staking.startDate);
+        const daysStaked = Math.min(
+          (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          item.staking.stakeDurationDays
+        );
+        
+        // Calculate rewards: principal * annual_rate * (days_staked / 365)
+        const principal = parseFloat(item.staking.tokenAmount);
+        const annualRate = parseFloat(item.staking.rewardRate);
+        const currentRewards = principal * annualRate * (daysStaked / 365);
+        
+        return {
+          ...item,
+          staking: {
+            ...item.staking,
+            totalRewards: currentRewards.toFixed(8)
+          }
+        };
+      }
+      return item;
+    });
   }
 
   async getActiveStakings(userId: string): Promise<any[]> {
@@ -880,8 +985,24 @@ export class DatabaseStorage implements IStorage {
 
       // Return tokens/rewards to user
       if (staking.stakeType === 'token' && staking.tokenAmount) {
-        const totalReturn = parseFloat(staking.tokenAmount) + parseFloat(staking.totalRewards || '0');
-        await this.adjustUserTokenBalance(userId, totalReturn, `Unstaking rewards: ${staking.tokenAmount} tokens + ${staking.totalRewards} rewards`);
+        // Calculate final rewards
+        const now = new Date();
+        const startDate = new Date(staking.startDate);
+        const endDate = new Date(staking.endDate);
+        const actualEndDate = now < endDate ? now : endDate;
+        
+        const daysStaked = (actualEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+        const principal = parseFloat(staking.tokenAmount);
+        const annualRate = parseFloat(staking.rewardRate);
+        const finalRewards = principal * annualRate * (daysStaked / 365);
+        
+        // Update staking record with final rewards
+        await tx.update(stakings)
+          .set({ totalRewards: finalRewards.toFixed(8) })
+          .where(eq(stakings.id, stakingId));
+        
+        const totalReturn = principal + finalRewards;
+        await this.adjustUserTokenBalance(userId, totalReturn, `Unstaking: ${staking.tokenAmount} tokens + ${finalRewards.toFixed(8)} rewards`);
       }
 
       return staking;
@@ -1527,6 +1648,522 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(memeDislikes, eq(memeGenerations.id, memeDislikes.memeId))
       .groupBy(memeGenerations.id, users.id)
       .orderBy(desc(sql`COUNT(DISTINCT ${memeLikes.id}) - COUNT(DISTINCT ${memeDislikes.id})`), desc(sql`COUNT(DISTINCT ${memeLikes.id})`));
+  }
+
+  // ===== FEED SYSTEM IMPLEMENTATIONS =====
+
+  // Gift types management
+  async getAllGiftTypes(): Promise<any[]> {
+    return db.select().from(giftTypes).orderBy(giftTypes.sortOrder);
+  }
+
+  async getActiveGiftTypes(): Promise<any[]> {
+    return db.select().from(giftTypes)
+      .where(eq(giftTypes.isActive, true))
+      .orderBy(giftTypes.sortOrder);
+  }
+
+  async createGiftType(giftTypeData: any): Promise<any> {
+    const [giftType] = await db.insert(giftTypes).values(giftTypeData).returning();
+    return giftType;
+  }
+
+  async updateGiftType(id: string, updates: any): Promise<void> {
+    await db.update(giftTypes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(giftTypes.id, id));
+  }
+
+  async deleteGiftType(id: string): Promise<void> {
+    await db.delete(giftTypes).where(eq(giftTypes.id, id));
+  }
+
+  // Storage settings
+  async getActiveStorageSettings(): Promise<any> {
+    const [settings] = await db.select().from(storageSettings)
+      .where(eq(storageSettings.isActive, true));
+    return settings;
+  }
+
+  async getStorageSettings(): Promise<any[]> {
+    return db.select().from(storageSettings);
+  }
+
+  async updateStorageSettings(settingsData: any): Promise<any> {
+    // First, deactivate all settings
+    await db.update(storageSettings).set({ isActive: false });
+    
+    // Then insert or update the new active settings
+    const [settings] = await db.insert(storageSettings)
+      .values({ ...settingsData, isActive: true })
+      .returning();
+    return settings;
+  }
+
+  // Feed settings
+  async getFeedSettings(): Promise<any> {
+    const [settings] = await db.select().from(feedSettings);
+    return settings;
+  }
+
+  async updateFeedSettings(settingsData: any): Promise<any> {
+    // Check if settings exist
+    const existing = await this.getFeedSettings();
+    
+    if (existing) {
+      const [updated] = await db.update(feedSettings)
+        .set({ ...settingsData, updatedAt: new Date() })
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(feedSettings)
+        .values(settingsData)
+        .returning();
+      return created;
+    }
+  }
+
+  // Social features
+  async followUser(followerId: string, followingId: string): Promise<void> {
+    // Prevent self-following
+    if (followerId === followingId) {
+      throw new Error('Cannot follow yourself');
+    }
+
+    // Check if already following
+    const existing = await db.select().from(userFollows)
+      .where(and(
+        eq(userFollows.followerId, followerId),
+        eq(userFollows.followingId, followingId)
+      ));
+
+    if (existing.length === 0) {
+      await db.insert(userFollows).values({
+        followerId,
+        followingId,
+      });
+
+      // Update follower/following counts
+      await db.update(users)
+        .set({ followingCount: sql`${users.followingCount} + 1` })
+        .where(eq(users.id, followerId));
+
+      await db.update(users)
+        .set({ followerCount: sql`${users.followerCount} + 1` })
+        .where(eq(users.id, followingId));
+    }
+  }
+
+  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+    const deleted = await db.delete(userFollows)
+      .where(and(
+        eq(userFollows.followerId, followerId),
+        eq(userFollows.followingId, followingId)
+      ));
+
+    if (deleted) {
+      // Update follower/following counts
+      await db.update(users)
+        .set({ followingCount: sql`${users.followingCount} - 1` })
+        .where(eq(users.id, followerId));
+
+      await db.update(users)
+        .set({ followerCount: sql`${users.followerCount} - 1` })
+        .where(eq(users.id, followingId));
+    }
+  }
+
+  async getUserFollowers(userId: string): Promise<any[]> {
+    return db.select({
+      id: users.id,
+      name: users.name,
+      username: users.username,
+      profileImageUrl: users.profileImageUrl,
+      isVerified: users.isVerified,
+      followedAt: userFollows.createdAt,
+    })
+    .from(userFollows)
+    .innerJoin(users, eq(userFollows.followerId, users.id))
+    .where(eq(userFollows.followingId, userId))
+    .orderBy(desc(userFollows.createdAt));
+  }
+
+  async getUserFollowing(userId: string): Promise<any[]> {
+    return db.select({
+      id: users.id,
+      name: users.name,
+      username: users.username,
+      profileImageUrl: users.profileImageUrl,
+      isVerified: users.isVerified,
+      followedAt: userFollows.createdAt,
+    })
+    .from(userFollows)
+    .innerJoin(users, eq(userFollows.followingId, users.id))
+    .where(eq(userFollows.followerId, userId))
+    .orderBy(desc(userFollows.createdAt));
+  }
+
+  async isUserFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const result = await db.select().from(userFollows)
+      .where(and(
+        eq(userFollows.followerId, followerId),
+        eq(userFollows.followingId, followingId)
+      ));
+    return result.length > 0;
+  }
+
+  // Video operations
+  async createVideoPost(videoData: any): Promise<any> {
+    const [video] = await db.insert(videoPosts).values(videoData).returning();
+    
+    // Update user's video count
+    await db.update(users)
+      .set({ videoCount: sql`${users.videoCount} + 1` })
+      .where(eq(users.id, videoData.userId));
+
+    return video;
+  }
+
+  async getVideoPost(videoId: string): Promise<any> {
+    const [video] = await db.select({
+      ...videoPosts,
+      user: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        profileImageUrl: users.profileImageUrl,
+        isVerified: users.isVerified,
+        followerCount: users.followerCount,
+      }
+    })
+    .from(videoPosts)
+    .innerJoin(users, eq(videoPosts.userId, users.id))
+    .where(eq(videoPosts.id, videoId));
+    return video;
+  }
+
+  async getUserVideos(userId: string): Promise<any[]> {
+    return db.select({
+      ...videoPosts,
+      user: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        profileImageUrl: users.profileImageUrl,
+        isVerified: users.isVerified,
+        followerCount: users.followerCount,
+      }
+    })
+    .from(videoPosts)
+    .innerJoin(users, eq(videoPosts.userId, users.id))
+    .where(and(
+      eq(videoPosts.userId, userId),
+      eq(videoPosts.isActive, true)
+    ))
+    .orderBy(desc(videoPosts.createdAt));
+  }
+
+  async getFeedVideos(page: number = 0, limit: number = 10): Promise<any[]> {
+    return db.select({
+      ...videoPosts,
+      user: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        profileImageUrl: users.profileImageUrl,
+        isVerified: users.isVerified,
+        followerCount: users.followerCount,
+      }
+    })
+    .from(videoPosts)
+    .innerJoin(users, eq(videoPosts.userId, users.id))
+    .where(and(
+      eq(videoPosts.isActive, true),
+      eq(videoPosts.isApproved, true)
+    ))
+    .orderBy(desc(videoPosts.createdAt))
+    .limit(limit)
+    .offset(page * limit);
+  }
+
+  async getFollowingVideos(userId: string, page: number = 0, limit: number = 10): Promise<any[]> {
+    return db.select({
+      ...videoPosts,
+      user: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        profileImageUrl: users.profileImageUrl,
+        isVerified: users.isVerified,
+        followerCount: users.followerCount,
+      }
+    })
+    .from(videoPosts)
+    .innerJoin(users, eq(videoPosts.userId, users.id))
+    .innerJoin(userFollows, eq(userFollows.followingId, users.id))
+    .where(and(
+      eq(userFollows.followerId, userId),
+      eq(videoPosts.isActive, true),
+      eq(videoPosts.isApproved, true)
+    ))
+    .orderBy(desc(videoPosts.createdAt))
+    .limit(limit)
+    .offset(page * limit);
+  }
+
+  async updateVideoPost(videoId: string, updates: any): Promise<void> {
+    await db.update(videoPosts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(videoPosts.id, videoId));
+  }
+
+  async deleteVideoPost(videoId: string): Promise<void> {
+    await db.update(videoPosts)
+      .set({ isActive: false })
+      .where(eq(videoPosts.id, videoId));
+  }
+
+  async incrementVideoViews(videoId: string): Promise<void> {
+    await db.update(videoPosts)
+      .set({ viewCount: sql`${videoPosts.viewCount} + 1` })
+      .where(eq(videoPosts.id, videoId));
+  }
+
+  // Video interactions
+  async likeVideo(videoId: string, userId: string): Promise<void> {
+    // Check if already liked
+    const existing = await db.select().from(videoLikes)
+      .where(and(
+        eq(videoLikes.videoId, videoId),
+        eq(videoLikes.userId, userId)
+      ));
+
+    if (existing.length === 0) {
+      await db.insert(videoLikes).values({
+        videoId,
+        userId,
+      });
+
+      // Update video like count
+      await db.update(videoPosts)
+        .set({ likeCount: sql`${videoPosts.likeCount} + 1` })
+        .where(eq(videoPosts.id, videoId));
+    }
+  }
+
+  async unlikeVideo(videoId: string, userId: string): Promise<void> {
+    const deleted = await db.delete(videoLikes)
+      .where(and(
+        eq(videoLikes.videoId, videoId),
+        eq(videoLikes.userId, userId)
+      ));
+
+    if (deleted) {
+      // Update video like count
+      await db.update(videoPosts)
+        .set({ likeCount: sql`${videoPosts.likeCount} - 1` })
+        .where(eq(videoPosts.id, videoId));
+    }
+  }
+
+  async sendVideoGift(giftData: any): Promise<any> {
+    const [gift] = await db.insert(videoGifts).values(giftData).returning();
+
+    // Update video gift count
+    await db.update(videoPosts)
+      .set({ giftCount: sql`${videoPosts.giftCount} + 1` })
+      .where(eq(videoPosts.id, giftData.videoId));
+
+    // Update user's total gifts received
+    await db.update(users)
+      .set({ totalGiftsReceived: sql`${users.totalGiftsReceived} + ${giftData.tokenAmount}` })
+      .where(eq(users.id, giftData.receiverId));
+
+    return gift;
+  }
+
+  async addVideoComment(commentData: any): Promise<any> {
+    const [comment] = await db.insert(videoComments).values(commentData).returning();
+
+    // Update video comment count
+    await db.update(videoPosts)
+      .set({ commentCount: sql`${videoPosts.commentCount} + 1` })
+      .where(eq(videoPosts.id, commentData.videoId));
+
+    return comment;
+  }
+
+  async getVideoComments(videoId: string): Promise<any[]> {
+    return db.select({
+      ...videoComments,
+      user: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        profileImageUrl: users.profileImageUrl,
+        isVerified: users.isVerified,
+      }
+    })
+    .from(videoComments)
+    .innerJoin(users, eq(videoComments.userId, users.id))
+    .where(eq(videoComments.videoId, videoId))
+    .orderBy(desc(videoComments.createdAt));
+  }
+
+  async getVideoStats(videoId: string): Promise<{likes: number, gifts: number, comments: number, views: number}> {
+    const [video] = await db.select({
+      likes: videoPosts.likeCount,
+      gifts: videoPosts.giftCount,
+      comments: videoPosts.commentCount,
+      views: videoPosts.viewCount,
+    })
+    .from(videoPosts)
+    .where(eq(videoPosts.id, videoId));
+
+    return video || { likes: 0, gifts: 0, comments: 0, views: 0 };
+  }
+
+  // ===== PROFILE METHODS =====
+
+  async getUserProfile(userId: string): Promise<any> {
+    const [user] = await db.select({
+      id: users.id,
+      name: users.name,
+      username: users.username,
+      bio: users.bio,
+      profileImageUrl: users.profileImageUrl,
+      followerCount: users.followerCount,
+      followingCount: users.followingCount,
+      videoCount: users.videoCount,
+      isVerified: users.isVerified,
+    })
+    .from(users)
+    .where(eq(users.id, userId));
+
+    return user;
+  }
+
+  async updateUserProfile(userId: string, updates: any): Promise<void> {
+    await db.update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  async uploadUserImage(userId: string, imageUrl: string, type: 'profile' | 'banner'): Promise<void> {
+    if (type === 'profile') {
+      await db.update(users)
+        .set({ profileImageUrl: imageUrl, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+    }
+    // Banner images not supported in current schema
+  }
+
+  async getUserVideos(userId: string): Promise<any[]> {
+    return db.select({
+      ...videoPosts,
+    })
+    .from(videoPosts)
+    .where(and(
+      eq(videoPosts.userId, userId),
+      eq(videoPosts.isActive, true),
+      eq(videoPosts.isApproved, true)
+    ))
+    .orderBy(desc(videoPosts.createdAt));
+  }
+
+  async getUserNFTs(userId: string): Promise<any[]> {
+    // This would need an NFTs table - for now return empty array
+    return [];
+  }
+
+  async getUserMemes(userId: string): Promise<any[]> {
+    // This would need a memes table - for now return empty array  
+    return [];
+  }
+
+  async checkIsFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const [follow] = await db.select()
+      .from(userFollows)
+      .where(and(
+        eq(userFollows.followerId, followerId),
+        eq(userFollows.followingId, followingId)
+      ));
+    
+    return !!follow;
+  }
+
+  async searchUsers(searchTerm: string): Promise<any[]> {
+    const result = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        profileImageUrl: users.profileImageUrl,
+        followerCount: users.followerCount,
+      })
+      .from(users)
+      .where(
+        sql`LOWER(${users.name}) LIKE ${'%' + searchTerm + '%'}`
+      )
+      .orderBy(desc(users.followerCount))
+      .limit(20);
+
+    return result;
+  }
+
+  async getRecentStories(): Promise<any[]> {
+    // Get videos from the last 24 hours for stories
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const result = await db
+      .select({
+        id: videoPosts.id,
+        userId: videoPosts.userId,
+        username: users.name,
+        profileImageUrl: users.profileImageUrl,
+        videoThumbnail: videoPosts.thumbnailUrl,
+        videoUrl: videoPosts.videoUrl,
+        createdAt: videoPosts.createdAt,
+      })
+      .from(videoPosts)
+      .innerJoin(users, eq(videoPosts.userId, users.id))
+      .where(
+        and(
+          gte(videoPosts.createdAt, twentyFourHoursAgo),
+          eq(videoPosts.isActive, true)
+        )
+      )
+      .orderBy(desc(videoPosts.createdAt))
+      .limit(20);
+
+    return result;
+  }
+
+  async getPendingVideos(): Promise<any[]> {
+    return db.select({
+      ...videoPosts,
+      user: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        profileImageUrl: users.profileImageUrl,
+      }
+    })
+    .from(videoPosts)
+    .innerJoin(users, eq(videoPosts.userId, users.id))
+    .where(and(
+      eq(videoPosts.isActive, true),
+      eq(videoPosts.isApproved, false)
+    ))
+    .orderBy(desc(videoPosts.createdAt));
+  }
+
+  async updateVideoApprovalStatus(videoId: string, isApproved: boolean): Promise<void> {
+    await db.update(videoPosts)
+      .set({ 
+        isApproved, 
+        updatedAt: new Date() 
+      })
+      .where(eq(videoPosts.id, videoId));
   }
 }
 

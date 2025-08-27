@@ -1,15 +1,18 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import pg from 'pg';
+const { Pool } = pg;
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Hardcoded local PostgreSQL connection
+const DATABASE_URL = "postgres://postgres:Octamy%231234@127.0.0.1:5432/chillmandb";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+console.log('database url is: ', DATABASE_URL);
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+// Configure connection for local PostgreSQL
+const connectionConfig = {
+  connectionString: DATABASE_URL,
+  ssl: false // No SSL for local development
+};
+
+export const pool = new Pool(connectionConfig);
+export const db = drizzle(pool, { schema });
